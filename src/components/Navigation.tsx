@@ -245,10 +245,10 @@ export const navigation: Array<NavGroup> = [
   {
     title: 'Resources',
     links: [
-      { title: 'Contacts', href: '/contacts' },
-      { title: 'Conversations', href: '/conversations' },
-      { title: 'Messages', href: '/messages' },
-      { title: 'Groups', href: '/groups' },
+      { title: 'Patient', href: '/Patient' },
+      { title: 'Encounter', href: '/Encounter' },
+      { title: 'Questionnaire', href: '/questionnaire' },
+      { title: 'Transactions', href: '/transaction' },
       { title: 'Attachments', href: '/attachments' },
     ],
   },

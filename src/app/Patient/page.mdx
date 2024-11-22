@@ -1,16 +1,16 @@
 export const metadata = {
-  title: 'Contacts',
+  title: 'Patient',
   description:
-    'On this page, we’ll dive into the different contact endpoints you can use to manage contacts programmatically.',
+    'On this page, we’ll dive into the different Patient endpoints you can use to manage patients programmatically.',
 }
 
-# Contacts
+# Patient
 
-As the name suggests, contacts are a core part of Protocol — the very reason Protocol exists is so you can have secure conversations with your contacts. On this page, we'll dive into the different contact endpoints you can use to manage contacts programmatically. We'll look at how to query, create, update, and delete contacts. {{ className: 'lead' }}
+As the name suggests, patients are a core part of Atticus. On this page, we'll dive into the different Patient endpoints you can use to manage patients programmatically. We'll look at how to query, create, update, and delete contacts. {{ className: 'lead' }}
 
-## The contact model
+## The Patient model
 
-The contact model contains all the information about your contacts, such as their username, avatar, and phone number. It also contains a reference to the conversation between you and the contact and information about when they were last active on Protocol.
+The Patient model contains all the information about your contacts, such as their username, avatar, and phone number. It also contains a reference to the conversation between you and the contact and information about when they were last active on Protocol.
 
 ### Properties
 
@@ -64,35 +64,24 @@ The contact model contains all the information about your contacts, such as thei
 
     <CodeGroup title="Request" tag="GET" label="/v1/contacts">
 
-    ```bash {{ title: 'cURL' }}
-    curl -G https://api.protocol.chat/v1/contacts \
-      -H "Authorization: Bearer {token}" \
-      -d active=true \
-      -d limit=10
+    ```cs
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var subject = new Patient()
+    {
+        Active = true,
+        Name = new List<HumanName>()
+            {
+                new HumanName()
+                {
+                    Use = HumanName.NameUse.Official,
+                    Text = "John Doe",
+                    Family = "Doe",
+                    Given = new string[] { "John" }
+                }
+            },
+    };
+    var response = client.Update<Patient>(subject);
     ```
-
-    ```js
-    import ApiClient from '@example/protocol-api'
-
-    const client = new ApiClient(token)
-
-    await client.contacts.list()
-    ```
-
-    ```python
-    from protocol_api import ApiClient
-
-    client = ApiClient(token)
-
-    client.contacts.list()
-    ```
-
-    ```php
-    $client = new \Protocol\ApiClient($token);
-
-    $client->contacts->list();
-    ```
-
     </CodeGroup>
 
     ```json {{ title: 'Response' }}

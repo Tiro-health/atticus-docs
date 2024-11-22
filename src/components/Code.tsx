@@ -24,6 +24,7 @@ const languageNames: Record<string, string> = {
   python: 'Python',
   ruby: 'Ruby',
   go: 'Go',
+  cs: 'C#',
 }
 
 function getPanelTitle({

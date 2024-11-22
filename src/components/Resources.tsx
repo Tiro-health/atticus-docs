@@ -28,10 +28,10 @@ interface Resource {
 
 const resources: Array<Resource> = [
   {
-    href: '/contacts',
-    name: 'Contacts',
+    href: '/Patient',
+    name: 'Patient',
     description:
-      'Learn about the contact model and how to create, retrieve, update, delete, and list contacts.',
+      'Learn about the Patient model and how to create, retrieve, update, delete, and list patients.',
     icon: UserIcon,
     pattern: {
       y: 16,
