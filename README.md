@@ -1,6 +1,4 @@
-# Protocol
-
-Protocol is a [Tailwind UI](https://tailwindui.com) site template built using [Tailwind CSS](https://tailwindcss.com) and [Next.js](https://nextjs.org).
+# Atticus Docs
 
 ## Getting started
 
@@ -17,10 +15,19 @@ npm run dev
 ```
 
 Finally, open [http://localhost:3000](http://localhost:3000) in your browser to view the website.
+## Update the docs
+All docs are written in MDX which is a combination of Markdown and JSX. You can find the individual pages in the `src/app` directory.
+
+### Navigation
+The navigation structure is defined as a Javascript array called `navigation` in the [src/components/Navigation.tsx](src/components/Navigations/tsx) file.
+Make sure the `href` matches a folder in the `src/app` directory.
+
+### Documentation pages
+All documentation pages are written in MDX and can be found in the `src/app` directory. Each page should have a `metadata` object at the top of the file that defines the title and description of the page. The `sections` array should list all the sections on the page.
+The directory where the page is located is used as the URL path. For example, a page in `src/app/docs/api` will be available at `/docs/api`.
 
 ## Customizing
-
-You can start editing this template by modifying the files in the `/src` folder. The site will auto-update as you edit these files.
+Customization of the design and functionality is possible by modifying the React components in the `src/components` directory.
 
 ## Global search
 
