@@ -11,30 +11,29 @@ import logoRuby from '@/images/logos/ruby.svg'
 const libraries = [
   {
     href: '#',
-    name: 'PHP',
+    name: 'FHIR REST API',
     description:
-      'A popular general-purpose scripting language that is especially suited to web development.',
+      'Create new structured reports linked to patient encounters and populate them with data from your EHR. Transfer both the report and the data back to your EHR.',
     logo: logoPhp,
   },
   {
     href: '#',
-    name: 'Ruby',
+    name: 'SMART on FHIR',
     description:
       'A dynamic, open source programming language with a focus on simplicity and productivity.',
     logo: logoRuby,
   },
   {
     href: '#',
-    name: 'Node.js',
+    name: 'SQL API',
     description:
       'Node.js® is an open-source, cross-platform JavaScript runtime environment.',
     logo: logoNode,
   },
   {
     href: '#',
-    name: 'Python',
-    description:
-      'Python is a programming language that lets you work quickly and integrate systems more effectively.',
+    name: 'Session API',
+    description: 'Create new sessions',
     logo: logoPython,
   },
   {
@@ -50,7 +49,7 @@ export function Libraries() {
   return (
     <div className="my-16 xl:max-w-none">
       <Heading level={2} id="official-libraries">
-        Official libraries
+        API overview
       </Heading>
       <div className="not-prose mt-4 grid grid-cols-1 gap-x-6 gap-y-10 border-t border-zinc-900/5 pt-10 sm:grid-cols-2 xl:max-w-none xl:grid-cols-3 dark:border-white/5">
         {libraries.map((library) => (

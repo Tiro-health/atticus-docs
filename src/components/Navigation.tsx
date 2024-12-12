@@ -234,22 +234,43 @@ export const navigation: Array<NavGroup> = [
     title: 'Guides',
     links: [
       { title: 'Introduction', href: '/' },
-      { title: 'Quickstart', href: '/quickstart' },
-      { title: 'SDKs', href: '/sdks' },
       { title: 'Authentication', href: '/authentication' },
-      { title: 'Pagination', href: '/pagination' },
-      { title: 'Errors', href: '/errors' },
-      { title: 'Webhooks', href: '/webhooks' },
+      { title: 'Populate new reports', href: '/report-population' },
+      { title: 'Extract data from reports', href: '/report-extraction' },
+      { title: 'Bring your own FHIR server', href: '/byof' },
     ],
   },
   {
-    title: 'Resources',
+    title: 'Workflow Integration',
+    links: [
+      {
+        title: '.NET',
+        href: '/dotnet',
+      },
+      {
+        title: 'Java',
+        href: '/java',
+      },
+    ],
+  },
+  {
+    title: 'FHIR Data API',
     links: [
       { title: 'Patient', href: '/Patient' },
       { title: 'Encounter', href: '/Encounter' },
-      { title: 'Questionnaire', href: '/questionnaire' },
+      { title: 'Questionnaire', href: '/Questionnaire' },
+      { title: 'QuestionnaireResponse', href: '/QuestionnaireResponse' },
+      { title: 'Subscription', href: '/Subscription' },
       { title: 'Transactions', href: '/transaction' },
-      { title: 'Attachments', href: '/attachments' },
+    ],
+  },
+  {
+    title: 'SMART on FHIR',
+    links: [
+      {
+        title: 'Introduction',
+        href: '/smart-on-fhir',
+      },
     ],
   },
 ]
