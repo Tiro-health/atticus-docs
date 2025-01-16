@@ -4,7 +4,6 @@ import clsx from 'clsx'
 import { Feedback } from '@/components/Feedback'
 import { Heading } from '@/components/Heading'
 import { Prose } from '@/components/Prose'
-import { FHIREncounterIn_Union_PatientReference__InternalReference__Schema } from './FHIREncounter'
 
 export const a = Link
 export { Button } from '@/components/Button'
