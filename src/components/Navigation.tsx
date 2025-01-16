@@ -241,7 +241,7 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
-    title: 'Workflow Integration',
+    title: 'Embedding in native apps',
     links: [
       {
         title: '.NET',
@@ -258,7 +258,7 @@ export const navigation: Array<NavGroup> = [
     links: [
       { title: 'Patient', href: '/Patient' },
       { title: 'Encounter', href: '/Encounter' },
-      { title: 'Questionnaire', href: '/Questionnaire' },
+      //{ title: 'Questionnaire', href: '/Questionnaire' },
       { title: 'QuestionnaireResponse', href: '/QuestionnaireResponse' },
       { title: 'Subscription', href: '/Subscription' },
       { title: 'Transactions', href: '/transaction' },

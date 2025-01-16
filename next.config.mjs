@@ -15,7 +15,8 @@ const withMDX = nextMDX({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
+  pageExtensions: ['js', 'jsx', 'ts', 'gen.ts', 'tsx', 'mdx'],
+  reactStrictMode: true,
 }
 
 export default withSearch(withMDX(nextConfig))
