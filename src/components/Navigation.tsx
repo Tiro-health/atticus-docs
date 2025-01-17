@@ -254,14 +254,12 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
-    title: 'FHIR Data API',
+    title: 'Attiucs FHIR API',
     links: [
       { title: 'Patient', href: '/Patient' },
       { title: 'Encounter', href: '/Encounter' },
-      //{ title: 'Questionnaire', href: '/Questionnaire' },
       { title: 'QuestionnaireResponse', href: '/QuestionnaireResponse' },
-      { title: 'Subscription', href: '/Subscription' },
-      { title: 'Transactions', href: '/transaction' },
+      { title: 'Transactions', href: '/Transaction' },
     ],
   },
   {

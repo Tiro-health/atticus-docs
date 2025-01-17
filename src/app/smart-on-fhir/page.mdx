@@ -3,13 +3,14 @@ export const metadata = {
   description: 'The SMART on FHIR protocol allows for seamless integration of workflow and data in a safe way.',
 }
 
-
 # SMART on FHIR
 
-The SMART on FHIR protocol brings three things:
+At Tiro.health, we encourage healthcare organizations to host their own FHIR server, ensuring patient data remains securely stored within hospital infrastructure. Integration with these systems is achieved through SMART on FHIR - a standardized HL7 protocol built on widely-adopted web standards like OAuth2 and OpenID Connect.
 
-1. Exchange of identity when launching the app
-2. Exchange of context (eg. patient ID, encounter ID)
-2. Authorization to the FHIR server
+SMART on FHIR extends these foundations with healthcare-specific capabilities:
 
-This way the workflow integration and data integration is seamlessly handled by a single protocol.
+1. Standardized authorization scopes for healthcare data access
+2. Exchange of clinical context (patient and encounter information)
+3. Seamless integration with FHIR servers
+
+This creates a comprehensive protocol that handles both authentication and clinical data exchange in a secure, standards-based way.

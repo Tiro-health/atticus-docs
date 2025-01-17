@@ -27,9 +27,21 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
         - `completed`
   </Property>
   <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.subject'>
-      A FHIR Reference to the patient that is the subject of the response.
+      A FHIR [`Reference`](https://hl7.org/fhir/R5/references.html#Reference) object to the patient that is the subject of the response.
   </Property>
+<Property name="encounter" type="Reference" href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.encounter'>
+    A FHIR [`Reference`](https://hl7.org/fhir/R5/references.html#Reference) to the encounter to which this response is related.
+</Property>
 </Properties>
+
+### Response Headers
+
+When making GET, POST, or PUT requests to QuestionnaireResponse endpoints, the response includes a `Link` header with the URL to open the report form in the browser. The URL is specified with the relation `edit-form`. You can use this URL to redirect users to the web-based form editor.
+
+Example response header for a QuestionnaireResponse with id `123`:
+```http
+Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; rel="edit-form"
+```
 
 ---
 

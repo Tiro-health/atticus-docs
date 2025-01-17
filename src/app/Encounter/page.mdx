@@ -14,25 +14,30 @@ The Encounter model contains all the information about the encounters of a patie
 
 ### Properties
 
-The Encounter model conforms to the FHIR Encounter resource. The following properties are available:
+The Encounter model conforms to the FHIR Encounter resource. The following properties are supported:
 
 <Properties>
   <Property name="resourceType" type="'Encounter'" required>
       The FHIR resource type. This must be set to `'Encounter'`.
   </Property>
-  <Property name="status" type="enum" required href='https://hl7.org/fhir/encounter-definitions.html#Encounter.status'>
-        The status of the encounter. Possible values are:
-        - `planned`
-        - `arrived`
-        - `triaged`
-        - `in-progress` (most common)
-        - `onleave`
-        - `finished`
-        - `cancelled`
-        - `entered-in-error`
+  <Property name="status" type="code" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.status'>
+    The status of the encounter. Possible values are:
+    - `planned`
+    - `arrived`
+    - `triaged`
+    - `in-progress` (most common)
+    - `onleave`
+    - `finished`
+    - `cancelled`
+    - `entered-in-error`
+
+    Atticus ignores status values but they are required by the FHIR standard.
   </Property>
-  <Property name="subject" type="Reference" required href='https://hl7.org/fhir/encounter-definitions.html#Encounter.subject'>
-      A FHIR Reference to the patient that is the subject of the encounter.
+  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.identifier'>
+      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this patient (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
+  </Property>
+  <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject'>
+      A FHIR [`Reference`](https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject) object pointing to the patient which is the subject of the encounter.
   </Property>
 </Properties>
 ---
