@@ -18,7 +18,7 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'ts', 'gen.ts', 'tsx', 'mdx'],
   reactStrictMode: true,
   output: 'export',
-  basePath: 'atticus-docs',
+  basePath: '/atticus-docs',
 }
 
 export default withSearch(withMDX(nextConfig))
