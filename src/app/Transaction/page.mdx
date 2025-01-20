@@ -135,15 +135,13 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
         {
           "response": {
             "status": "201 Created",
-            "location": "Patient/1/_history/1",
-            "etag": "1"
+            "location": "Patient/1",
           }
         },
         {
           "response": {
             "status": "201 Created",
-            "location": "Encounter/1/_history/1",
-            "etag": "1"
+            "location": "Encounter/1",
           }
         }
       ]
@@ -163,7 +161,7 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
 ## Common Use Cases
 
 - Creating a patient and their initial encounter together
-- Updating multiple related resources at once
+- Creating a patient, an encounter and a draft questionnaire response
 - Deleting a group of related resources
 - Ensuring referential integrity between resources
 
@@ -183,14 +181,3 @@ If any operation in the transaction fails, the server will return an OperationOu
   ]
 }
 ```
-```
-
-This documentation page provides a comprehensive overview of FHIR transactions, including:
-- Explanation of the Bundle resource and its properties
-- Detailed example of creating multiple related resources in a transaction
-- Code examples in both cURL and C#
-- Transaction rules and processing behavior
-- Common use cases
-- Error handling
-
-The examples show how to create a Patient and an associated Encounter in a single transaction, demonstrating how to use temporary UUIDs for references between resources in the bundle.
