@@ -51,7 +51,7 @@ To get started with integrating Atticus in your .NET application, follow these s
     ```
 ## Create an authenticated session
 
-To create an authenticated session, you need to include the client credentials in your request and send a POST request along with session specific data. Here's what to do:
+To create an authenticated session, you need to include the client credentials in your request and send a POST request along with session-specific data. Here's what to do:
 
 1. Create a dictionary with the required session data:
     ```csharp
@@ -78,7 +78,7 @@ To create an authenticated session, you need to include the client credentials i
     var authHeader = $"Basic {Convert.ToBase64String(authToken)}";
     request.Headers.SetHeader("Authorization", authHeader);
 
-    // Add content type header
+    // Add content-type header
     request.Headers.SetHeader("Content-Type", "application/json");
 
     // Add user identification header
@@ -98,6 +98,6 @@ To create an authenticated session, you need to include the client credentials i
     };
     ```
 
-## Receive realtime updates
+## Receive real-time updates
 
 _to be completed_
