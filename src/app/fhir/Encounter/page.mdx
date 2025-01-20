@@ -1,0 +1,148 @@
+export const metadata = {
+  title: 'Encounter',
+  description:
+    'On this page, we’ll dive into the different Encounter endpoints you can use to manage encounters programmatically.',
+}
+
+# Encounter
+
+Encounters are an essential part of Atticus. On this page, we’ll dive into the different encounter endpoints you can use to manage encounters programmatically. We'll look at how to query, create, update, and delete encounters. {{ className: 'lead' }}
+
+## The Encounter model
+
+The Encounter model contains all the information about the encounters of a patient. In addition, encounters can also be group-based with more than one contact, they can have a pinned message, and they can be muted.
+
+### Properties
+
+The Encounter model conforms to the FHIR Encounter resource. The following properties are supported:
+
+<Properties>
+  <Property name="resourceType" type="'Encounter'" required>
+      The FHIR resource type. This must be set to `'Encounter'`.
+  </Property>
+  <Property name="status" type="code" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.status'>
+    The status of the encounter. Possible values are:
+    - `planned`
+    - `arrived`
+    - `triaged`
+    - `in-progress` (most common)
+    - `onleave`
+    - `finished`
+    - `cancelled`
+    - `entered-in-error`
+
+    Atticus ignores status values but they are required by the FHIR standard.
+  </Property>
+  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.identifier'>
+      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this Encounter (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
+      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
+  </Property>
+  <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject'>
+      A FHIR [`Reference`](https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject) object pointing to the patient which is the subject of the encounter.
+  </Property>
+</Properties>
+---
+
+## Create a new Encounter {{ tag: 'POST', label: '/Encounter' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to create a new Encounter.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/Encounter">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://reports.tiro.heallth/fhir/r5/Encounter \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Encounter",
+        "status": "planned",
+        "subject": {
+          "reference": "Patient/123"
+        }
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var encounter = new Encounter
+    {
+      Status = Encounter.EncounterStatus.Planned,
+      Subject = new ResourceReference("Patient/123")
+    };
+    client.Create(encounter);
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Encounter",
+      "id": "1",
+      "status": "planned",
+      "subject": {
+        "reference": "Patient/123"
+      }
+    }
+    ```
+  </Col>
+</Row>
+
+
+---
+
+## Conditionally create a new Encounter {{ tag: 'POST', label: '/Encounter' }}
+
+_to be documented_
+
+---
+
+## Get an existing Encounter {{ tag: 'GET', label: '/Encounter/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to retrieve an existing Encounter by providing the Encounter id.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/Encounter/1">
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/Encounter/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var encounter = client.Read<Encounter>("1");
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+## Delete an existing Encounter {{ tag: 'DELETE', label: '/Encounter/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to delete an existing Encounter by providing the Encounter id. Once an Encounter is deleted, it cannot be recovered.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="DELETE" label="/Encounter/1">
+    ```bash {{ title: 'cURL' }}
+    curl -X DELETE https://reports.tiro.health/fhir/r5/Encounter/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    client.Delete("Encounter", "1");
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "OperationOutcome",
+      "issue": [
+        {
+          "severity": "information",
+          "code": "informational",
+          "diagnostics": "Successfully deleted Encounter/1"
+        }
+      ]
+    }
+    ```
+  </Col>
+</Row>

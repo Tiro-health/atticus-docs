@@ -1,0 +1,45 @@
+export const metadata = {
+  title: 'FHIR Tips',
+  description: 'This page contains tips and best practices for working with FHIR resources in Atticus.'
+}
+
+# Tips for working with FHIR in Atticus
+
+This page contains tips and best practices for working with FHIR resources in Atticus to help you get the most out of the platform.
+
+## Store your internal identifiers in FHIR resources
+
+When creating resources in Atticus, you want to use your internal identifiers to retrieve them.
+
+For example, you might want to use your hospital's patient ID to retrieve a patient resource. To do this, you can store your internal identifiers in the `identifier` property of the FHIR resource. This property is an array of `Identifier` objects that can be used to store your internal identifiers.
+
+### Identifier properties
+<Properties>
+  <Property name="system" type="uri" required>
+    A URI that identifies the system that the identifier comes from. It's **domain should be owned by your organization** or your organization's IT provider.
+  </Property>
+  <Property name="value" type="string" required>
+    The actual identifier value. This value should be unique within the system that the `system` property points to.
+  </Property>
+</Properties>
+
+### Example
+
+```json
+{
+  "resourceType": "Patient",
+  "identifier": [
+    {
+      "system": "http://myhospital.org/patient-id",
+      "value": "12345"
+    }
+  ]
+}
+```
+
+### Important rules
+
+- The `system` property must be a URI. It should be a URL that points to a page that describes the system that the identifier comes from. The domain of the URL should be owned by your organization (eg. the hospital) or your organization's IT provider.
+The `system` makes sure that the identifier is unique across all systems that use the same identifier value.
+
+- The `value` property should be the actual identifier value. This value should be unique within the system that the `system` property points to. For example, if the `system` property points to your hospital's patient ID system, the `value` should be unique for each patient in your hospital.

@@ -1,0 +1,237 @@
+export const metadata = {
+  title: 'Patient',
+  description: "On this page, we'll dive into the different Patient endpoints you can use to manage patients programmatically"
+}
+
+# Patient
+
+Patients are an essential part of Atticus. On this page, we'll dive into the different patient endpoints you can use to manage patients programmatically. We'll look at how to query, create, update, and delete patients. {{ className: 'lead' }}
+
+## The Patient model
+
+The Patient model contains all the basic demographic information about a patient, including their name, birth date, gender and identifiers.
+
+### Properties
+
+The Patient model conforms to the FHIR Patient resource. The following properties are available:
+
+<Properties>
+  <Property name="resourceType" type="'Patient'" required>
+      The FHIR resource type. This must be set to `'Patient'`.
+  </Property>
+  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.identifier'>
+      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this patient (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
+      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
+  </Property>
+  <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.name'>
+      The name of the patient. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+  </Property>
+  <Property name="birthDate" type="date" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.birthDate'>
+      The patient's date of birth.
+  </Property>
+  <Property name="gender" type="code" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient'>
+    Administrative gender. Possible values are:
+      - `male`
+      - `female`
+      - `other`
+      - `unknown`
+  </Property>
+</Properties>
+
+---
+
+## Create a new Patient {{ tag: 'POST', label: '/Patient' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to create a new Patient.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/Patient">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://reports.tiro.heallth/fhir/r5/Patient \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Patient",
+        "name": [{
+          "given": ["John"],
+          "family": "Smith"
+        }],
+        "birthDate": "1970-01-01",
+        "gender": "male",
+        "identifier": [{
+          "system": "http://hospital.example.org/identifiers/mrn",
+          "value": "12345"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var patient = new Patient
+    {
+      Name = new List<HumanName>
+      {
+        new HumanName().WithGiven("John").AndFamily("Smith")
+      },
+      BirthDate = "1970-01-01",
+      Gender = AdministrativeGender.Male,
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hospital.example.org/identifiers/mrn",
+          Value = "12345"
+        }
+      }
+    };
+    client.Create(patient);
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Patient",
+      "id": "1",
+      "name": [{
+        "given": ["John"],
+        "family": "Smith"
+      }],
+      "birthDate": "1970-01-01",
+      "gender": "male",
+      "identifier": [{
+        "system": "http://hospital.example.org/identifiers/mrn",
+        "value": "12345"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## Conditionally create a new Patient {{ tag: 'POST', label: '/Patient' }}
+
+_to be documented_
+
+---
+
+## Update a new Patient {{ tag: 'PUT', label: '/Patient/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to update an existing Patient by providing both the Patient id and the updated Patient data. The entire Patient resource must be included in the request.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Patient/1">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT https://reports.tiro.health/fhir/r5/Patient/1 \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Patient",
+        "id": "1",
+        "name": [{
+          "given": ["John"],
+          "family": "Smith"
+        }],
+        "birthDate": "1970-01-01",
+        "gender": "male",
+        "identifier": [{
+          "system": "http://hospital.example.org/identifiers/mrn",
+          "value": "12345"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var patient = new Patient
+    {
+      Id = "1",
+      Name = new List<HumanName>
+      {
+        new HumanName().WithGiven("John").AndFamily("Smith")
+      },
+      BirthDate = "1970-01-01",
+      Gender = AdministrativeGender.Male,
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hospital.example.org/identifiers/mrn",
+          Value = "12345"
+        }
+      }
+    };
+    client.Update(patient);
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Patient",
+      "id": "1",
+      "name": [{
+        "given": ["John"],
+        "family": "Smith"
+      }],
+      "birthDate": "1970-01-01",
+      "gender": "male",
+      "identifier": [{
+        "system": "http://hospital.example.org/identifiers/mrn",
+        "value": "12345"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+---
+
+## Get an existing Patient {{ tag: 'GET', label: '/Patient/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to retrieve an existing Patient by providing the Patient id.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/Patient/1">
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/Patient/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var patient = client.Read<Patient>("1");
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+## Delete an existing Patient {{ tag: 'DELETE', label: '/Patient/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to delete an existing Patient by providing the Patient id. Once a Patient is deleted, it cannot be recovered.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="DELETE" label="/Patient/1">
+    ```bash {{ title: 'cURL' }}
+    curl -X DELETE https://reports.tiro.health/fhir/r5/Patient/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    client.Delete("Patient", "1");
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "OperationOutcome",
+      "issue": [
+        {
+          "severity": "information",
+          "code": "informational",
+          "diagnostics": "Successfully deleted Patient/1"
+        }
+      ]
+    }
+    ```
+  </Col>
+</Row>
