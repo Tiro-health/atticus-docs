@@ -6,11 +6,11 @@ export const metadata = {
 
 # Authentication
 
-You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token . {/*— OAuth2 is the recommended way.*/} {{ className: 'lead' }}
+You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token. {/*— OAuth2 is the recommended way.*/} {{ className: 'lead' }}
 
-## Basic authentication (API-key)
+## Basic authentication (API key)
 
-With basic authentication, you use an apikey (a base64 encoded version of `client_id:client_secret`) to authenticate your HTTP requests. {/* Unless you have a very good reason, you probably shouldn't use basic auth.*/}
+With basic authentication, you use an API key (a base64 encoded version of `client_id:client_secret`) to authenticate your HTTPS requests. {/* Unless you have a very good reason, you probably shouldn't use basic auth.*/}
 Here's how to authenticate using cURL:
 
 ```bash {{ title: 'Example request with basic auth' }}
