@@ -235,9 +235,6 @@ export const navigation: Array<NavGroup> = [
     links: [
       { title: 'Introduction', href: '/' },
       { title: 'Authentication', href: '/authentication' },
-      { title: 'Populate new reports', href: '/report-population' },
-      { title: 'Extract data from reports', href: '/report-extraction' },
-      { title: 'Bring your own FHIR server', href: '/byof' },
     ],
   },
   {
@@ -254,12 +251,26 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
+    title: 'Integration in web apps',
+    links: [
+      {
+        title: 'React',
+        href: '/react',
+      },
+      {
+        title: 'Angular',
+        href: '/angular',
+      },
+    ],
+  },
+  {
     title: 'Attiucs FHIR API',
     links: [
-      { title: 'Patient', href: '/Patient' },
-      { title: 'Encounter', href: '/Encounter' },
-      { title: 'QuestionnaireResponse', href: '/QuestionnaireResponse' },
-      { title: 'Transactions', href: '/Transaction' },
+      { title: 'Patient', href: '/fhir/Patient' },
+      { title: 'Encounter', href: '/fhir/Encounter' },
+      { title: 'QuestionnaireResponse', href: '/fhir/QuestionnaireResponse' },
+      { title: 'Transactions', href: '/fhir/Transaction' },
+      { title: 'FHIR Tips', href: '/fhir/tips' },
     ],
   },
   {

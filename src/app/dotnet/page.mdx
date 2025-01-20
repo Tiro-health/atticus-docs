@@ -98,6 +98,14 @@ To create an authenticated session, you need to include the client credentials i
     };
     ```
 
-## Receive real-time updates
+After completing these steps, you should have a working WebView2 control that can be used to display the Atticus Filler UI in your .NET application.
+
+### Demo repository
+A demo repository with a working example can be found [here](https://github.com/Tiro-health/SessionLaunch).
+The code that creates the session can be found [here](https://github.com/Tiro-health/SessionLaunch/blob/master/SessionLaunch/Session.cs#L197)
+
+## Receive real-time updates of the form state
+
+Atticus can send realtime updates of the form state as FHIR QuestionnaireResponse resources. The realtime updates are sent using message events. The messaging protocol is based on [SMART Web Messaging](https://hl7.org/fhir/uv/smart-web-messaging/STU1/).
 
 _to be completed_

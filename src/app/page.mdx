@@ -8,25 +8,42 @@ export const metadata = {
     'Learn how to integrate Atticus deeply in to your healthcare workflow.',
 }
 
-export const sections = [
-  { title: 'Guides', id: 'guides' },
-  { title: 'Resources', id: 'resources' },
-]
-
 <HeroPattern />
 
-# API Documentation
+# Atticus Integration Documentation
 
 Use the Atticus API to instantiate new structured reporting forms, populate them with your data and extract FHIR resources from the form responses. {{ className: 'lead' }}
 
+## Integration flow
+A typical integration flow with Atticus looks like this:
+
+1. **Data Exchange**: Send data to Atticus
+Atticus needs some minimal context to associate with the QuestionnaireResponse. At least a patient resource is required.
+Often a empty patient resources with a single identifier is sufficient. Optionally an encounter resource can also be provided.
+
+2. **Authentication**
+Users need a seemless experience from your system to Atticus and back. To achieve this, a authenticated session is created.
+This flow is different for native applications like .NET or Java applications from web applications.
+\
+\
+Most native applications are able to configure a embedded browser. In this case, the authenticated session can be created in the background. Once a browser session is created, the user can be redirected to the Atticus form.\
+When using a separate browser, external identity providers are needed. SMART on FHIR can be used to exchange both the user identity and context.
+Classic Identity providers like Microsoft Entra ID or Google are also supported but are not able to exchange the context.
+
+3. **Submission**: Submit the form
+When the user submits the form, a QuestionnaireResponse with the answered data is sent to Atticus.
+Depending on the configured tasks, Atticus will process the QuestionnaireResponse and return the results to the configured endpoints.
+
+{/*
 <div className="not-prose mb-16 mt-6 flex gap-3">
-  {/*<Button href="/quickstart" arrow="right">
+  <Button href="/quickstart" arrow="right">
     <>Quickstart</>
-  </Button>*/}
+  </Button>
   <Button href="/intergrations" variant="outline">
     <>Explore integrations</>
   </Button>
 </div>
+
 
 ## Getting started {{ anchor: false }}
 
@@ -38,7 +55,7 @@ To get started, request an API-key to your point of contact of via [admin@tiro.h
   </Button>
 </div>
 
-{/*<Guides />
+<Guides />
 
 <Resources />
-}*/}
+*/}
