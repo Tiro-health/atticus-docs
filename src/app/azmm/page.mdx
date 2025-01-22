@@ -1,0 +1,165 @@
+export const metadata = {
+  title: 'AZ Maria Middelares integration',
+  description: 'This page focuses on the integration with AZ Maria Middelares.',
+}
+
+# AZ Maria Middelares integration
+
+This page contains code examples as discussed with the integration team at AZ Maria Middelares.
+
+## Synchronize Patient & Encounter and create one or more QuestionnaireResponses
+
+The code below demonstrates how to synchronize a patient and encounter with the FHIR server and create a draft FHIR QuestionnaireResponse with links to the patient and encounter. The code uses the `Hl7.Fhir.R5` NuGet package to interact with the FHIR server.
+
+Synchornizing is done by using **Conditional Update** operations. This means that the server will try to find a resource that matches the given search parameters. If a resource is found, it will be updated. If no resource is found, a new resource will be created.
+
+```csharp
+#r "nuget: Hl7.Fhir.R5, 5.11.0"
+
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Serialization;
+using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
+using System.Collections.Generic;
+
+public class AuthorizationMessageHandler : HttpClientHandler
+{
+    public System.Net.Http.Headers.AuthenticationHeaderValue Authorization { get; set; }
+    public String UserId { get; set; }
+    protected async override Task<HttpResponseMessage> SendAsync( HttpRequestMessage request,
+                                                                  CancellationToken cancellationToken)
+    {
+        if (Authorization != null)
+        {
+            request.Headers.Authorization = Authorization;
+            request.Headers.Add("X-User-Id", UserId);
+        }
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
+
+var serializer = new FhirJsonSerializer(
+    new SerializerSettings
+    {
+        Pretty = true // Enables formatted output
+    }
+);
+
+var settings = new FhirClientSettings()
+{
+    PreferredFormat = ResourceFormat.Json,
+    ReturnPreference = ReturnPreference.Minimal
+};
+
+const string userSystem = "http://azmm.be/synops/user-id";
+const string patientSystem = "http://azmm.be/synops/patient-id";
+const string encounterSystem = "http://azmm.be/synops/encounter-id";
+const string apikey = "dGVzdDp0ZXN0";
+const string userId = "1234";
+const string contactId = "1234";
+const string patientId = "1234";
+const string encounterId = "5678";
+const string fhirBaseUrl = "https://reports-staging.tiro.health/fhir/r5";
+var questionnaire = new Canonical("http://templates.tiro.health/templates/473f08a6507946b4b7fdeb00d3137139");
+
+var handler = new AuthorizationMessageHandler(){
+    Authorization = new AuthenticationHeaderValue("Basic", apikey),
+    UserId = $"{userSystem}|{userId}",
+    AllowAutoRedirect = true
+};
+
+var client = new FhirClient(new Uri(fhirBaseUrl), settings, handler);
+var builder = new TransactionBuilder(fhirBaseUrl, Bundle.BundleType.Transaction);
+
+// Reuse the patient if it exists already by matching the patient.identifier
+var patientMatchParams = new SearchParams();
+patientMatchParams.Add("identifier", patientSystem + "|" + patientId);
+
+// Construct the patient object
+var subject = new Patient()
+{
+    Active = true,
+    Name = new List<HumanName>()
+        {
+            new HumanName()
+            {
+                Use = HumanName.NameUse.Official,
+                Text = "John Doe",
+                Family = "Doe",
+                Given = new string[] { "John" }
+            }
+        },
+};
+
+// Generate a temporary ID for the patient to link into other resources (ex. Encounter)
+var tempPatientId = Uuid.Generate();
+// Add the patient to the transaction bundle
+builder.ConditionalUpdate(patientMatchParams, subject, bundleEntryFullUrl: tempPatientId.Value);
+
+// Reuse the encounter if it exists already by matching the encounter.identifier
+var encounterMatchParams = new SearchParams();
+encounterMatchParams.Add("identifier", encounterSystem + "|" + encounterId);
+
+// Construct the encounter object
+var encounter = new Encounter()
+{
+    Status = EncounterStatus.InProgress,
+    Subject = new ResourceReference(tempPatientId.Value),
+};
+
+// Generate a temporary ID for the encounter to link into other resources (ex. Questionnaire)
+var tempEncounterId = Uuid.Generate();
+
+// Add the encounter to the transaction bundle
+builder.ConditionalUpdate(encounterMatchParams, encounter, bundleEntryFullUrl: tempEncounterId.Value);
+
+// The code below is used to create an draft FHIR QuestionnaireResponse with links to the patient and encounter.
+// Using the identifier field, internal id's can be attached to the form.
+// Use-cases that need multiple 'forms' or 'structured reports' to be filled for the same encounter and patient,
+// can reuse the same fragment. The TransactionBuilder will append the requests to the bundle.
+
+// Create a parameter resource to pass to the populatelink operation
+var qr = new QuestionnaireResponse()
+{
+    Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
+    Questionnaire = questionnaire,
+    Identifier = new List<Identifier>()
+    {
+        new Identifier()
+        {
+            System = "http://azmm.be/synops/contact/" + contactId + "/contactveld",
+            Value = "1234"
+        }
+    },
+    Subject = new ResourceReference(tempPatientId.Value),
+    Encounter = new ResourceReference(tempEncounterId.Value)
+};
+
+// Add a create questionnaire requeset to the transaction bundle
+builder.Create(qr);
+
+// From this point on, we consider the transaction to be complete.
+
+// Build the transaction bundle
+var bundle = builder.ToBundle();
+// Serialize the Bundle to JSON
+string requestJson = serializer.SerializeToString(bundle);
+
+Console.WriteLine("Serialized Bundle:");
+
+// Print the JSON string
+Console.WriteLine(requestJson);
+
+// Send the transaction bundle to the FHIR server
+var response = await client.TransactionAsync(bundle);
+
+// Serialize the response to JSON
+var responseJson = serializer.SerializeToString(response);
+Console.WriteLine("Response:");
+
+// Print the response
+Console.WriteLine(responseJson);
+```
