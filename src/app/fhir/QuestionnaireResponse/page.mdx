@@ -24,7 +24,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
   <Property name="questionnaire" type="Canonical" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.questionnaire'>
       A FHIR [`Canonical`](https://hl7.org/fhir/R5/datatypes.html#canonical) url to the corresponding questionnaire (the form definition).
       For questionnaires (='templates') designed in Atticus Designer, this url will start with `http://templates.tiro.health/templates/`.
-      Optionally, a version can be specified by appending `|<version>` to the url. This allows you to specify a specific version of the questionnaire.
+      Optionally, a version can be specified by appending `|<version>` to the url. This allows you to specify a specific version of the questionnaire: `http://templates.tiro.health/templates/unreadable-unique-id|1.0.1`.
   </Property>
   <Property name='identifier' type='Identifier[]' href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.identifier'>
       An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this questionnaire response.
