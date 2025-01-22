@@ -16,30 +16,23 @@ For example, you might want to use your hospital's patient ID to retrieve a pati
 ### Identifier properties
 <Properties>
   <Property name="system" type="uri" required>
-    A URI that identifies the system that the identifier comes from. It's **domain should be owned by your organization** or your organization's IT provider.
+    A URI that identifies the system that the identifier comes from. It servers as a namespace for the `value` property.
   </Property>
   <Property name="value" type="string" required>
     The actual identifier value. This value should be unique within the system that the `system` property points to.
   </Property>
 </Properties>
 
-### Example
-
+### Example of an `Identifier` object
 ```json
 {
-  "resourceType": "Patient",
-  "identifier": [
-    {
-      "system": "http://myhospital.org/patient-id",
-      "value": "12345"
-    }
-  ]
+    "system": "http://myhospital.org/patient-id",
+    "value": "12345"
 }
 ```
 
 ### Important rules
 
-- The `system` property must be a URI. It should be a URL that points to a page that describes the system that the identifier comes from. The domain of the URL should be owned by your organization (eg. the hospital) or your organization's IT provider.
-The `system` makes sure that the identifier is unique across all systems that use the same identifier value.
-
-- The `value` property should be the actual identifier value. This value should be unique within the system that the `system` property points to. For example, if the `system` property points to your hospital's patient ID system, the `value` should be unique for each patient in your hospital.
+- The `system` property must be a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
+- The **domain** of the `system` should **be owned by your organization** or your organization's IT provider.
+- The `value` property should be unique within the system. For example, if the `system` property points to your hospital's patient ID system, the `value` should be unique for each patient in your hospital.

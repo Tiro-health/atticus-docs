@@ -24,6 +24,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
   <Property name="questionnaire" type="Canonical" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.questionnaire'>
       A FHIR [`Canonical`](https://hl7.org/fhir/R5/datatypes.html#canonical) url to the corresponding questionnaire (the form definition).
       For questionnaires (='templates') designed in Atticus Designer, this url will start with `http://templates.tiro.health/templates/`.
+      Optionally, a version can be specified by appending `|<version>` to the url. This allows you to specify a specific version of the questionnaire.
   </Property>
   <Property name='identifier' type='Identifier[]' href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.identifier'>
       An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this questionnaire response.
@@ -32,7 +33,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
   <Property name="status" type="enum" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.status'>
         The status of the response. Possible values are:
         - `in-progress` (most common)
-        - `completed`
+        - `completed` (makes report read-only and triggers processing.) **Currently not allowed for external systems.**
   </Property>
   <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.subject'>
       A FHIR [`Reference`](https://hl7.org/fhir/R5/references.html#Reference) object to the patient that is the subject of the response.
@@ -42,14 +43,6 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
 </Property>
 </Properties>
 
-### Response Headers
-
-When making GET, POST, or PUT requests to QuestionnaireResponse endpoints, the response includes a `Link` header with the URL to open the report form in the browser. The URL is specified with the relation `edit-form`. You can use this URL to redirect users to the web-based form editor.
-
-Example response header for a QuestionnaireResponse with id `123`:
-```http
-Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; rel="edit-form"
-```
 
 ---
 
@@ -68,8 +61,17 @@ Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; 
         "resourceType": "QuestionnaireResponse",
         "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1",
         "status": "in-progress",
+        "identifier": [
+          {
+            "system": "http://example.com/my-hospital-reports/,
+            "value": "123"
+          }
+        ],
         "subject": {
           "reference": "Patient/123"
+        },
+        "encounter": {
+          "reference": "Encounter/456"
         }
       }'
     ```
@@ -77,9 +79,18 @@ Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; 
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
     var qr = new QuestionnaireResponse
     {
-      Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
-      Questionnaire = new Canonical("http://templates.tiro.health/templates/unreadable-unique-id|1"),
-      Subject = new ResourceReference("Patient/123")
+        Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
+        Questionnaire = new Canonical("http://templates.tiro.health/templates/unreadable-unique-id|1"),
+        Identifier = new List<Identifier>
+        {
+            new Identifier
+            {
+            System = "http://example.com/my-hospital-reports/",
+            Value = "123"
+            }
+        },
+        Subject = new ResourceReference("Patient/123")
+        Encounter = new ResourceReference("Encounter/456")
     };
     client.Create(qr);
     ```
@@ -88,10 +99,19 @@ Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; 
     {
       "resourceType": "QuestionnaireResponse",
       "id": "1",
-      "status": "in-progress",
       "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1",
+      "status": "in-progress",
+      "identifier": [
+        {
+          "system": "http://example.com/my-hospital-reports/",
+          "value": "123"
+        }
+      ],
       "subject": {
         "reference": "Patient/123"
+      },
+      "encounter": {
+        "reference": "Encounter/456"
       }
     }
     ```
@@ -128,6 +148,26 @@ _to be documented_
     ```
     </CodeGroup>
   </Col>
+  ```json {{ title: 'Response' }}
+  {
+    "resourceType": "QuestionnaireResponse",
+    "id": "1",
+    "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1",
+    "status": "in-progress",
+    "identifier": [
+      {
+        "system": "http://example.com/my-hospital-reports/",
+        "value": "123"
+      }
+    ],
+    "subject": {
+      "reference": "Patient/123"
+    },
+    "encounter": {
+      "reference": "Encounter/456"
+    }
+  }
+  ```
 </Row>
 
 ---
@@ -163,3 +203,48 @@ _to be documented_
     ```
   </Col>
 </Row>
+
+---
+
+
+## Special considerations in Response
+
+A QuestionnaireResponse resource has some special headers and response body properties that you should be aware of.
+
+### Link header
+
+When making GET, POST, or PUT requests to QuestionnaireResponse endpoints, the response includes a `Link` header with the URL to open the report form in the browser. The URL is specified with the relation `edit-form`. You can use this URL to redirect users to the web-based form editor.
+
+Example response header for a QuestionnaireResponse with id `123`:
+```http
+Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; rel="edit-form"
+```
+
+### Versioning info
+
+The `questionnaire` property of the response body contains the canonical reference to the corresponding questionnaire (the form definition).
+The full version is always appended in the response.
+
+When sending a request with a partial version:
+
+```json
+{
+  "resourceType": "QuestionnaireResponse",
+  //...
+  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1",
+  //...
+}
+```
+
+you will receive aresponse with a full version
+
+
+```json
+{
+  "resourceType": "QuestionnaireResponse",
+  //...
+  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1",
+  //...
+}
+```
+}
