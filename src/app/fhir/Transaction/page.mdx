@@ -12,36 +12,45 @@ Combining multiple operations in a single transaction can be useful when you nee
 A FHIR Bundle is a container for a collection of resources. When used for transactions, the Bundle contains a list of operations (create, update, delete) that should be processed atomically - meaning either all operations succeed or none of them do.
 
 ### Properties
-
 <Properties>
   <Property name="resourceType" type="'Bundle'" required>
     The FHIR resource type. This must be set to `'Bundle'`.
   </Property>
   <Property name="type" type="code" required>
-    For transactions, this must be set to `'transaction'`.
+    For transactions, this will be set to `'transaction'`. For transaction responses, it will be set to `'transaction-response'`.
   </Property>
-  <Property name="entry" type="array" required>
+  <Property name="entry" type="Entry[]" required>
     An array of entry objects, each containing a request and a resource.
+    \
+    Each entry in a **transaction request Bundle** can have the following properties
+    <Properties>
+        <Property name="fullUrl" type='uri'>
+          A temporary UUID that can be used to reference the resource in other entries.
+        </Property>
+        <Property name="resource" type="Resource">
+          The resource to be created, updated. Not required for DELETE operations.
+        </Property>
+        <Property name="request">
+          The request object contains the HTTP method and URL for the operation.
+          <Properties>
+            <Property name="method" type="code" required>
+              The HTTP method for the operation. Must be one of `POST`, `PUT`, or `DELETE`.
+            </Property>
+            <Property name="url" type="string" required>
+              The relative URL for the resource. For example, `Patient` or `Encounter/1`.
+            </Property>
+          </Properties>
+        </Property>
+    </Properties>
   </Property>
 </Properties>
+A detailed description of all properties can be found in the [FHIR specification](https://www.hl7.org/fhir/r5/bundle.html).
 
 ## Making Transaction Requests {{ tag: 'POST', label: '/' }}
 
 <Row>
   <Col>
     This endpoint allows you to submit a transaction Bundle containing multiple operations. The following example shows how to create a Patient and an associated Encounter in a single transaction.
-
-    ### Request Structure
-    Each entry in the Bundle must specify:
-    - The HTTP method (`POST`, `PUT`, or `DELETE`)
-    - The relative URL for the resource
-    - The resource data (except for DELETE operations)
-
-    ### Transaction Processing
-    - All operations in the Bundle are processed as a single transaction
-    - If any operation fails, the entire transaction is rolled back
-    - Operations are processed in the order they appear in the Bundle
-    - References between resources in the Bundle can use temporary IDs
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/">
@@ -150,7 +159,7 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
   </Col>
 </Row>
 
-## Transaction Rules
+## Transaction Processing Rules
 
 - All resources in a transaction must have a `request` element specifying the HTTP method and URL
 - For resources being created (POST), you can provide a temporary UUID in the `fullUrl` field to allow other resources in the bundle to reference it
@@ -164,6 +173,35 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
 - Creating a patient, an encounter and a draft questionnaire response
 - Deleting a group of related resources
 - Ensuring referential integrity between resources
+
+## Response headers in a Bundle
+Most endpoints of the FHIR API use HTTP Response Headers to provide urls to the user interface or urls to the exact location of a resource.
+The transaction response Bundle keeps most of these headers in the response object of the entry. The response object contains extrac fields that contain the status code, link headers and the location header.
+
+```json
+{
+  "resourceType": "Bundle",
+  "type": "transaction-response",
+  "entry": [
+    {
+      "fullUrl": "https://reports.tiro.health/fhir/r5/QuestionnaireResponse/123",
+      "response": {
+        "status": "201 Created",
+        "location": "QuestionnaireResponse/123",
+      },
+      "link": [
+        {
+          "rel": "edit-form":
+          "url": "https://app.tiro.health/reports/edit?response=QuestionnaireResponse/123"
+        },
+      ]
+    }
+  ]
+}
+```
+
+For an exact overview of the headers send back in the response, refer to the documentation of the specific endpoint.
+
 
 ## Error Handling
 

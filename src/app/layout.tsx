@@ -9,8 +9,8 @@ import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Protocol API Reference',
-    default: 'Protocol API Reference',
+    template: '%s - Atticus API Reference',
+    default: 'Atticus API Reference',
   },
 }
 

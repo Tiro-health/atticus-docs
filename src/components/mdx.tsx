@@ -85,7 +85,7 @@ export function Properties({ children }: { children: React.ReactNode }) {
     <div className="my-6 pl-4">
       <ul
         role="list"
-        className="m-0 max-w-[calc(theme(maxWidth.lg)-theme(spacing.8))] list-none divide-y divide-zinc-900/5 p-0 dark:divide-white/5"
+        className="ml m-0 max-w-[calc(theme(maxWidth.lg)-theme(spacing.8))] divide-y divide-zinc-900/5 p-0 dark:divide-white/5"
       >
         {children}
       </ul>
@@ -107,7 +107,7 @@ export function Property({
   href?: string
 }) {
   return (
-    <li className="m-0 list-disc px-0 py-4 first:pt-0 last:pb-0">
+    <li className="m-0 px-0 py-4 first:pt-0 last:pb-0">
       <dl className="m-0 flex flex-wrap items-center gap-x-3 gap-y-2">
         <dt className="sr-only">Name</dt>
         <dd>
