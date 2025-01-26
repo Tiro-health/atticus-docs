@@ -36,3 +36,8 @@ For example, you might want to use your hospital's patient ID to retrieve a pati
 - The `system` property must be a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#syntax).
 - The **domain** of the `system` should **be owned by your organization** or your organization's IT provider.
 - The `value` property should be unique within the system. For example, if the `system` property points to your hospital's patient ID system, the `value` should be unique for each patient in your hospital.
+
+### Usage in headers and query parameters
+
+When using identifiers in headers or query parameters, you need to combine the `system` and the `value` of the identifier in a single string. The convention is to concatenate the `system` and the `value` with a pipe `|`. For example, if the `system` is `http://myhospital.org/patient-id` and the `value` is `12345`, the combined identifier would be `http://myhospital.org/patient-id|12345`.
+This convention is used when [identifying users in authenticated requests](/fhir/authentication#end-user-identification-in-machine-to-machine-communication) and when performing [conditional operations on resources](./Patient#conditionally-update-a-patient).

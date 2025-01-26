@@ -234,43 +234,67 @@ export const navigation: Array<NavGroup> = [
     title: 'Guides',
     links: [
       { title: 'Introduction', href: '/' },
-      { title: 'Authentication', href: '/authentication' },
+      { title: 'Data Tenants', href: '/guides/data-tenants' },
+      { title: 'Content Versioning', href: '/guides/content-versioning' },
     ],
   },
   {
-    title: 'Embedding in native apps',
+    title: 'Supported Integrations',
+    links: [
+      { title: 'Introduction', href: '/supported' },
+      {
+        title: 'Nexuzhealth KWS',
+        href: '/supported/nexuzhealth-kws',
+      },
+      { title: 'Synops', href: '/supported/synops' },
+    ],
+  },
+  {
+    title: 'Context Launch',
     links: [
       {
+        title: 'Introduction',
+        href: '/context',
+      },
+      {
         title: '.NET',
-        href: '/dotnet',
+        href: '/context/dotnet',
       },
       {
         title: 'Java',
-        href: '/java',
+        href: '/context/java',
+      },
+      {
+        title: 'Web',
+        href: '/context/react',
       },
     ],
   },
   {
-    title: 'Integration in web apps',
+    title: 'Identity Provider',
     links: [
       {
-        title: 'React',
-        href: '/react',
+        title: 'Introduction',
+        href: '/identity-provider',
       },
       {
-        title: 'Angular',
-        href: '/angular',
+        title: 'Microsoft Entra ID',
+        href: '/identity-provider/microsoft-entra-id',
       },
     ],
   },
   {
     title: 'Attiucs FHIR API',
     links: [
+      { title: 'Introduction', href: '/fhir' },
+      { title: 'Authentication', href: '/fhir/authentication' },
+      { title: 'Practitioner', href: '/fhir/Practitioner' },
       { title: 'Patient', href: '/fhir/Patient' },
       { title: 'Encounter', href: '/fhir/Encounter' },
       { title: 'QuestionnaireResponse', href: '/fhir/QuestionnaireResponse' },
       { title: 'Transactions', href: '/fhir/Transaction' },
       { title: 'FHIR Tips', href: '/fhir/tips' },
+      { title: 'Integration engines', href: '/integration-engines' },
     ],
   },
   {

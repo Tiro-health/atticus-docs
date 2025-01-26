@@ -108,10 +108,71 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 
 ---
 
-## Conditionally create a new Patient {{ tag: 'POST', label: '/Patient' }}
-
-_to be documented_
-
+## Conditionally update a Patient {{ tag: 'POST', label: '/Patient?identifier=<system>|<value>' }}
+<Row>
+  <Col>
+    This endpoint allows you to update a Patient by matching on specific criteria. The search criteria are provided as query parameters, and the updated Patient data is provided in the request body.
+    When no Patient is found that matches the search criteria, a **new Patient is created**.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT "https://reports.tiro.health/fhir/r5/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345" \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Patient",
+        "name": [{
+          "given": ["John"],
+          "family": "Smith"
+        }],
+        "birthDate": "1970-01-01",
+        "gender": "male",
+        "identifier": [{
+          "system": "http://hospital.example.org/identifiers/mrn",
+          "value": "12345"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var patient = new Patient
+    {
+      Name = new List<HumanName>
+      {
+        new HumanName().WithGiven("John").AndFamily("Smith")
+      },
+      BirthDate = "1970-01-01",
+      Gender = AdministrativeGender.Male,
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hospital.example.org/identifiers/mrn",
+          Value = "12345"
+        }
+      }
+    };
+    client.Update(patient, new SearchParams().Where("identifier=http://hospital.example.org/identifiers/mrn|12345"));
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Patient",
+      "id": "1",
+      "name": [{
+        "given": ["John"],
+        "family": "Smith"
+      }],
+      "birthDate": "1970-01-01",
+      "gender": "male",
+      "identifier": [{
+        "system": "http://hospital.example.org/identifiers/mrn",
+        "value": "12345"
+      }]
+    }
+    ```
+  </Col>
+</Row>
 ---
 
 ## Update a new Patient {{ tag: 'PUT', label: '/Patient/:id' }}

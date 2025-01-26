@@ -9,30 +9,32 @@ export const metadata = {
 }
 
 <HeroPattern />
-
 # Atticus Integration Documentation
 
-Use the Atticus API to instantiate new structured reporting forms, populate them with your data and extract FHIR resources from the form responses. {{ className: 'lead' }}
+Use the Atticus API to create structured reporting forms, populate them with your data, and extract FHIR resources from form responses. {{ className: 'lead' }}
 
 ## Integration flow
-A typical integration flow with Atticus looks like this:
+Here's how a typical integration with Atticus works:
 
-1. **Data Exchange**: Send data to Atticus
-Atticus needs some minimal context to associate with the QuestionnaireResponse. At least a patient resource is required.
-Often a empty patient resources with a single identifier is sufficient. Optionally an encounter resource can also be provided.
+1. **Data Exchange**:
+Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well.
+Learn more about available APIs in the [Atticus FHIR API](./fhir) section.
+![Sketch illustrating the data import step.](/data-import.svg)
 
-2. **Authentication**
-Users need a seemless experience from your system to Atticus and back. To achieve this, a authenticated session is created.
-This flow is different for native applications like .NET or Java applications from web applications.
-\
-\
-Most native applications are able to configure a embedded browser. In this case, the authenticated session can be created in the background. Once a browser session is created, the user can be redirected to the Atticus form.\
-When using a separate browser, external identity providers are needed. SMART on FHIR can be used to exchange both the user identity and context.
-Classic Identity providers like Microsoft Entra ID or Google are also supported but are not able to exchange the context.
+2. **Context Launch**
+To provide a seamless user experience between your system and Atticus, we support contextual launches. This allows users to be redirected directly to a specific patient's information. The context launch flow is a two step process:
+- Authorize a new session: A healthcare information systems (eg. EHR or LIS) authorizes a new session with the Atticus Authorization Server.
+- Launch of Atticus: The user is redirected to the Atticus application in a new browser window.
+![Sketch illustrating the context launch step.](/context-launch.svg)
+Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.\
+When using a separate browser, external identity providers are required for authentication. SMART on FHIR enables exchange of both user identity and context.
+Standard identity providers like Microsoft Entra ID or Google are also supported, though they cannot exchange context information.
+More info about this can be found on the [context launch](./context) page and the [identiy provider](./identity-provider) page.
 
-3. **Submission**: Submit the form
-When the user submits the form, a QuestionnaireResponse with the answered data is sent to Atticus.
-Depending on the configured tasks, Atticus will process the QuestionnaireResponse and return the results to the configured endpoints.
+3. **Submission**:
+The Atticus API lets external systems configure destinations for submitted data.
+When a user submits a form, their QuestionnaireResponse data is sent to Atticus and forwarded to the configured endpoints.
+![Sketch illustrating the submission step.](/submission.svg)
 
 {/*
 <div className="not-prose mb-16 mt-6 flex gap-3">
