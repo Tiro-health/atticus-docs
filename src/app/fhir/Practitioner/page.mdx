@@ -1,0 +1,277 @@
+export const metadata = {
+  title: 'Practitioner',
+  description: "On this page, we'll dive into the different Practitioner endpoints you can use to manage practitioners programmatically"
+}
+
+# Practitioner
+
+Practitioners are an essential part of Atticus. On this page, we'll dive into the different practitioner endpoints you can use to manage practitioners programmatically. We'll look at how to query, create, update, and delete practitioners. {{ className: 'lead' }}
+
+## The Practitioner model
+
+The Practitioner model contains all the basic information about a healthcare practitioner, including their name, identifiers, and qualifications.
+
+### Properties
+
+The Practitioner model conforms to the FHIR Practitioner resource. The following properties are available:
+
+<Properties>
+  <Property name="resourceType" type="'Practitioner'" required>
+      The FHIR resource type. This must be set to `'Practitioner'`.
+  </Property>
+  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.identifier'>
+      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this practitioner (e.g. NPI, license number). This is the place to store provider identifiers or hospital identifiers for the practitioner.
+      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
+  </Property>
+  <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.name'>
+      The name of the practitioner. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+  </Property>
+</Properties>
+
+---
+
+## Create a new Practitioner {{ tag: 'POST', label: '/Practitioner' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to create a new Practitioner.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/Practitioner">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://reports.tiro.heallth/fhir/r5/Practitioner \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Practitioner",
+        "name": [{
+          "prefix": ["dr."],
+          "given": ["Jane"],
+          "family": "Doe"
+        }],
+        "identifier": [{
+          "system": "http://hl7.org/fhir/sid/us-npi",
+          "value": "1234567890"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var practitioner = new Practitioner
+    {
+      Name = new List<HumanName>
+      {
+        new HumanName().WithPrefix("dr.").WithGiven("Jane").AndFamily("Doe")
+      },
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hl7.org/fhir/sid/us-npi",
+          Value = "1234567890"
+        }
+      }
+    };
+    client.Create(practitioner);
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Practitioner",
+      "id": "1",
+      "name": [{
+        "prefix": ["dr."],
+        "given": ["Jane"],
+        "family": "Doe"
+      }],
+      "identifier": [{
+        "system": "http://hl7.org/fhir/sid/us-npi",
+        "value": "1234567890"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## Conditionally update a new Practitioner {{ tag: 'POST', label: '/Practitioner?identifier=<system>|<value>' }}
+<Row>
+  <Col>
+    This endpoint allows you to update a Practitioner by matching on specific criteria. The search criteria are provided as query parameters, and the updated Practitioner data is provided in the request body.
+    When no Practitioner is found that matches the search criteria, a **new Practitioner is created**.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Practitioner?identifier=http://hl7.org/fhir/sid/us-npi|1234567890">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT "https://reports.tiro.health/fhir/r5/Practitioner?identifier=http://hl7.org/fhir/sid/us-npi|1234567890" \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Practitioner",
+        "name": [{
+          "prefix": ["dr."],
+          "given": ["Jane"],
+          "family": "Doe"
+        }],
+        "identifier": [{
+          "system": "http://hl7.org/fhir/sid/us-npi",
+          "value": "1234567890"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var practitioner = new Practitioner
+    {
+      Name = new List<HumanName>
+      {
+        new HumanName().WithPrefix("dr.").WithGiven("Jane").AndFamily("Doe")
+      },
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hl7.org/fhir/sid/us-npi",
+          Value = "1234567890"
+        }
+      }
+    };
+    client.Update(practitioner, new SearchParams().Where("identifier=http://hl7.org/fhir/sid/us-npi|1234567890"));
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Practitioner",
+      "id": "1",
+      "name": [{
+        "prefix": ["dr."],
+        "given": ["Jane"],
+        "family": "Doe"
+      }],
+      "identifier": [{
+        "system": "http://hl7.org/fhir/sid/us-npi",
+        "value": "1234567890"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
+## Update a new Practitioner {{ tag: 'PUT', label: '/Practitioner/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to update an existing Practitioner by providing both the Practitioner id and the updated Practitioner data. The entire Practitioner resource must be included in the request.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Practitioner/1">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT https://reports.tiro.health/fhir/r5/Practitioner/1 \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Practitioner",
+        "id": "1",
+        "name": [{
+          "prefix": ["dr."],
+          "given": ["Jane"],
+          "family": "Doe"
+        }],
+        "identifier": [{
+          "system": "http://hl7.org/fhir/sid/us-npi",
+          "value": "1234567890"
+        }]
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var practitioner = new Practitioner
+    {
+      Id = "1",
+      Name = new List<HumanName>
+      {
+        new HumanName().WithPrefix("dr.").WithGiven("Jane").AndFamily("Doe")
+      },
+      Identifier = new List<Identifier>
+      {
+        new Identifier
+        {
+          System = "http://hl7.org/fhir/sid/us-npi",
+          Value = "1234567890"
+        }
+      }
+    };
+    client.Update(practitioner);
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Practitioner",
+      "id": "1",
+      "name": [{
+        "prefix": ["dr."],
+        "given": ["Jane"],
+        "family": "Doe"
+      }],
+      "identifier": [{
+        "system": "http://hl7.org/fhir/sid/us-npi",
+        "value": "1234567890"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+---
+
+## Get an existing Practitioner {{ tag: 'GET', label: '/Practitioner/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to retrieve an existing Practitioner by providing the Practitioner id.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/Practitioner/1">
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/Practitioner/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var practitioner = client.Read<Practitioner>("1");
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+## Delete an existing Practitioner {{ tag: 'DELETE', label: '/Practitioner/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to delete an existing Practitioner by providing the Practitioner id. Once a Practitioner is deleted, it cannot be recovered.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="DELETE" label="/Practitioner/1">
+    ```bash {{ title: 'cURL' }}
+    curl -X DELETE https://reports.tiro.health/fhir/r5/Practitioner/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    client.Delete("Practitioner", "1");
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "OperationOutcome",
+      "issue": [
+        {
+          "severity": "information",
+          "code": "informational",
+          "diagnostics": "Successfully deleted Practitioner/1"
+        }
+      ]
+    }
+    ```
+  </Col>
+</Row>
