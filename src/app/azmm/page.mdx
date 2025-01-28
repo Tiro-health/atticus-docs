@@ -121,7 +121,7 @@ builder.ConditionalUpdate(encounterMatchParams, encounter, bundleEntryFullUrl: t
 // Use-cases that need multiple 'forms' or 'structured reports' to be filled for the same encounter and patient,
 // can reuse the same fragment. The TransactionBuilder will append the requests to the bundle.
 
-// Create a parameter resource to pass to the populatelink operation
+// Create an empty QuestionnaireRespnse to link to the patient and encounter and attach a custom identifier
 var qr = new QuestionnaireResponse()
 {
     Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
