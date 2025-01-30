@@ -57,13 +57,13 @@ var settings = new FhirClientSettings()
 const string userSystem = "http://azmm.be/synops/user-id";
 const string patientSystem = "http://azmm.be/synops/patient-id";
 const string encounterSystem = "http://azmm.be/synops/encounter-id";
-const string apikey = "top-secret";
+const string apikey = "!APIKEY!"; // Replace with your API key
 const string userId = "1234";
 const string contactId = "1234";
 const string patientId = "1234";
 const string encounterId = "5678";
 const string fhirBaseUrl = "https://reports-staging.tiro.health/fhir/r5";
-var questionnaire = new Canonical("http://templates.tiro.health/templates/473f08a6507946b4b7fdeb00d3137139");
+var questionnaire = new Canonical("http://templates.tiro.health/templates/578878825e6941aca66e1ad93e3da06d");
 
 var handler = new AuthorizationMessageHandler(){
     Authorization = new AuthenticationHeaderValue("Basic", apikey),
@@ -162,4 +162,6 @@ Console.WriteLine("Response:");
 
 // Print the response
 Console.WriteLine(responseJson);
+var link = response.Entry[2].Link[0];
+Console.WriteLine("Link to the QuestionnaireResponse:"+link.Url);
 ```
