@@ -77,6 +77,69 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
   </Col>
 </Row>
 
+---
+
+## Conditionally update a Practitioner {{ tag: 'PUT', label: '/Practitioner?identifier=<system>|<value>' }}
+<Row>
+  <Col>
+    This endpoint allows you to update a Practitioner by matching on specific criteria. The search criteria are provided as query parameters, and the updated Practitioner data is provided in the request body.
+    When no Practitioner is found that matches the search criteria, a **new Practitioner is created**. Currently only identifiers with system 'http://tiro.health/Practitioner' are allowed for matching.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Practitioner?identifier=http://tiro.health/Practitioner|12345">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT "https://reports.tiro.health/fhir/r5/Practitioner?identifier=http://tiro.health/Practitioner|12345" \
+      -H "Authorization: Bearer {token}" \
+      -d '{
+        "resourceType": "Practitioner",
+        "name": [{
+          "prefix": ["dr."],
+          "given": ["Jane"],
+          "family": "Doe"
+        }],
+        "telecom": [{"system": "email", "value": "test@test.com"}],
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+    var patient = new Patient
+    {
+      Name = new List<HumanName>
+      {
+        new HumanName().WithGiven("John").AndFamily("Smith")
+      }
+      Telecom = new List<ContactPoint>
+      {
+          new ContactPoint
+          {
+              System = ContactPoint.ContactPointSystem.Email,
+              Value = "test@test.com",
+          }
+      },     
+    };
+    client.Update(patient, new SearchParams().Where("identifier=http://tiro.health/Practitioner|12345"));
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Practitioner",
+      "id": "1",
+      "name": [{
+        "given": ["John"],
+        "family": "Smith"
+      }],
+      "telecom": [{"system": "email", "value": "test@test.com"}],
+      "identifier": [{
+        "system": "http://tiro.health/Practitioner",
+        "value": "12345"
+      }]
+    }
+    ```
+  </Col>
+</Row>
+
+---
+
 ## Get an existing Practitioner {{ tag: 'GET', label: '/Practitioner/:id' }}
 
 <Row>
