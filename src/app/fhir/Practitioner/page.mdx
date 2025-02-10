@@ -76,3 +76,23 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
     ```
   </Col>
 </Row>
+
+## Get an existing Practitioner {{ tag: 'GET', label: '/Practitioner/:id' }}
+
+<Row>
+  <Col>
+    This endpoint allows you to retrieve an existing Practitioner by providing the Practitioner id.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="GET" label="/Practitioner/1">
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/Practitioner/1 \
+      -H "Authorization: Bearer {token}" \
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+    var patient = client.Read<Practitioner>("1");
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
