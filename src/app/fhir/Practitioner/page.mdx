@@ -22,8 +22,8 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
   <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.name'>
       The name of the practitioner. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
   </Property>
-  <Property name="name" type="ContactPoint[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.telecom'>
-      The contact details of the practitioner. Telecom contains an array of FHIR [`ContactPoint`](https://hl7.org/fhir/R5/datatypes.html#ContactPoint) objects.
+  <Property name="telecom" type="ContactPoint[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.telecom'>
+      The contact details of the practitioner. Telecom contains an array of FHIR [`ContactPoint`](https://hl7.org/fhir/R5/datatypes.html#ContactPoint) objects. Currently only email is imported and stored.
   </Property>
 </Properties>
 
