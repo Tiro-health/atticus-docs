@@ -51,7 +51,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var practitioner = new Practitioner
     {
       Name = new List<HumanName>
