@@ -57,7 +57,15 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
       Name = new List<HumanName>
       {
         new HumanName().WithPrefix("dr.").WithGiven("Jane").AndFamily("Doe")
-      }
+      },
+      Telecom = new List<ContactPoint>
+      {
+          new ContactPoint
+          {
+              System = ContactPoint.ContactPointSystem.Email,
+              Value = "test@test.com",
+          }
+      }  
     };
     client.Create(practitioner);
     ```
@@ -107,7 +115,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
       Name = new List<HumanName>
       {
         new HumanName().WithGiven("John").AndFamily("Smith")
-      }
+      },
       Telecom = new List<ContactPoint>
       {
           new ContactPoint
@@ -115,7 +123,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
               System = ContactPoint.ContactPointSystem.Email,
               Value = "test@test.com",
           }
-      },     
+      }     
     };
     client.Update(patient, new SearchParams().Where("identifier=http://tiro.health/Practitioner|12345"));
     ```
