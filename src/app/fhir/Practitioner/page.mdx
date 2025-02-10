@@ -19,12 +19,11 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
   <Property name="resourceType" type="'Practitioner'" required>
       The FHIR resource type. This must be set to `'Practitioner'`.
   </Property>
-  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.identifier'>
-      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this practitioner (e.g. NPI, license number). This is the place to store provider identifiers or hospital identifiers for the practitioner.
-      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
-  </Property>
   <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.name'>
       The name of the practitioner. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+  </Property>
+  <Property name="name" type="ContactPoint[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.telecom'>
+      The contact details of the practitioner. Telecom contains an array of FHIR [`ContactPoint`](https://hl7.org/fhir/R5/datatypes.html#ContactPoint) objects.
   </Property>
 </Properties>
 
@@ -48,10 +47,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
           "given": ["Jane"],
           "family": "Doe"
         }],
-        "identifier": [{
-          "system": "http://hl7.org/fhir/sid/us-npi",
-          "value": "1234567890"
-        }]
+        "telecom": [{"system": "email", "value": "test@test.com"}],
       }'
     ```
     ```cs {{ title: 'C#' }}
@@ -61,14 +57,6 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
       Name = new List<HumanName>
       {
         new HumanName().WithPrefix("dr.").WithGiven("Jane").AndFamily("Doe")
-      },
-      Identifier = new List<Identifier>
-      {
-        new Identifier
-        {
-          System = "http://hl7.org/fhir/sid/us-npi",
-          Value = "1234567890"
-        }
       }
     };
     client.Create(practitioner);
@@ -83,10 +71,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
         "given": ["Jane"],
         "family": "Doe"
       }],
-      "identifier": [{
-        "system": "http://hl7.org/fhir/sid/us-npi",
-        "value": "1234567890"
-      }]
+      "telecom": [{"system": "email", "value": "test@test.com"}],
     }
     ```
   </Col>
