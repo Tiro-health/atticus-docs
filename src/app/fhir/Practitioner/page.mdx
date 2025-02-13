@@ -39,7 +39,8 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
     <CodeGroup title="Request" tag="POST" label="/Practitioner">
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5/Practitioner \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
       -d '{
         "resourceType": "Practitioner",
         "name": [{

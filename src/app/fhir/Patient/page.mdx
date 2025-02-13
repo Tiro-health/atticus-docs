@@ -50,7 +50,8 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     <CodeGroup title="Request" tag="POST" label="/Patient">
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5/Patient \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
       -d '{
         "resourceType": "Patient",
         "name": [{
@@ -118,7 +119,8 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     <CodeGroup title="Request" tag="PUT" label="/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345">
     ```bash {{ title: 'cURL' }}
     curl -X PUT "https://reports.tiro.health/fhir/r5/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345" \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
       -d '{
         "resourceType": "Patient",
         "name": [{
@@ -185,7 +187,8 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     <CodeGroup title="Request" tag="PUT" label="/Patient/1">
     ```bash {{ title: 'cURL' }}
     curl -X PUT https://reports.tiro.health/fhir/r5/Patient/1 \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
       -d '{
         "resourceType": "Patient",
         "id": "1",
@@ -254,7 +257,8 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     <CodeGroup title="Request" tag="GET" label="/Patient/1">
     ```bash {{ title: 'cURL' }}
     curl -G https://reports.tiro.health/fhir/r5/Patient/1 \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
@@ -275,7 +279,8 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     <CodeGroup title="Request" tag="DELETE" label="/Patient/1">
     ```bash {{ title: 'cURL' }}
     curl -X DELETE https://reports.tiro.health/fhir/r5/Patient/1 \
-      -H "Authorization: Bearer {token}" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);

@@ -55,7 +55,7 @@ After picking your preferred client, you are ready to make your first call to th
 
 ```bash {{ title: 'cURL' }}
 curl -G https://api.protocol.chat/v1/conversations \
-  -H "Authorization: Bearer {token}" \
+  -H "Authorization: Basic {{apikey}}" \ -H "Content-Type: application/json" \
   -d limit=10
 ```
 
