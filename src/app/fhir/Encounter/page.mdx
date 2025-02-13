@@ -94,12 +94,12 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   <Col>
     This endpoint allows you to update an Encounter by matching on specific criteria. A common use case is to update the status of an Encounter. Some systems may want to mark encounters as 'entered-in-error' when they are no longer relevant.\
     The search criteria are provided as query parameters, and the updated Encounter data is provided in the request body.
-    When no Encounter is found that matches the search criteria, a **new Encounter is created**. Currently only identifiers with system 'http://tiro.health/Encounter' are allowed for matching.
+    When no Encounter is found that matches the search criteria, a **new Encounter is created**.
   </Col>
   <Col sticky>
-    <CodeGroup title="Request" tag="PUT" label="/Encounter?identifier=http://tiro.health/Encounter|12345">
+    <CodeGroup title="Request" tag="PUT" label="/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345">
     ```bash {{ title: 'cURL' }}
-    curl -X PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://tiro.health/Encounter|12345" \
+    curl -X PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345" \
       -H "Authorization: Basic {{apikey}}" \
       -H "Content-Type: application/fhir+json" \
       -d '{
@@ -117,7 +117,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
       Status = Encounter.EncounterStatus.InProgress,
       Subject = new ResourceReference("Patient/123")
     };
-    client.Update(encounter, new SearchParams().Where("identifier=http://tiro.health/Encounter|12345"));
+    client.Update(encounter, new SearchParams().Where("identifier=http://hospital.example.org/identifiers/encounters|12345"));
     ```
     </CodeGroup>
     ```json {{ title: 'Response' }}
@@ -129,7 +129,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
         "reference": "Patient/123"
       },
       "identifier": [{
-        "system": "http://tiro.health/Encounter",
+        "system": "http://hospital.example.org/identifiers/encounters",
         "value": "12345"
       }]
     }
