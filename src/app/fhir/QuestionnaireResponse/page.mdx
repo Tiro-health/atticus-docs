@@ -57,7 +57,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5/QuestionnaireResponse \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "QuestionnaireResponse",
         "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1",
@@ -132,7 +132,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
     ```bash {{ title: 'cURL' }}
     curl -G https://reports.tiro.health/fhir/r5/QuestionnaireResponse/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
@@ -175,7 +175,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
     ```bash {{ title: 'cURL' }}
     curl -X DELETE https://reports.tiro.health/fhir/r5/QuestionnaireResponse/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);

@@ -54,7 +54,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5/Encounter \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "Encounter",
         "status": "planned",
@@ -89,10 +89,53 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
 
 ---
 
-## Conditionally create a new Encounter {{ tag: 'PUT', label: '/Encounter' }}
-
-*To be documented*
-
+## Conditionally update an Encounter {{ tag: 'PUT', label: '/Encounter?identifier=<system>|<value>' }}
+<Row>
+  <Col>
+    This endpoint allows you to update an Encounter by matching on specific criteria. A common use case is to update the status of an Encounter. Some systems may want to mark encounters as 'entered-in-error' when they are no longer relevant.\
+    The search criteria are provided as query parameters, and the updated Encounter data is provided in the request body.
+    When no Encounter is found that matches the search criteria, a **new Encounter is created**. Currently only identifiers with system 'http://tiro.health/Encounter' are allowed for matching.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="PUT" label="/Encounter?identifier=http://tiro.health/Encounter|12345">
+    ```bash {{ title: 'cURL' }}
+    curl -X PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://tiro.health/Encounter|12345" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/fhir+json" \
+      -d '{
+        "resourceType": "Encounter",
+        "status": "entered-in-error",
+        "subject": {
+          "reference": "Patient/123"
+        }
+      }'
+    ```
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+    var encounter = new Encounter
+    {
+      Status = Encounter.EncounterStatus.InProgress,
+      Subject = new ResourceReference("Patient/123")
+    };
+    client.Update(encounter, new SearchParams().Where("identifier=http://tiro.health/Encounter|12345"));
+    ```
+    </CodeGroup>
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Encounter",
+      "id": "1",
+      "status": "in-progress",
+      "subject": {
+        "reference": "Patient/123"
+      },
+      "identifier": [{
+        "system": "http://tiro.health/Encounter",
+        "value": "12345"
+      }]
+    }
+    ```
+  </Col>
+</Row>
 ---
 
 ## Get an existing Encounter {{ tag: 'GET', label: '/Encounter/:id' }}
@@ -106,7 +149,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
     ```bash {{ title: 'cURL' }}
     curl -G https://reports.tiro.health/fhir/r5/Encounter/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
@@ -128,7 +171,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
     ```bash {{ title: 'cURL' }}
     curl -X DELETE https://reports.tiro.health/fhir/r5/Encounter/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);

@@ -81,7 +81,7 @@ Here is an example of how to create a session in a .NET application:
     request.Headers.SetHeader("Authorization", authHeader);
 
     // Add content-type header
-    request.Headers.SetHeader("Content-Type", "application/json");
+    request.Headers.SetHeader("Content-Type", "application/fhir+json");
 
     // Add user identification header
     request.Headers.SetHeader("x-user-id", userIdentifier);

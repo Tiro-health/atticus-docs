@@ -51,7 +51,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5/Patient \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "Patient",
         "name": [{
@@ -120,7 +120,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     ```bash {{ title: 'cURL' }}
     curl -X PUT "https://reports.tiro.health/fhir/r5/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345" \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "Patient",
         "name": [{
@@ -188,7 +188,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     ```bash {{ title: 'cURL' }}
     curl -X PUT https://reports.tiro.health/fhir/r5/Patient/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "Patient",
         "id": "1",
@@ -258,7 +258,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     ```bash {{ title: 'cURL' }}
     curl -G https://reports.tiro.health/fhir/r5/Patient/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
@@ -280,7 +280,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     ```bash {{ title: 'cURL' }}
     curl -X DELETE https://reports.tiro.health/fhir/r5/Patient/1 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);

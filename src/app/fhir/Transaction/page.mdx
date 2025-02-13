@@ -57,7 +57,7 @@ A detailed description of all properties can be found in the [FHIR specification
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/fhir/r5 \
       -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/json" \
+      -H "Content-Type: application/fhir+json" \
       -d '{
         "resourceType": "Bundle",
         "type": "transaction",
