@@ -25,13 +25,12 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
     - `planned`
     - `arrived`
     - `triaged`
-    - `in-progress` (most common)
+    - `in-progress`
     - `onleave`
     - `finished`
     - `cancelled`
-    - `entered-in-error`
-
-    Atticus ignores status values but they are required by the FHIR standard.
+    - `entered-in-error`\
+    This is only stored as metadata and does not affect any business logic.
   </Property>
   <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.identifier'>
       An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this Encounter (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
