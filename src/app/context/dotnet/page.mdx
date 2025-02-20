@@ -110,4 +110,67 @@ The code that creates the session can be found [here](https://github.com/Tiro-he
 
 Atticus can send realtime updates of the form state as FHIR QuestionnaireResponse resources. The realtime updates are sent using message events. The messaging protocol is based on [SMART Web Messaging](https://hl7.org/fhir/uv/smart-web-messaging/STU1/).
 
-🚧 *This section is still under construction*  🚧
+To make this integration easier we have created a [package](https://www.nuget.org/packages/SMARTWebEHR) that handles the SMART web messages. If a resource is changed (create or update) the SmartMessageHandler fires a ResourceChangedEvent containing the changed resource.
+Here is an example integration:
+1. Create the MessageHandler and subscribe to the ResourceChangedEvent
+    ```csharp
+
+       public SmartMessageHandler MessageHandler { get; }
+
+       public Session()
+       {
+           InitializeComponent();
+           InitializeWebViewAsync();
+           this.Resize += new System.EventHandler(this.Form_Resize);
+           this.Size = new System.Drawing.Size(800, 600);
+           this.Load += new System.EventHandler(this.Form_PrefillContext);
+           addressBar.Text = Environment.GetEnvironmentVariable("LANDING_PAGE")
+                       ?? "https://write.tiro.health";
+           this.Locked = false;
+           this.MessageHandler = new SmartMessageHandler();
+
+           this.MessageHandler.ResourceChanged += ResourceChanged;
+       }
+    ```
+
+2. Subscribe to the SMARTWebMessages
+    ```csharp
+       private async void InitializeWebViewAsync()
+       {
+           await webView.EnsureCoreWebView2Async();
+           webView.CoreWebView2.WebMessageReceived += SMARTWebMessageReceived;
+       }
+    ```
+
+3. Handle the SMARTWebMessages
+    ```csharp
+       private void SMARTWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+       {
+           // Handle the incoming message here
+           string requestJson = e.WebMessageAsJson;
+           string origin = e.Source;
+           Console.WriteLine($"Received message from {origin}: {requestJson}");
+
+           string responseJson = this.MessageHandler.HandleMessage(requestJson);
+
+           Console.WriteLine($"Response message: {responseJson}");
+           // Send the response back to the web content
+           webView.CoreWebView2.PostWebMessageAsJson(responseJson);
+       }
+    ```
+
+4. Handle the ResourceChangedEvent
+    ```csharp
+       private void ResourceChanged(object sender, ResourceChangedEventArgs e)
+       {
+           Console.WriteLine($"Resource Changed: {e.Resource.TypeName}/{e.Resource.Id}");
+           if (e.Resource.TypeName == "QuestionnaireResponse")
+           {
+               QuestionnaireResponse questionnaireResponse = e.Resource as QuestionnaireResponse;
+               Console.WriteLine($"QR narrative: {questionnaireResponse.Text.Div}");
+           }
+       }
+    ```
+
+### Demo repository
+A demo repository with a working example can be found [here](https://github.com/Tiro-health/SessionLaunch/tree/smart-web-messaging).
