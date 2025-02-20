@@ -110,66 +110,49 @@ The code that creates the session can be found [here](https://github.com/Tiro-he
 
 Atticus can send realtime updates of the form state as FHIR QuestionnaireResponse resources. The realtime updates are sent using message events. The messaging protocol is based on [SMART Web Messaging](https://hl7.org/fhir/uv/smart-web-messaging/STU1/).
 
-To make this integration easier we have created a [package](https://www.nuget.org/packages/SMARTWebEHR) that handles the SMART web messages. If a resource is changed (create or update) the SmartMessageHandler fires a ResourceChangedEvent containing the changed resource.
-Here is an example integration:
-1. Create the MessageHandler and subscribe to the ResourceChangedEvent
+To make this integration easier we have created a [package](https://www.nuget.org/packages/SMARTWebEHR) that handles the SMART Web Messages and generates events. If a resource is changed (create or update) the SmartMessageHandler fires a ResourceChangedEvent containing the changed resource.
+Here are the steps to setup the message handler:
+
+1. Add the message handler to your form class and subscribe to the ResourceChangedEvent:
     ```csharp
-
-       public SmartMessageHandler MessageHandler { get; }
-
-       public Session()
-       {
-           InitializeComponent();
-           InitializeWebViewAsync();
-           this.Resize += new System.EventHandler(this.Form_Resize);
-           this.Size = new System.Drawing.Size(800, 600);
-           this.Load += new System.EventHandler(this.Form_PrefillContext);
-           addressBar.Text = Environment.GetEnvironmentVariable("LANDING_PAGE")
-                       ?? "https://write.tiro.health";
-           this.Locked = false;
-           this.MessageHandler = new SmartMessageHandler();
-
-           this.MessageHandler.ResourceChanged += ResourceChanged;
-       }
+    this.MessageHandler = new SmartMessageHandler();
+    this.MessageHandler.ResourceChanged += ResourceChanged;
+    ```
+    \
+  The `ResourceChanged` handler is a method that will receive the changed resources. We'll implement it later.
+    ```csharp
+    private void ResourceChanged(object sender, ResourceChangedEventArgs e)
+    {
+        // Handle the resource change here
+    }
     ```
 
-2. Subscribe to the SMARTWebMessages
+2. Subscribe to the SMARTWebMessages by creating an event handler and passing it to the message handler.
     ```csharp
-       private async void InitializeWebViewAsync()
-       {
-           await webView.EnsureCoreWebView2Async();
-           webView.CoreWebView2.WebMessageReceived += SMARTWebMessageReceived;
-       }
+    await webView.EnsureCoreWebView2Async();
+    webView.CoreWebView2.WebMessageReceived += SMARTWebMessageReceived;
     ```
 
-3. Handle the SMARTWebMessages
     ```csharp
-       private void SMARTWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
-       {
-           // Handle the incoming message here
-           string requestJson = e.WebMessageAsJson;
-           string origin = e.Source;
-           Console.WriteLine($"Received message from {origin}: {requestJson}");
+    private void SMARTWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        // Handle the incoming message here
+        string responseJson = this.MessageHandler.HandleMessage(e.WebMessageAsJson);
 
-           string responseJson = this.MessageHandler.HandleMessage(requestJson);
-
-           Console.WriteLine($"Response message: {responseJson}");
-           // Send the response back to the web content
-           webView.CoreWebView2.PostWebMessageAsJson(responseJson);
-       }
+        // Send the response back to the web content
+        webView.CoreWebView2.PostWebMessageAsJson(responseJson);
+    }
     ```
 
-4. Handle the ResourceChangedEvent
+3. Handle the ResourceChangedEvent by implementing the ResourceChanged method.
     ```csharp
-       private void ResourceChanged(object sender, ResourceChangedEventArgs e)
-       {
-           Console.WriteLine($"Resource Changed: {e.Resource.TypeName}/{e.Resource.Id}");
-           if (e.Resource.TypeName == "QuestionnaireResponse")
-           {
-               QuestionnaireResponse questionnaireResponse = e.Resource as QuestionnaireResponse;
-               Console.WriteLine($"QR narrative: {questionnaireResponse.Text.Div}");
-           }
-       }
+    private void ResourceChanged(object sender, ResourceChangedEventArgs e)
+    {
+        if (e.Resource.TypeName == "QuestionnaireResponse")
+        {
+            QuestionnaireResponse questionnaireResponse = e.Resource as QuestionnaireResponse;
+        }
+    }
     ```
 
 ### Demo repository
