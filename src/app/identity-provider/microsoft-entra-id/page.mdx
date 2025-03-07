@@ -1,0 +1,42 @@
+export const metadata = {
+  title: 'Microsoft Entra ID',
+  description: "This page explains how to integrate Microsoft Entra ID to authenticate your users in Tiro.health."
+}
+
+# Microsoft Entra ID Integration
+
+This guide explains how to integrate your Microsoft Entra ID (formerly Azure AD) with Tiro Health to enable secure access for your organization.
+
+## Overview
+
+Integrating Tiro Health with Microsoft Entra ID allows your users to access Tiro Health using their existing Microsoft credentials, simplifying user management and enhancing security through single sign-on capabilities.
+
+## Integration Steps
+
+### Step 1: Grant Admin Consent
+
+As an application administrator for your organization, you need to approve the Tiro Health application in your Microsoft Entra ID tenant.
+
+1. Click the [Admin Consent Link](https://login.microsoftonline.com/organizations/adminconsent?client_id=c0cc5ff3-b558-45f6-a289-4d253588f37b) to navigate to Microsoft's consent page
+2. Sign in with your administrator credentials
+3. Review the requested permissions
+4. Click "Accept" to grant Tiro Health access to identity information of your users
+
+![Admin Consent Screenshot](/MSEntraAdminConcent.png)
+
+### Step 2: Provide Your Tenant ID
+
+After granting admin consent, you need to provide your Microsoft Entra tenant ID to Tiro Health:
+
+1. Send an email to [admin@tiro.health](mailto:admin@tiro.health) with the following information:
+   - Subject: "Entra ID Integration - [Your Organization Name]"
+   - Body: Include your Microsoft Entra tenant ID
+   - Contact information for the technical point of contact
+
+### Step 3: Confirmation
+
+Once your tenant ID is configured in our system, you will receive a confirmation email. Your users will then be able to sign in to Tiro Health using their Microsoft credentials.
+
+## Troubleshooting
+
+If you encounter any issues during the integration process, please contact our support team at [support@tiro.health](mailto:support@tiro.health).
