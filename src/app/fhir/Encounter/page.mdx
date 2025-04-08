@@ -51,27 +51,45 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/Encounter">
-    ```bash {{ title: 'cURL' }}
-    curl -X POST https://reports.tiro.health/fhir/r5/Encounter \
-      -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/fhir+json" \
-      -d '{
-        "resourceType": "Encounter",
-        "status": "planned",
-        "subject": {
-          "reference": "Patient/123"
-        }
-      }'
-    ```
-    ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
-    var encounter = new Encounter
-    {
-      Status = Encounter.EncounterStatus.Planned,
-      Subject = new ResourceReference("Patient/123")
-    };
-    client.Create(encounter);
-    ```
+      ```bash {{ title: 'cURL' }}
+      curl -X POST https://reports.tiro.health/fhir/r5/Encounter \
+        -H "Authorization: Basic {{apikey}}" \
+        -H "Content-Type: application/fhir+json" \
+        -d '{
+          "resourceType": "Encounter",
+          "status": "planned",
+          "subject": {
+            "reference": "Patient/123"
+          }
+        }'
+      ```
+      
+      ```bash {{ title: 'httpie' }}
+      http POST https://reports.tiro.health/fhir/r5/Encounter \
+        Authorization:"Basic {{apikey}}" \
+        Content-Type:"application/fhir+json" \
+        resourceType="Encounter" \
+        status="planned" \
+        subject:='{"reference": "Patient/123"}'
+      ```
+      
+      ```cs {{ title: 'C#' }}
+          var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+          var encounter = new Encounter
+          {
+            Status = Encounter.EncounterStatus.Planned,
+            Subject = new ResourceReference("Patient/123")
+          };
+          client.Create(encounter);
+      ```
+      ```vb {{ title: 'VB.NET' }}
+          Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+          Dim encounter = New Encounter With {
+              .Status = Encounter.EncounterStatus.Planned,
+              .Subject = New ResourceReference("Patient/123")
+          }
+          client.Create(encounter)
+      ```
     </CodeGroup>
     ```json {{ title: 'Response' }}
     {
@@ -98,27 +116,45 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="PUT" label="/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345">
-    ```bash {{ title: 'cURL' }}
-    curl -X PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345" \
-      -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/fhir+json" \
-      -d '{
-        "resourceType": "Encounter",
-        "status": "entered-in-error",
-        "subject": {
-          "reference": "Patient/123"
-        }
-      }'
-    ```
-    ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
-    var encounter = new Encounter
-    {
-      Status = Encounter.EncounterStatus.InProgress,
-      Subject = new ResourceReference("Patient/123")
-    };
-    client.Update(encounter, new SearchParams().Where("identifier=http://hospital.example.org/identifiers/encounters|12345"));
-    ```
+      ```bash {{ title: 'cURL' }}
+      curl -X PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345" \
+        -H "Authorization: Basic {{apikey}}" \
+        -H "Content-Type: application/fhir+json" \
+        -d '{
+          "resourceType": "Encounter",
+          "status": "entered-in-error",
+          "subject": {
+            "reference": "Patient/123"
+          }
+        }'
+      ```
+      
+      ```bash {{ title: 'httpie' }}
+      http PUT "https://reports.tiro.health/fhir/r5/Encounter?identifier=http://hospital.example.org/identifiers/encounters|12345" \
+        Authorization:"Basic {{apikey}}" \
+        Content-Type:"application/fhir+json" \
+        resourceType="Encounter" \
+        status="entered-in-error" \
+        subject:='{"reference": "Patient/123"}'
+      ```
+      
+      ```cs {{ title: 'C#' }}
+          var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+          var encounter = new Encounter
+          {
+            Status = Encounter.EncounterStatus.InProgress,
+            Subject = new ResourceReference("Patient/123")
+          };
+          client.Update(encounter, new SearchParams().Where("identifier=http://hospital.example.org/identifiers/encounters|12345"));
+      ```
+      ```vb {{ title: 'VB.NET' }}
+          Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+          Dim encounter = New Encounter With {
+              .Status = Encounter.EncounterStatus.InProgress,
+              .Subject = New ResourceReference("Patient/123")
+          }
+          client.Update(encounter, New SearchParams().Where("identifier=http://hospital.example.org/identifiers/encounters|12345"))
+      ```
     </CodeGroup>
     ```json {{ title: 'Response' }}
     {
@@ -146,15 +182,26 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="GET" label="/Encounter/1">
-    ```bash {{ title: 'cURL' }}
-    curl -G https://reports.tiro.health/fhir/r5/Encounter/1 \
-      -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/fhir+json" \
-    ```
-    ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
-    var encounter = client.Read<Encounter>("1");
-    ```
+      ```bash {{ title: 'cURL' }}
+      curl -G https://reports.tiro.health/fhir/r5/Encounter/1 \
+        -H "Authorization: Basic {{apikey}}" \
+        -H "Content-Type: application/fhir+json" \
+      ```
+      
+      ```bash {{ title: 'httpie' }}
+      http GET https://reports.tiro.health/fhir/r5/Encounter/1 \
+        Authorization:"Basic {{apikey}}" \
+        Content-Type:"application/fhir+json"
+      ```
+      
+      ```cs {{ title: 'C#' }}
+          var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+          var encounter = client.Read<Encounter>("1");
+      ```
+      ```vb {{ title: 'VB.NET' }}
+          Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+          Dim encounter = client.Read(Of Encounter)("1")
+      ```
     </CodeGroup>
   </Col>
 </Row>
@@ -168,15 +215,26 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="DELETE" label="/Encounter/1">
-    ```bash {{ title: 'cURL' }}
-    curl -X DELETE https://reports.tiro.health/fhir/r5/Encounter/1 \
-      -H "Authorization: Basic {{apikey}}" \
-      -H "Content-Type: application/fhir+json" \
-    ```
-    ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
-    client.Delete("Encounter", "1");
-    ```
+      ```bash {{ title: 'cURL' }}
+      curl -X DELETE https://reports.tiro.health/fhir/r5/Encounter/1 \
+        -H "Authorization: Basic {{apikey}}" \
+        -H "Content-Type: application/fhir+json" \
+      ```
+      
+      ```bash {{ title: 'httpie' }}
+      http DELETE https://reports.tiro.health/fhir/r5/Encounter/1 \
+        Authorization:"Basic {{apikey}}" \
+        Content-Type:"application/fhir+json"
+      ```
+      
+      ```cs {{ title: 'C#' }}
+          var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+          client.Delete("Encounter", "1");
+      ```
+      ```vb {{ title: 'VB.NET' }}
+          Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+          client.Delete("Encounter", "1")
+      ```
     </CodeGroup>
     ```json {{ title: 'Response' }}
     {

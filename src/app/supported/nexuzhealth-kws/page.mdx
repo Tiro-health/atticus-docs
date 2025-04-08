@@ -4,4 +4,17 @@ export const metadata = {
     'This page focuses on the UI integration in Nexuzhealth KWS applications.',
 }
 
+# Nexuzhealth KWS
+
+## UI Integration
+
+The UI integration that enables a seamless launch for Practitioners is based on the 'External Web Viewer' API. Contact Tiro.health for more information
+
+
+## Data Integration
+
+1. The human-readable report can be send back using a 'process response' Task. Tiro.health makes use of the KWS Import XML API to send back the report. Hospitals should obtain a unique 'application identifier' from Nexuzhealth and expose a public endpoint to send back. Tiro.health supports more complex network setups like VPN, static IP's or mutual TLS on-demand.
+
+2. Currently Nexuzhealth KWS has no documented support for structured FHIR resources like QuestionnaireResponses, Conditions and Procedures. Tiro.health allows hospitals to archive these resources in a structured format in secondary systems like data warehouses or secured network drives.
+
 🚧 *This page is still under construction* 🚧

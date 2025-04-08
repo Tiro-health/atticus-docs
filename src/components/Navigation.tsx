@@ -292,6 +292,7 @@ export const navigation: Array<NavGroup> = [
       { title: 'Patient', href: '/fhir/Patient' },
       { title: 'Encounter', href: '/fhir/Encounter' },
       { title: 'QuestionnaireResponse', href: '/fhir/QuestionnaireResponse' },
+      { title: 'Task', href: '/fhir/Task' },
       { title: 'Transactions', href: '/fhir/Transaction' },
       { title: 'FHIR Tips', href: '/fhir/tips' },
       { title: 'Integration engines', href: '/integration-engines' },

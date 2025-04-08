@@ -29,7 +29,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
   <Property name="birthDate" type="date" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.birthDate'>
       The patient's date of birth.
   </Property>
-  <Property name="gender" type="code" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient'>
+  <Property name="gender" type="code" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.gender'>
     Administrative gender. Possible values are:
       - `male`
       - `female`
@@ -67,7 +67,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Name = new List<HumanName>
@@ -136,7 +136,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Name = new List<HumanName>
@@ -205,7 +205,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Id = "1",
@@ -261,7 +261,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var patient = client.Read<Patient>("1");
     ```
     </CodeGroup>
@@ -283,7 +283,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     client.Delete("Patient", "1");
     ```
     </CodeGroup>
