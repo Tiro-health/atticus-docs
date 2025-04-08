@@ -77,7 +77,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var qr = new QuestionnaireResponse
     {
         Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
@@ -135,7 +135,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     var questionnaireResponse = client.Read<QuestionnaireResponse>("1");
     ```
     </CodeGroup>
@@ -178,7 +178,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports-staging.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
     client.Delete("QuestionnaireResponse", "1");
     ```
     </CodeGroup>

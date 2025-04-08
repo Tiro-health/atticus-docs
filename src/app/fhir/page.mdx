@@ -10,10 +10,12 @@ Tiro.health strives to give full control of the internals of Atticus through a s
 ## Overview of
 The following table gives an overview how concepts in Atticus are related to FHIR resources:
 
-| Attticus   |    FHIR   |
-| ---------- | ----------|
-| Subject    | Patient   |
-| Encounter  | Encounter |
-| Report  | QuestionnaireResponse |
-| Template  | Questionnaire |
-| User  | Practitioner |
+| Attticus   |    FHIR   | API Docs |
+| ---------- | ----------|------|
+| Subject    | Patient   | [Patient API](./fhir/Patient) |
+| Encounter  | Encounter | [Encounter API](./fhir/Encounter) |
+| Report (status tracker)  | Task (code: `complete-questionnaire`)| [Task API](./fhir/Task) |
+| Report (content)  | QuestionnaireResponse| [QuestionnaireResponse API](./fhir/QuestionnaireResponse) |
+| Submit task | Task (code: `process-response`)| [Task API](./fhir/Task) |
+| Template  | Questionnaire | [Questionnaire API](./fhir/Questionnaire) |
+| User  | Practitioner | [Practitioner API](./fhir/Practitioner) |
