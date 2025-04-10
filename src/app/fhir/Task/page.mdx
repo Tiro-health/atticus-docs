@@ -154,7 +154,7 @@ Each status change affects how and where the task appears in the practitioner's 
           -d '{
               "resourceType": "Task",
               "intent": "order",
-              "status": "requested",
+              "status": "draft",
               "description": "Task tracking the completion of a CT scan report for patient with id='123'.",
               "code": {
                   "text": "CT scan report",
@@ -177,7 +177,7 @@ Each status change affects how and where the task appears in the practitioner's 
           Content-Type:"application/fhir+json" \
           resourceType="Task" \
           intent="order" \
-          status="requested" \
+          status="draft" \
           description="Complete CT scan report for patient" \
           code:='{"text": "CT scan report", "coding": [{"system": "http://fhir.tiro.health/CodeSystem/task-type", "code": "complete-questionnaire"}]}' \
           for:='{"reference": "Patient/123"}'
@@ -189,7 +189,7 @@ Each status change affects how and where the task appears in the practitioner's 
           var task = new Task
           {
               Intent = Task.TaskIntent.Order,
-              Status = Task.TaskStatus.Requested,
+              Status = Task.TaskStatus.Draft,
               Description = "Complete CT scan report for patient",
               Code = new CodeableConcept
               {
@@ -214,7 +214,7 @@ Each status change affects how and where the task appears in the practitioner's 
 
           Dim task = New Task With {
               .Intent = Task.TaskIntent.Order,
-              .Status = Task.TaskStatus.Requested,
+              .Status = Task.TaskStatus.Draft,
               .Description = "Complete CT scan report for patient",
               .Code = New CodeableConcept With {
                   .Text = "CT scan report",
@@ -256,7 +256,7 @@ Each status change affects how and where the task appears in the practitioner's 
       }
     ]
   },
-  "status": "requested",
+  "status": "draft",
   "for": {
     "reference": "Patient/123"
   }
