@@ -5,6 +5,115 @@ export const metadata = {
 
 # Content Versioning
 
-Tiro.health applies a semantic versioning system to keep track of changes of your content.
+## Why Versioning Matters
 
-🚧 *This page is still under construction*  🚧
+Think of a medical form or questionnaire you use to collect patient information. What happens if you suddenly change that form? People using older versions might record data differently than those using newer versions, making it difficult to compare results across patients.
+
+Content versioning solves this problem. When we create healthcare data collection templates in Atticus, we carefully track each version to ensure:
+
+1. **Data Consistency**: Healthcare professionals know exactly which version of a form they're using
+2. **Reliable Analysis**: Data analysts can trust that information collected from the same version follows the same rules
+3. **Predictable Changes**: When templates need updates, everyone understands how these changes might affect existing data
+
+Once a template is marked as "Active" (approved for clinical use), we never change its content directly. Instead, we create a new version with a specific number that signals how compatible it is with previous versions. This approach ensures that data collected today can still be accurately analyzed alongside data collected last year.
+
+## How Our Versioning Works
+
+We use a simple numbering system (called semantic versioning) for all our templates. Each template has a version number with three parts, like this: `1.2.3`
+
+These numbers help everyone understand whether data collected with different versions will work together.
+
+### Version Number Explained
+
+Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
+
+- First number (MAJOR): Signals big changes that affect data compatibility
+- Middle number (MINOR): Indicates additions that don't break existing data
+- Last number (PATCH): Shows small fixes that don't affect data at all
+
+### What Each Type of Change Means
+
+1. **Major Changes** (Example: 1.0.0 → 2.0.0)
+
+   These are significant changes that mean old and new data won't work well together:
+   - Removing questions from a form
+   - Changing how a question is identified in the system
+   - Changing what type of answer is expected (e.g., from text to numbers)
+   - Adding stricter rules about what answers are acceptable
+   - Making optional questions mandatory
+
+   **Important**: When you see a major version change, it means data collected with the old version cannot be properly displayed or analyzed using the new version.
+
+2. **Minor Changes** (Example: 1.0.0 → 1.1.0)
+
+   These changes add new features but don't break existing data:
+   - Adding new questions to a form
+   - Making validation rules less strict
+   - Making required questions optional
+
+   **Important**: Data collected with older versions will still work perfectly with newer minor versions. However, data collected with newer versions might have extra information that older systems can't handle.
+
+3. **Patch Changes** (Example: 1.0.0 → 1.0.1)
+
+   These are small fixes that don't affect data at all:
+   - Fixing typos or improving wording
+   - Making visual improvements to the form
+   - Adding clarifications to questions
+
+   **Important**: Patch changes never affect data compatibility in any way.
+
+{/**
+ * Visual Example of Versioning
+ *
+ * The diagram below shows how templates evolve through different versions and which data remains compatible:
+ *
+ * ```mermaid
+ * flowchart TD
+ *     A[Template v1.0.0] -->|Minor Update - Add Question| B[Template v1.1.0]
+ *     B -->|Patch Update - Fix Typo| C[Template v1.1.1]
+ *     B -->|Major Update - Remove Question| D[Template v2.0.0]
+ *
+ *     subgraph Compatibility
+ *         E[Data from v1.0.0] -->|Works with| B
+ *         E -->|Works with| C
+ *         E -->|Does NOT work with| D
+ *      F[Data from v1.1.0] -->|Works with| C
+ *      F -->|Does NOT work with| D
+ *  end
+ *
+ *  style A fill:#d4f1f9,stroke:#333
+ *  style B fill:#d4f1f9,stroke:#333
+ *  style C fill:#d4f1f9,stroke:#333
+ *  style D fill:#ffcccc,stroke:#333
+ * ```
+ * In this example:
+ * - Adding a question creates version 1.1.0 (minor change)
+ * - Fixing a typo creates version 1.1.1 (patch change)
+ * - Removing a question creates version 2.0.0 (major change, shown in red)
+ *
+ * Notice that data collected with version 1.0.0 works with versions 1.1.0 and 1.1.1, but not with version 2.0.0.
+ */}
+
+## Publication Status: The Life Cycle of Templates
+
+Every template in our system has a status label that shows where it is in its lifecycle:
+
+1. **`draft`**:
+   - Still being developed and refined
+   - Should only be used for testing and getting feedback
+   - Not ready for real patient data collection
+   - Can still be modified and changed
+
+2. **`active`**:
+   - Officially approved for clinical use
+   - Safe for collecting real patient data
+   - Cannot be modified (any changes require a new version)
+   - Trusted source for data collection and analysis
+
+3. **`retired`**:
+   - No longer recommended for use
+   - Should not be used for new data collection
+   - Kept in the system only to help understand historical data
+   - May be replaced by newer templates
+
+When a template moves from "Draft" to "Active," it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
