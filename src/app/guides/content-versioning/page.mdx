@@ -17,6 +17,30 @@ Content versioning solves this problem. When we create healthcare data collectio
 
 Once a template is marked as "Active" (approved for clinical use), we never change its content directly. Instead, we create a new version with a specific number that signals how compatible it is with previous versions. This approach ensures that data collected today can still be accurately analyzed alongside data collected last year.
 
+## Publication Status: The Life Cycle of Templates
+
+Every template in our system has a status label that shows where it is in its lifecycle:
+
+1. **`draft`**:
+   - Still being developed and refined
+   - Should only be used for testing and getting feedback
+   - Not ready for real patient data collection
+   - Can still be modified and changed
+
+2. **`active`**:
+   - Officially approved for clinical use
+   - Safe for collecting real patient data
+   - Cannot be modified (any changes require a new version)
+   - Trusted source for data collection and analysis
+
+3. **`retired`**:
+   - No longer recommended for use
+   - Should not be used for new data collection
+   - Kept in the system only to help understand historical data
+   - May be replaced by newer templates
+
+When a template moves from `draft` to `active`, it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
+
 ## How Our Versioning Works
 
 We use a simple numbering system (called semantic versioning) for all our templates. Each template has a version number with three parts, like this: `1.2.3`
@@ -93,27 +117,3 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
  *
  * Notice that data collected with version 1.0.0 works with versions 1.1.0 and 1.1.1, but not with version 2.0.0.
  */}
-
-## Publication Status: The Life Cycle of Templates
-
-Every template in our system has a status label that shows where it is in its lifecycle:
-
-1. **`draft`**:
-   - Still being developed and refined
-   - Should only be used for testing and getting feedback
-   - Not ready for real patient data collection
-   - Can still be modified and changed
-
-2. **`active`**:
-   - Officially approved for clinical use
-   - Safe for collecting real patient data
-   - Cannot be modified (any changes require a new version)
-   - Trusted source for data collection and analysis
-
-3. **`retired`**:
-   - No longer recommended for use
-   - Should not be used for new data collection
-   - Kept in the system only to help understand historical data
-   - May be replaced by newer templates
-
-When a template moves from "Draft" to "Active," it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
