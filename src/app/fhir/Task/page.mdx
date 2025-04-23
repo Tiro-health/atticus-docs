@@ -155,6 +155,12 @@ Each status change affects how and where the task appears in the practitioner's 
               "resourceType": "Task",
               "intent": "order",
               "status": "draft",
+              "identifier": [
+                  {
+                      "system": "http://hospital.example.com/task-id",
+                      "value": "complete-questionnaire"
+                  }
+              ],
               "description": "Task tracking the completion of a CT scan report for patient with id='123'.",
               "code": {
                   "text": "CT scan report",
@@ -178,6 +184,7 @@ Each status change affects how and where the task appears in the practitioner's 
           resourceType="Task" \
           intent="order" \
           status="draft" \
+          identifier:='[{"system": "http://hospital.example.com/task-id", "value": "complete-questionnaire"}]' \
           description="Complete CT scan report for patient" \
           code:='{"text": "CT scan report", "coding": [{"system": "http://fhir.tiro.health/CodeSystem/task-type", "code": "complete-questionnaire"}]}' \
           for:='{"reference": "Patient/123"}'
@@ -191,6 +198,14 @@ Each status change affects how and where the task appears in the practitioner's 
               Intent = Task.TaskIntent.Order,
               Status = Task.TaskStatus.Draft,
               Description = "Complete CT scan report for patient",
+              Identifier = new List<Identifier>
+              {
+                  new Identifier
+                  {
+                      System = "http://hospital.example.com/task-id",
+                      Value = "complete-questionnaire"
+                  }
+              },
               Code = new CodeableConcept
               {
                   Text = "CT scan report",
@@ -216,6 +231,12 @@ Each status change affects how and where the task appears in the practitioner's 
               .Intent = Task.TaskIntent.Order,
               .Status = Task.TaskStatus.Draft,
               .Description = "Complete CT scan report for patient",
+              .Identifier = New List(Of Identifier) From {
+                  New Identifier With {
+                      .System = "http://hospital.example.com/task-id",
+                      .Value = "complete-questionnaire"
+                  }
+              },
               .Code = New CodeableConcept With {
                   .Text = "CT scan report",
                   .Coding = New List(Of Coding) From {
