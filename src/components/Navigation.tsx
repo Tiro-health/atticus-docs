@@ -284,7 +284,7 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
-    title: 'Attiucs FHIR API',
+    title: 'Atticus FHIR API',
     links: [
       { title: 'Introduction', href: '/fhir' },
       { title: 'Authentication', href: '/fhir/authentication' },
