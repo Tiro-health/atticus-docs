@@ -58,36 +58,5 @@ Hospitals will need to obtain a unique **'application identifier'** from Nexuzhe
 Currently, only the plaintext human-readable report can be stored in KWS. Nexuzhealth KWS has no documented support for structured FHIR resources like QuestionnaireResponses, Conditions and Procedures. Tiro.health allows hospitals to archive these resources in a structured format in secondary systems like data warehouses or secured network drives. For more information, contact support@tiro.health.
 
 ## Sequence diagram
-```mermaid
-sequenceDiagram
-    actor User as User
-    participant KWS as KWS
-    participant TiroHealth as Tiro.health (App)
-
-    User->>KWS: Selects 'contact' and does a Tiro.health launch
-    activate KWS
-    KWS->>TiroHealth: Opens browser to Tiro.health report create page
-    deactivate KWS
-    activate TiroHealth
-    TiroHealth-->>User: Show report template picker page
-    User->>TiroHealth: Chooses report template
-    TiroHealth-->>User: Show report page
-
-    loop User answers multiple questions
-        User->>TiroHealth: Answers questions
-        TiroHealth->>TiroHealth: Updates report
-    end
-
-    User->>TiroHealth: Submits report
-
-    TiroHealth-->>KWS: Store report text
-    deactivate TiroHealth
-
-    note over User, KWS: In the future we can redirect the user back to KWS
-
-    activate KWS
-    User->>KWS: Opens KWS and selects 'contact'
-    KWS-->>User: Shows report text under the 'contact'
-    deactivate KWS
-```
+![SequenceDiagram KWS - Tiro](/SequenceDiagram KWS - Tiro.png)
 
