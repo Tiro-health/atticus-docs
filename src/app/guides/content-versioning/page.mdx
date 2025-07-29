@@ -3,9 +3,9 @@ export const metadata = {
   description: 'This page provides an overview of the content versioning feature in Atticus'
 }
 
-# Content Versioning
+# Content versioning
 
-## Why Versioning Matters
+## Why versioning matters
 
 Think of a medical form or questionnaire you use to collect patient information. What happens if you suddenly change that form? People using older versions might record data differently than those using newer versions, making it difficult to compare results across patients.
 
@@ -17,37 +17,46 @@ Content versioning solves this problem. When we create healthcare data collectio
 
 Once a template is marked as "Active" (approved for clinical use), we never change its content directly. Instead, we create a new version with a specific number that signals how compatible it is with previous versions. This approach ensures that data collected today can still be accurately analyzed alongside data collected last year.
 
-## Publication Status: The Life Cycle of Templates
+## Publication status: the life cycle of templates
 
 Every template in our system has a status label that shows where it is in its lifecycle:
 
 1. **`draft`**:
-   - Still being developed and refined
-   - Should only be used for testing and getting feedback
-   - Not ready for real patient data collection
-   - Can still be modified and changed
+   **Description:** A new, unassigned version of the template that has not yet been published.
+   **Usage:** This is the starting point where the template can be edited freely.
+   **Transition:** From here, the user can choose to publish it as `test`/`active` or continue editing.
+   **Note:** There can only be one `test`
 
-2. **`active`**:
-   - Officially approved for clinical use
-   - Safe for collecting real patient data
-   - Cannot be modified (any changes require a new version)
-   - Trusted source for data collection and analysis
+2. **`test`:**
+   **Description:** A template version published for testing purposes.
+   **Usage:** Used to validate the template before making it fully `active`.
+   **Transition:** The user can later choose to publish it as `active`. 
+   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.
 
-3. **`retired`**:
-   - No longer recommended for use
-   - Should not be used for new data collection
-   - Kept in the system only to help understand historical data
-   - May be replaced by newer templates
+3. **`active`**:
+   **Description:** The template is officially in use.
+   **Usage:** This is the live, production version.
+   **Transition:** The user can choose to retire it when it is no longer needed. 
+   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired
+
+4. **`retired`**:
+   **Description:** A previously `active` or `test` version that is no longer in use.
+   **Usage:** Archived for record-keeping or reference; not used for `active` processes.
+   **Transition:** A version becomes retired when: 
+   - A new version is published as `active` or `test`, or
+   - The user manually retires it.
+   **Note:** Multiple retired versions may exist for historical traceability.
+
 
 When a template moves from `draft` to `active`, it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
 
-## How Our Versioning Works
+## How our versioning works
 
 We use a simple numbering system (called semantic versioning) for all our templates. Each template has a version number with three parts, like this: `1.2.3`
 
 These numbers help everyone understand whether data collected with different versions will work together.
 
-### Version Number Explained
+### Version number explained
 
 Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 
@@ -55,9 +64,9 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 - Middle number (MINOR): Indicates additions that don't break existing data
 - Last number (PATCH): Shows small fixes that don't affect data at all
 
-### What Each Type of Change Means
+### What each type of change means
 
-1. **Major Changes** (Example: 1.0.0 → 2.0.0)
+1. **Major changes** (Example: 1.0.0 → 2.0.0)
 
    These are significant changes that mean old and new data won't work well together:
    - Removing questions from a form
@@ -68,7 +77,7 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 
    **Important**: When you see a major version change, it means data collected with the old version cannot be properly displayed or analyzed using the new version.
 
-2. **Minor Changes** (Example: 1.0.0 → 1.1.0)
+2. **Minor changes** (Example: 1.0.0 → 1.1.0)
 
    These changes add new features but don't break existing data:
    - Adding new questions to a form
@@ -77,7 +86,7 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 
    **Important**: Data collected with older versions will still work perfectly with newer minor versions. However, data collected with newer versions might have extra information that older systems can't handle.
 
-3. **Patch Changes** (Example: 1.0.0 → 1.0.1)
+3. **Patch changes** (Example: 1.0.0 → 1.0.1)
 
    These are small fixes that don't affect data at all:
    - Fixing typos or improving wording
@@ -87,7 +96,7 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
    **Important**: Patch changes never affect data compatibility in any way.
 
 {/**
- * Visual Example of Versioning
+ * Visual example of versioning
  *
  * The diagram below shows how templates evolve through different versions and which data remains compatible:
  *
