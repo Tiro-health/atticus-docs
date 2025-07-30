@@ -21,27 +21,28 @@ Once a template is marked as "Active" (approved for clinical use), we never chan
 
 Every template in our system has a status label that shows where it is in its lifecycle:
 
-1. **`draft`**:
-   **Description:** A new, unassigned version of the template that has not yet been published.
-   **Usage:** This is the starting point where the template can be edited freely.
-   **Transition:** From here, the user can choose to publish it as `test`/`active` or continue editing.
+1. **`draft`**:\n
+   **Description:** A new, unassigned version of the template that has not yet been published.\n
+   **Usage:** This is the starting point where the template can be edited freely.\n
+   **Transition:** From here, the user can choose to publish it as `test`/`active` or continue editing.\n
    **Note:** There can only be one `test`
 
 2. **`test`:**
-   **Description:** A template version published for testing purposes.
-   **Usage:** Used to validate the template before making it fully `active`.
-   **Transition:** The user can later choose to publish it as `active`. 
-   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.
+
+   **Description:** A template version published for testing purposes.\n
+   **Usage:** Used to validate the template before making it fully `active`.\n
+   **Transition:** The user can later choose to publish it as `active`.\n
+   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.\n
 
 3. **`active`**:
-   **Description:** The template is officially in use.
-   **Usage:** This is the live, production version.
-   **Transition:** The user can choose to retire it when it is no longer needed. 
-   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired
+   **Description:** The template is officially in use.\n
+   **Usage:** This is the live, production version.\n
+   **Transition:** The user can choose to retire it when it is no longer needed. \n
+   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired\n
 
 4. **`retired`**:
-   **Description:** A previously `active` or `test` version that is no longer in use.
-   **Usage:** Archived for record-keeping or reference; not used for `active` processes.
+   **Description:** A previously `active` or `test` version that is no longer in use.\n
+   **Usage:** Archived for record-keeping or reference; not used for `active` processes.\n
    **Transition:** A version becomes retired when: 
    - A new version is published as `active` or `test`, or
    - The user manually retires it.
