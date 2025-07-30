@@ -27,20 +27,20 @@ Every template in our system has a status label that shows where it is in its li
    **Transition:** From here, the user can choose to publish it as `test`/`active` or continue editing.\n
    **Note:** There can only be one `test`
 
-2. **`test`:**
+2. **`test`**:\n
 
    **Description:** A template version published for testing purposes.\n
    **Usage:** Used to validate the template before making it fully `active`.\n
    **Transition:** The user can later choose to publish it as `active`.\n
-   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.\n
+   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.
 
-3. **`active`**:
+3. **`active`**:\n
    **Description:** The template is officially in use.\n
    **Usage:** This is the live, production version.\n
    **Transition:** The user can choose to retire it when it is no longer needed. \n
-   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired\n
+   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired.
 
-4. **`retired`**:
+4. **`retired`**:\n
    **Description:** A previously `active` or `test` version that is no longer in use.\n
    **Usage:** Archived for record-keeping or reference; not used for `active` processes.\n
    **Transition:** A version becomes retired when: 
