@@ -22,32 +22,32 @@ Once a template is marked as "Active" (approved for clinical use), we never chan
 Every template in our system has a status label that shows where it is in its lifecycle:
 
 1. **`draft`**<br />
-   **Description:** A new, unassigned version of the template that has not yet been published.<br />
-   **Usage:** This is the starting point where the template can be edited freely.<br />
-   **Transition:** From here, the user can choose to publish it as `test`/`active` or continue editing.<br />
-   **Note:** There can only be one `test`
+   **Description:** An initial, unpublished version of the template that is not yet published or in use.<br />
+   **Usage:** Serves as the editable starting point for creating or updating a template.<br />
+   **Transition:** Can be published as either `test` or `active`, or continue to be edited.<br />
+   **Note:** Only one `draft` version can exist at a time. A `draft` can be deleted. 
 
 2. **`test`**<br />
 
-   **Description:** A template version published for testing purposes.<br />
-   **Usage:** Used to validate the template before making it fully `active`.<br />
-   **Transition:** The user can later choose to publish it as `active`.<br />
-   **Note:** There can only be one `test`, when a new version is made `test`, the previous `test` version is retired.
+   **Description:** A versioned template published for testing purposes only.<br />
+   **Usage:** Used to validate and test the template before publishing it officially as `active`.<br />
+   **Transition:** Can later be published as `active`. Only the status changes, the version number will remain unchanged.<br />
+   **Note:** Only one `test` version can exist. Publishing a new test version will automatically retire the previous one.
 
 3. **`active`**<br />
-   **Description:** The template is officially in use.<br />
-   **Usage:** This is the live, production version.<br />
-   **Transition:** The user can choose to retire it when it is no longer needed. <br />
-   **Note:** There can only be one `active`, when a new version is made `active`, the previous `active` version is retired.
+   **Description:** A versioned template published for general use.<br />
+   **Usage:** Serves as the live, production version.<br />
+   **Transition:** Can be `retired` when it is no longer needed. <br />
+   **Note:** Only one `active` version can exist. Publishing a new active version will automatically retire the previous one.
 
 4. **`retired`**<br />
-   **Description:** A previously `active` or `test` version that is no longer in use.<br />
-   **Usage:** Archived for record-keeping or reference, not used for `active` processes.<br />
+   **Description:** A version of the template that was previously `active` or `test`, but is no longer in use.<br />
+   **Usage:** Preserved for historical reference or record-keeping. Not used in active processes.<br />
    **Transition:** A version becomes retired when: 
-   - A new version is published as `active` or `test`, or
+   - A new version is published as `active` or `test`
    - The user manually retires it.
-   
-   **Note:** Multiple retired versions may exist for historical traceability.
+
+   **Note:** Multiple `retired` versions can exist to maintain version history.
 
 
 When a template moves from `draft` to `active`, it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
