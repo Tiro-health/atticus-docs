@@ -1,7 +1,6 @@
 export const metadata = {
   title: '.NET',
-  description:
-    'This page focuses on the UI integration in .NET applications.',
+  description: 'This page focuses on the UI integration in .NET applications.',
 }
 
 # Intergrating Attcius in a .NET frontend
@@ -24,85 +23,92 @@ To get started with integrating Atticus in your .NET application, follow these s
 1. Create a new .NET Windows Forms application in Visual Studio.
 
 2. Add the necessary NuGet packages to your project:
+
    - Microsoft.Web.WebView2
    - Newtonsoft.Json
 
 3. Add the webview control to your form in the designer:
 
-  - Drag a WebView2 control from the toolbox to your form. [See the Microsoft docs for more information](https://learn.microsoft.com/en-us/microsoft-edge/webview2/get-started/winforms#step-5---create-a-single-webview2-control)
-  - Initialize the WebView2 control in the form constructor:
-    ```csharp
-    public Form1()
-    {
-        InitializeComponent();
-        InitializeWebView2Async();
+- Drag a WebView2 control from the toolbox to your form. [See the Microsoft docs for more information](https://learn.microsoft.com/en-us/microsoft-edge/webview2/get-started/winforms#step-5---create-a-single-webview2-control)
+- Initialize the WebView2 control in the form constructor:
 
-        async void InitializeAsync()
-        {
-            await webView.EnsureCoreWebView2Async(null);
-            await createSession();
-        }
+  ```csharp
+  public Form1()
+  {
+      InitializeComponent();
+      InitializeWebView2Async();
 
-        async Task createSession()
-        {
-            // Here comes the code to create a session
-        }
-    }
-    ```
+      async void InitializeAsync()
+      {
+          await webView.EnsureCoreWebView2Async(null);
+          await createSession();
+      }
+
+      async Task createSession()
+      {
+          // Here comes the code to create a session
+      }
+  }
+  ```
+
 ## Create an authenticated session
+
 Using the WebView2 control, you can create an authenticated session with Atticus. The idea is to create a session in the background using a POST request with authentication headers. The Atticus Authorization Server will set a cookie that holds the session information. Once the session is created, you can navigate to the Atticus Filler UI.
 To create an authenticated requeset, you need to include both client credentials in an `Authorization` header and the user identifier in the `X-User-Id` header and send a POST request along with session-specific data. More info about this can be found on the [authentication page](/fhir/authentication#end-user-identification-in-machine-to-machine-communication).
 
 Here is an example of how to create a session in a .NET application:
 
 1. Create a dictionary with the required session data:
-    ```csharp
-    var launchContext = new Dictionary<string, string>
-    {
-        { "patient", patientId }, // FHIR Patient.id
-        { "encounter", encounterId } // FHIR Encounter.id (optional)
-    };
-    ```
+
+   ```csharp
+   var launchContext = new Dictionary<string, string>
+   {
+       { "patient", patientId }, // FHIR Patient.id
+       { "encounter", encounterId } // FHIR Encounter.id (optional)
+   };
+   ```
 
 2. Build a POST request with the necessary headers:
-    ```csharp
-    var launchContextStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(launchContext)));
-    var request = webView.CoreWebView2.Environment.CreateWebResourceRequest(
-        "https://auth.tiro.health/session",
-        "POST",
-        launchContextStream,
-        null);
 
-    // Add authentication header
-    string clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
-    string clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
-    var authToken = Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}");
-    var authHeader = $"Basic {Convert.ToBase64String(authToken)}";
-    request.Headers.SetHeader("Authorization", authHeader);
+   ```csharp
+   var launchContextStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(launchContext)));
+   var request = webView.CoreWebView2.Environment.CreateWebResourceRequest(
+       "https://auth.tiro.health/session",
+       "POST",
+       launchContextStream,
+       null);
 
-    // Add content-type header
-    request.Headers.SetHeader("Content-Type", "application/fhir+json");
+   // Add authentication header
+   string clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+   string clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
+   var authToken = Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}");
+   var authHeader = $"Basic {Convert.ToBase64String(authToken)}";
+   request.Headers.SetHeader("Authorization", authHeader);
 
-    // Add user identification header
-    request.Headers.SetHeader("x-user-id", userIdentifier);
-    ```
+   // Add content-type header
+   request.Headers.SetHeader("Content-Type", "application/fhir+json");
+
+   // Add user identification header
+   request.Headers.SetHeader("x-user-id", userIdentifier);
+   ```
 
 3. Send the request and handle the response:
-    ```csharp
-    webView.CoreWebView2.NavigateWithWebResourceRequest(request);
-    webView.CoreWebView2.NavigationCompleted += (sender, args) =>
-    {
-        if (args.IsSuccess)
-        {
-            // Navigate to the Atticus Filler UI
-            webView.CoreWebView2.Navigate("https://app.tiro.health/reports/edit?response=QuestionnaireResponse/123");
-        }
-    };
-    ```
+   ```csharp
+   webView.CoreWebView2.NavigateWithWebResourceRequest(request);
+   webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+   {
+       if (args.IsSuccess)
+       {
+           // Navigate to the Atticus Filler UI
+           webView.CoreWebView2.Navigate("https://app.tiro.health/reports/edit?response=QuestionnaireResponse/123");
+       }
+   };
+   ```
 
 After completing these steps, you should have a working WebView2 control that can be used to display the Atticus Filler UI in your .NET application.
 
 ### Demo repository
+
 A demo repository with a working example can be found [here](https://github.com/Tiro-health/SessionLaunch).
 The code that creates the session can be found [here](https://github.com/Tiro-health/SessionLaunch/blob/master/SessionLaunch/Session.cs#L197)
 
@@ -114,46 +120,51 @@ To make this integration easier we have created a [package](https://www.nuget.or
 Here are the steps to setup the message handler:
 
 1. Add the message handler to your form class and subscribe to the ResourceChangedEvent:
-    ```csharp
-    this.MessageHandler = new SmartMessageHandler();
-    this.MessageHandler.ResourceChanged += ResourceChanged;
-    ```
-    \
-  The `ResourceChanged` handler is a method that will receive the changed resources. We'll implement it later.
-    ```csharp
-    private void ResourceChanged(object sender, ResourceChangedEventArgs e)
-    {
-        // Handle the resource change here
-    }
-    ```
+
+   ```csharp
+   this.MessageHandler = new SmartMessageHandler();
+   this.MessageHandler.ResourceChanged += ResourceChanged;
+   ```
+
+   \
+   The `ResourceChanged` handler is a method that will receive the changed resources. We'll implement it later.
+
+   ```csharp
+   private void ResourceChanged(object sender, ResourceChangedEventArgs e)
+   {
+       // Handle the resource change here
+   }
+   ```
 
 2. Subscribe to the SMARTWebMessages by creating an event handler and passing it to the message handler.
-    ```csharp
-    await webView.EnsureCoreWebView2Async();
-    webView.CoreWebView2.WebMessageReceived += SMARTWebMessageReceived;
-    ```
 
-    ```csharp
-    private void SMARTWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
-    {
-        // Handle the incoming message here
-        string responseJson = this.MessageHandler.HandleMessage(e.WebMessageAsJson);
+   ```csharp
+   await webView.EnsureCoreWebView2Async();
+   webView.CoreWebView2.WebMessageReceived += SMARTWebMessageReceived;
+   ```
 
-        // Send the response back to the web content
-        webView.CoreWebView2.PostWebMessageAsJson(responseJson);
-    }
-    ```
+   ```csharp
+   private void SMARTWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
+   {
+       // Handle the incoming message here
+       string responseJson = this.MessageHandler.HandleMessage(e.WebMessageAsJson);
+
+       // Send the response back to the web content
+       webView.CoreWebView2.PostWebMessageAsJson(responseJson);
+   }
+   ```
 
 3. Handle the ResourceChangedEvent by implementing the ResourceChanged method.
-    ```csharp
-    private void ResourceChanged(object sender, ResourceChangedEventArgs e)
-    {
-        if (e.Resource.TypeName == "QuestionnaireResponse")
-        {
-            QuestionnaireResponse questionnaireResponse = e.Resource as QuestionnaireResponse;
-        }
-    }
-    ```
+   ```csharp
+   private void ResourceChanged(object sender, ResourceChangedEventArgs e)
+   {
+       if (e.Resource.TypeName == "QuestionnaireResponse")
+       {
+           QuestionnaireResponse questionnaireResponse = e.Resource as QuestionnaireResponse;
+       }
+   }
+   ```
 
 ### Demo repository
+
 A demo repository with a working example can be found [here](https://github.com/Tiro-health/SessionLaunch/tree/smart-web-messaging).

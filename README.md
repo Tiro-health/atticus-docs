@@ -15,18 +15,23 @@ npm run dev
 ```
 
 Finally, open [http://localhost:3000](http://localhost:3000) in your browser to view the website.
+
 ## Update the docs
+
 All docs are written in MDX which is a combination of Markdown and JSX. You can find the individual pages in the [src/app](src/app) directory.
 
 ### Navigation
+
 The navigation structure is defined as a Javascript array called `navigation` in the [src/components/Navigation.tsx](src/components/Navigations/tsx) file.
 Make sure the `href` matches a folder in the [src/app](src/app) directory.
 
 ### Documentation pages
-All documentation pages are written in MDX and can be found in the [src/app](src/app)  directory. Each page should have a `metadata` object at the top of the file that defines the title and description of the page. The `sections` array should list all the sections on the page.
+
+All documentation pages are written in MDX and can be found in the [src/app](src/app) directory. Each page should have a `metadata` object at the top of the file that defines the title and description of the page. The `sections` array should list all the sections on the page.
 The directory where the page is located is used as the URL path. For example, a page in [src/Patient](src/Patient) will be available at `/Patient`.
 
 ## Customizing
+
 Customization of the design and functionality is possible by modifying the React components in the [src/components](src/components) directory.
 
 ## Global search

@@ -6,12 +6,12 @@ export const metadata = {
 
 # Authentication
 
-You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus offers two ways to authenticate your API requests: [Basic authentication](#basic-authentication-api-key) and OAuth2 with a token.  {{ className: 'lead' }}
+You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus offers two ways to authenticate your API requests: [Basic authentication](#basic-authentication-api-key) and OAuth2 with a token. {{ className: 'lead' }}
 If requests must be performed as a specific end-user, an extra header is needed to identify that user. This is the `X-User-Id` header. This header is used to identify the user in the context of the session. This header is only needed when the session is created in the background.
 
 ## Basic authentication (API key)
 
-With basic authentication, you use an API key (a base64 encoded version of `client_id:client_secret`) to authenticate your HTTPS requests. {/* Unless you have a very good reason, you probably shouldn't use basic auth.*/}
+With basic authentication, you use an API key (a base64 encoded version of `client_id:client_secret`) to authenticate your HTTPS requests. {/* Unless you have a very good reason, you probably shouldn't use basic auth. */}
 Here's how to authenticate using cURL:
 
 <CodeGroup title="Example request with basic auth">
@@ -27,9 +27,11 @@ string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes("client_id:c
 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
 var response = await client.GetAsync("https://reports.tiro.health/fhir/r5/Patient");
 ```
+
 </CodeGroup>
 
 ## End-user identification in machine-to-machine communication
+
 Some endpoints need a user to be identified. This is done by adding the `X-User-Id` header to the request. This header is used to identify the user (a Practitioner FHIR terms) in the context of the session.
 
 <CodeGroup title="Example request with user identification">
@@ -47,6 +49,7 @@ client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basi
 client.DefaultRequestHeaders.Add("X-User-Id", "http://myhospital.org/clincal-staff/user-ids|123");
 var response = await client.GetAsync("https://reports.tiro.health/fhir/r5/Patient");
 ```
+
 </CodeGroup>
 
 The notation used for the `X-User-Id` header is an **identifier token**. An identifier is a common used [concept in FHIR to identify practitioners, patients and other entities](https://www.hl7.org/fhir/resource.html#identifiers). More information about identifiers in the Atticus FHIR API can be found in the [FHIR tips](./fhir/tips#store-your-internal-identifiers-in-fhir-resources).
@@ -55,4 +58,4 @@ In headers we need a special notation to combine the `system` and the `value` of
 
 ## OAuth2 with a token
 
-*To be documented*
+_To be documented_

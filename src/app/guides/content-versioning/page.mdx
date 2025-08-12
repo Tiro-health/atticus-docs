@@ -25,7 +25,7 @@ Every template in our system has a status label that shows where it is in its li
    **Description:** An initial, unpublished version of the template that is not yet published or in use.<br />
    **Usage:** Serves as the editable starting point for creating or updating a template.<br />
    **Transition:** Can be published as either `test` or `active`, or continue to be edited.<br />
-   **Note:** Only one `draft` version can exist at a time. A `draft` can be deleted. 
+   **Note:** Only one `draft` version can exist at a time. A `draft` can be deleted.
 
 2. **`test`**<br />
 
@@ -43,12 +43,12 @@ Every template in our system has a status label that shows where it is in its li
 4. **`retired`**<br />
    **Description:** A version of the template that was previously `active` or `test`, but is no longer in use.<br />
    **Usage:** Preserved for historical reference or record-keeping. Not used in active processes.<br />
-   **Transition:** A version becomes retired when: 
+   **Transition:** A version becomes retired when:
+
    - A new version is published as `active` or `test`
    - The user manually retires it.
 
    **Note:** Multiple `retired` versions can exist to maintain version history.
-
 
 When a template moves from `draft` to `active`, it becomes locked to preserve data integrity. This ensures that all data collected with that template version follows exactly the same structure.
 
@@ -71,6 +71,7 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 1. **Major changes** (Example: 1.0.0 → 2.0.0)
 
    These are significant changes that mean old and new data won't work well together:
+
    - Removing questions from a form
    - Changing how a question is identified in the system
    - Changing what type of answer is expected (e.g., from text to numbers)
@@ -82,6 +83,7 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 2. **Minor changes** (Example: 1.0.0 → 1.1.0)
 
    These changes add new features but don't break existing data:
+
    - Adding new questions to a form
    - Making validation rules less strict
    - Making required questions optional
@@ -91,40 +93,39 @@ Each version number has three parts: `MAJOR.MINOR.PATCH` (like `1.2.3`)
 3. **Patch changes** (Example: 1.0.0 → 1.0.1)
 
    These are small fixes that don't affect data at all:
+
    - Fixing typos or improving wording
    - Making visual improvements to the form
    - Adding clarifications to questions
 
    **Important**: Patch changes never affect data compatibility in any way.
 
-{/**
- * Visual example of versioning
- *
- * The diagram below shows how templates evolve through different versions and which data remains compatible:
- *
- * ```mermaid
- * flowchart TD
- *     A[Template v1.0.0] -->|Minor Update - Add Question| B[Template v1.1.0]
- *     B -->|Patch Update - Fix Typo| C[Template v1.1.1]
- *     B -->|Major Update - Remove Question| D[Template v2.0.0]
- *
- *     subgraph Compatibility
- *         E[Data from v1.0.0] -->|Works with| B
- *         E -->|Works with| C
- *         E -->|Does NOT work with| D
- *      F[Data from v1.1.0] -->|Works with| C
- *      F -->|Does NOT work with| D
- *  end
- *
- *  style A fill:#d4f1f9,stroke:#333
- *  style B fill:#d4f1f9,stroke:#333
- *  style C fill:#d4f1f9,stroke:#333
- *  style D fill:#ffcccc,stroke:#333
- * ```
- * In this example:
- * - Adding a question creates version 1.1.0 (minor change)
- * - Fixing a typo creates version 1.1.1 (patch change)
- * - Removing a question creates version 2.0.0 (major change, shown in red)
- *
- * Notice that data collected with version 1.0.0 works with versions 1.1.0 and 1.1.1, but not with version 2.0.0.
- */}
+Visual example of versioning
+
+The diagram below shows how templates evolve through different versions and which data remains compatible:
+
+```mermaid
+flowchart TD
+    A[Template v1.0.0] -->|Minor Update - Add Question| B[Template v1.1.0]
+    B -->|Patch Update - Fix Typo| C[Template v1.1.1]
+    B -->|Major Update - Remove Question| D[Template v2.0.0]
+
+    subgraph Compatibility
+        E[Data from v1.0.0] -->|Works with| B
+        E -->|Works with| C
+        E -->|Does NOT work with| D
+     F[Data from v1.1.0] -->|Works with| C
+     F -->|Does NOT work with| D
+ end
+
+ style A fill:#d4f1f9,stroke:#333
+ style B fill:#d4f1f9,stroke:#333
+ style C fill:#d4f1f9,stroke:#333
+ style D fill:#ffcccc,stroke:#333
+```
+In this example:
+- Adding a question creates version 1.1.0 (minor change)
+- Fixing a typo creates version 1.1.1 (patch change)
+- Removing a question creates version 2.0.0 (major change, shown in red)
+
+Notice that data collected with version 1.0.0 works with versions 1.1.0 and 1.1.1, but not with version 2.0.0.

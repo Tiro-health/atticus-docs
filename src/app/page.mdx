@@ -3,61 +3,31 @@ import { Resources } from '@/components/Resources'
 import { HeroPattern } from '@/components/HeroPattern'
 
 export const metadata = {
-  title: 'Atticus API Documentation',
+  title: 'Tiro.health Technical Documentation',
   description:
-    'Learn how to integrate Atticus deeply in to your healthcare workflow.',
+    'Learn how to integrate Tiro.health Capture deeply in to your healthcare workflow.',
 }
 
 <HeroPattern />
-# Atticus Integration Documentation
+# Tiro.health Integration Docs
 
-Use the Atticus API to create structured reporting forms, populate them with your data, and extract FHIR resources from form responses. {{ className: 'lead' }}
+Welcome to the Tiro.health Integration docs! This documentation is designed to help you integrate Tiro.health Capture into your healthcare information system, such as an EHR or LIS. Whether you are a developer or an application manager, this documentation will guide you through the integration process.{{ className: 'lead' }}
 
-## Integration flow
-Here's how a typical integration with Atticus works:
+### How should I integrate? Form SDK vs API?
+Tiro.health offers two main ways to integrate with your healthcare information system:
 
-1. **Data Exchange**:
-Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.\
-Learn more about available APIs in the [Atticus FHIR API](./fhir) section.
-![Sketch illustrating the data import step.](/data-import.svg)
-
-2. **Context Launch**
-To provide a seamless user experience between your system and Atticus, we support contextual launches. This allows users to be redirected directly to a specific patient's information. The context launch flow is a two step process:
-- Authorize a new session: A healthcare information systems (eg. EHR or LIS) authorizes a new session with the Atticus Authorization Server.
-- Launch of Atticus: The user is redirected to the Atticus application in a new browser window.
-![Sketch illustrating the context launch step.](/context-launch.svg)
-Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.\
-When using a separate browser, external identity providers are required for authentication. SMART on FHIR enables exchange of both user identity and context.
-Standard identity providers like Microsoft Entra ID or Google are also supported, though they cannot exchange context information.
-More info about this can be found on the [context launch](./context) page and the [identiy provider](./identity-provider) page.
-
-3. **Submission**:
-The Atticus API lets external systems configure destinations for submitted data.
-When a user submits a form, their QuestionnaireResponse data is sent to Atticus and forwarded to the configured endpoints.
-![Sketch illustrating the submission step.](/submission.svg)
-
-{/*
-<div className="not-prose mb-16 mt-6 flex gap-3">
-  <Button href="/quickstart" arrow="right">
-    <>Quickstart</>
-  </Button>
-  <Button href="/intergrations" variant="outline">
-    <>Explore integrations</>
-  </Button>
-</div>
+| Audience | Type | Description |
+|----------|------------------|-------------|
+| EHR or LIS-developers | [**Form SDK**](./form-sdk) | A UI package and and a docker images to integrate Tiro.health into your EHR or LIS.<br/> It provides a seamless user experience and allows you to leverage the full power of Tiro.health's technology. Developers stay in control of the patient data flow. They can use backend api's for form processing tasks like text narrative generation or validation.|
+| EHR application managers | [**API**](./api) | A set of APIs to integrate Tiro.health Capture into your EHR or LIS.<br/>This is a more flexible way to integrate Tiro.health into your system, but it requires more work to set up and maintain. This integration is recommended for EHR or LIS systems that support a simple URL based integration. It allows you to quickly set up Tiro.health without being dependent on software development. However, it does not provide the same level of control over the data flow as the Form SDK. |
 
 
-## Getting started {{ anchor: false }}
 
-To get started, request an API-key to your point of contact of via [admin@tiro.health](mailto:admin@tiro.health). {{ className: 'lead' }}
 
-<div className="not-prose">
-  <Button href="mailto:admin@tiro.health" variant="text" arrow="right">
-    <>Get your API key</>
-  </Button>
-</div>
+### Form SDK vs API Overview
+A more detailed overview to highlighed the difference between both approaches
 
-<Guides />
-
-<Resources />
-*/}
+| Feature | Form SDK | API |
+|---------|---------|-----|
+| Integrated UI | Yes, provides a Form Filler component for seamless user experience | No, requires a browser window or iframe |
+| Data Storage | x | Cloud or on-prem FHIR server |

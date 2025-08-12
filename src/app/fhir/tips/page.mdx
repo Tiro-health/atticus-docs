@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'FHIR Tips',
-  description: 'This page contains tips and best practices for working with FHIR resources in Atticus.'
+  description:
+    'This page contains tips and best practices for working with FHIR resources in Atticus.',
 }
 
 # Tips for working with FHIR in Atticus
@@ -14,20 +15,24 @@ When creating resources in Atticus, you want to use your internal identifiers to
 For example, you might want to use your hospital's patient ID to retrieve a patient resource. To do this, you can store your internal identifiers in the `identifier` property of the FHIR resource. This property is an array of `Identifier` objects that can be used to store your internal identifiers.
 
 ### Identifier properties
+
 <Properties>
   <Property name="system" type="uri" required>
-    A URI that identifies the system that the identifier comes from. It servers as a namespace for the `value` property.
+    A URI that identifies the system that the identifier comes from. It servers
+    as a namespace for the `value` property.
   </Property>
   <Property name="value" type="string" required>
-    The actual identifier value. This value should be unique within the system that the `system` property points to.
+    The actual identifier value. This value should be unique within the system
+    that the `system` property points to.
   </Property>
 </Properties>
 
 ### Example of an `Identifier` object
+
 ```json
 {
-    "system": "http://myhospital.org/patient-id",
-    "value": "12345"
+  "system": "http://myhospital.org/patient-id",
+  "value": "12345"
 }
 ```
 

@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'FHIR Transactions',
-  description: "Combining multiple operations in a single transaction can be useful when you need to ensure that all operations succeed or fail together. This page explains how to use FHIR transactions in Atticus."
+  description:
+    'Combining multiple operations in a single transaction can be useful when you need to ensure that all operations succeed or fail together. This page explains how to use FHIR transactions in Atticus.',
 }
 
 # Transactions
@@ -12,39 +13,44 @@ Combining multiple operations in a single transaction can be useful when you nee
 A FHIR Bundle is a container for a collection of resources. When used for transactions, the Bundle contains a list of operations (create, update, delete) that should be processed atomically - meaning either all operations succeed or none of them do.
 
 ### Properties
+
 <Properties>
   <Property name="resourceType" type="'Bundle'" required>
     The FHIR resource type. This must be set to `'Bundle'`.
   </Property>
   <Property name="type" type="code" required>
-    For transactions, this will be set to `'transaction'`. For transaction responses, it will be set to `'transaction-response'`.
+    For transactions, this will be set to `'transaction'`. For transaction
+    responses, it will be set to `'transaction-response'`.
   </Property>
   <Property name="entry" type="Entry[]" required>
-    An array of entry objects, each containing a request and a resource.
-    \
-    Each entry in a **transaction request Bundle** can have the following properties
+    An array of entry objects, each containing a request and a resource. \ Each
+    entry in a **transaction request Bundle** can have the following properties
     <Properties>
-        <Property name="fullUrl" type='uri'>
-          A temporary UUID that can be used to reference the resource in other entries.
-        </Property>
-        <Property name="resource" type="Resource">
-          The resource to be created, updated. Not required for DELETE operations.
-        </Property>
-        <Property name="request">
-          The request object contains the HTTP method and URL for the operation.
-          <Properties>
-            <Property name="method" type="code" required>
-              The HTTP method for the operation. Must be one of `POST`, `PUT`, or `DELETE`.
-            </Property>
-            <Property name="url" type="string" required>
-              The relative URL for the resource. For example, `Patient` or `Encounter/1`.
-            </Property>
-          </Properties>
-        </Property>
+      <Property name="fullUrl" type="uri">
+        A temporary UUID that can be used to reference the resource in other
+        entries.
+      </Property>
+      <Property name="resource" type="Resource">
+        The resource to be created, updated. Not required for DELETE operations.
+      </Property>
+      <Property name="request">
+        The request object contains the HTTP method and URL for the operation.
+        <Properties>
+          <Property name="method" type="code" required>
+            The HTTP method for the operation. Must be one of `POST`, `PUT`, or
+            `DELETE`.
+          </Property>
+          <Property name="url" type="string" required>
+            The relative URL for the resource. For example, `Patient` or
+            `Encounter/1`.
+          </Property>
+        </Properties>
+      </Property>
     </Properties>
   </Property>
 </Properties>
-A detailed description of all properties can be found in the [FHIR specification](https://www.hl7.org/fhir/r5/bundle.html).
+A detailed description of all properties can be found in the [FHIR
+specification](https://www.hl7.org/fhir/r5/bundle.html).
 
 ## Making Transaction Requests {{ tag: 'POST', label: '/' }}
 
@@ -157,6 +163,7 @@ A detailed description of all properties can be found in the [FHIR specification
       ]
     }
     ```
+
   </Col>
 </Row>
 
@@ -176,6 +183,7 @@ A detailed description of all properties can be found in the [FHIR specification
 - Ensuring referential integrity between resources
 
 ## Response headers in a Bundle
+
 Most endpoints of the FHIR API use HTTP Response Headers to provide urls to the user interface or urls to the exact location of a resource.
 The transaction response Bundle keeps most of these headers in the response object of the entry. The response object contains extrac fields that contain the status code, link headers and the location header.
 
@@ -202,7 +210,6 @@ The transaction response Bundle keeps most of these headers in the response obje
 ```
 
 For an exact overview of the headers send back in the response, refer to the documentation of the specific endpoint.
-
 
 ## Error Handling
 

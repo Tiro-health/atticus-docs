@@ -1,0 +1,152 @@
+export const metadata = {
+  title: 'Tiro.health Toolkit',
+  description:
+    'The Tiro.health Toolkit is a library and a set of docker images to integrate Tiro.health into your EHR or LIS.',
+}
+
+# Tiro.health Form SDK
+
+Tiro.health's Form SDK backend is a set of services that enable you to integrate form response processing into your healthcare information system. It provides a FHIR-based API for
+
+- Retrieving and search Questionnaire resources
+- Creating an initial QuestionnaireResponse based on the configuration specified in a Questionnaire resource
+- Validating QuestionnaireResponses against the Questionnaire resource
+- Generating narrative text based for a QuestionnaireResponse
+- Expanding ValueSets for use in Questionnaire items
+
+These FHIR API's are conformant to the [SDC Implementation Guide](https://www.hl7.org/fhir/uv/sdc/index.html), which is a set of FHIR profiles and extensions that define how to create and manage forms and form responses in healthcare systems.
+
+---
+
+## Form Population Service {{ tag: 'POST', label: '/Questionnaire/$populate' }}
+
+This endpoint allows you to create an initial QuestionnaireResponse based on the configuration specified in a Questionnaire resource. It is typically used to pre-fill a form with data from the patient record or other sources.
+
+The service accepts context information to pre-populate fields with data on the subject, encounter or other context related resources.
+
+> [!NOTE]
+> The specification for this endpoint is defined in the [SDC Implementation Guide](https://www.hl7.org/fhir/uv/sdc/OperationDefinition-questionnaire-populate.html). It is a part of the SDC (Structured Data Capture) standard, which is used to create and manage forms and form responses in healthcare applications.
+
+Example context information:
+| Name | Content | Description |
+|------|---------|-------------|
+| subject | Patient | The patient resource to pre-populate the form with. |
+| encounter | Encounter | The encounter resource to pre-populate the form with. |
+| user | Device, PractitionerRole, Practitioner, RelatedPerson, Organization or Patient | The practitioner resource to pre-populate the form with. |
+| clinical | \* | Indicates the current clinical resource being manipulated or reviewed by the user launching the Questionnaire.
+
+<Row>
+  <Col>
+    This endpoint allows you to create an initial QuestionnaireResponse based on the configuration specified in a Questionnaire resource. It is typically used to pre-fill a form with data from the patient record or other sources.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/Questionnaire/$populate">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://{SDC_BACKEND_ADDRESS}/Questionnaire/$populate \
+      -H "Content-Type: application/fhir+json" \
+      -d '{
+        "resourceType": "Parameters",
+        "parameter": [{
+          "name": "questionnaire",
+          "resource": {
+            "resourceType": "Questionnaire",
+            // ... Questionnaire resource here
+          }
+        }, {
+          "name": "context",
+          "part": [
+            {
+                "name": "name"
+                "valueString": "subject"
+            },
+            {
+                "name": "content"
+                "resource": {
+                    "resourceType": "Patient",
+                    "identifier": [{
+                        "system": "http://example.com/mrn",
+                        "value": "12345"
+                    }],
+                    "name": [{
+                        "given": ["John"],
+                        "family": "Doe"
+                    }],
+                }
+
+            }
+          ]
+        }]
+      }'
+    ```
+    </CodeGroup>
+
+  </Col>
+</Row>
+
+---
+
+## Form Validation Service {{ tag: 'POST', label: '/QuestionnaireResponse/$validate' }}
+
+This endpoint allows you to validate a QuestionnaireResponse against the Questionnaire resource. It checks if the response is valid according to the rules defined in the Questionnaire, such as required fields, value types, and constraints.
+
+<Row>
+  <Col>
+    This endpoint allows you to validate a QuestionnaireResponse against the Questionnaire resource. It checks if the response is valid according to the rules defined in the Questionnaire, such as required fields, value types, and constraints.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/QuestionnaireResponse/$validate">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://{SDC_BACKEND_ADDRESS}/QuestionnaireResponse/$validate \
+      -H "Content-Type: application/fhir+json" \
+      -d '{
+        "resourceType": "QuestionnaireResponse",
+        "questionnaire": "https://example.com/Questionnaire/123",
+        "status": "in-progress",
+        "item": [{
+            "linkId": "1",
+            "text": "Patient Name",
+            "answer": [{
+                "valueString": "John Doe"
+             }]
+            // ... other items here
+         }],
+        }
+      }'
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+## Text Narrative Generation Service {{ tag: 'POST', label: '/QuestionnaireResponse/$generate-narrative' }}
+
+This endpoint allows you to generate a human readable narrative for a QuestionnaireResponse. It follows the configuration specified in the Questionnnaire and the data in the QuestionnaireResponse to create a narrative text that summarizes the information captured in the form.
+
+<Row>
+  <Col>
+    This endpoint allows you to generate a human readable narrative for a QuestionnaireResponse. It follows the configuration specified in the Questionnnaire and the data in the QuestionnaireResponse to create a narrative text that summarizes the information captured in the form.
+  </Col>
+  <Col sticky>
+    <CodeGroup title="Request" tag="POST" label="/QuestionnaireResponse/$generate-narrative">
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://{SDC_BACKEND_ADDRESS}/QuestionnaireResponse/$generate-narrative \
+      -H "Content-Type: application/fhir+json" \
+      -d '{
+        "resourceType": "QuestionnaireResponse",
+        "questionnaire": "https://example.com/Questionnaire/123",
+        "status": "completed",
+        "item": [{
+            "linkId": "1",
+            "text": "Patient Name",
+            "answer": [{
+                "valueString": "John Doe"
+             }]
+            // ... other items here
+         }],
+        }
+      }'
+    ```
+    </CodeGroup>
+  </Col>
+</Row>

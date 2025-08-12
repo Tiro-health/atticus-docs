@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'Patient',
-  description: "On this page, we'll dive into the different Patient endpoints you can use to manage patients programmatically"
+  description:
+    "On this page, we'll dive into the different Patient endpoints you can use to manage patients programmatically",
 }
 
 # Patient
@@ -17,24 +18,43 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 
 <Properties>
   <Property name="resourceType" type="'Patient'" required>
-      The FHIR resource type. This must be set to `'Patient'`.
+    The FHIR resource type. This must be set to `'Patient'`.
   </Property>
-  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.identifier'>
-      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this patient (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
-      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
+  <Property
+    name="identifier"
+    type="Identifier[]"
+    href="https://hl7.org/fhir/R5/patient-definitions.html#Patient.identifier"
+  >
+    An array of
+    [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects
+    for this patient (e.g. MRN, SSN). This is the place to store EHR identifiers
+    or hospital identifiers for the patient. More information about identifiers
+    in Atticus can be found
+    [here](./tips#linking-resources-to-your-internal-identifiers).
   </Property>
-  <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.name'>
-      The name of the patient. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+  <Property
+    name="name"
+    type="HumanName[]"
+    href="https://hl7.org/fhir/R5/patient-definitions.html#Patient.name"
+  >
+    The name of the patient. This includes given names and family name. Name
+    contains an array of FHIR
+    [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
   </Property>
-  <Property name="birthDate" type="date" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.birthDate'>
-      The patient's date of birth.
+  <Property
+    name="birthDate"
+    type="date"
+    href="https://hl7.org/fhir/R5/patient-definitions.html#Patient.birthDate"
+  >
+    The patient's date of birth.
   </Property>
-  <Property name="gender" type="code" href='https://hl7.org/fhir/R5/patient-definitions.html#Patient.gender'>
-    Administrative gender. Possible values are:
-      - `male`
-      - `female`
-      - `other`
-      - `unknown`
+  <Property
+    name="gender"
+    type="code"
+    href="https://hl7.org/fhir/R5/patient-definitions.html#Patient.gender"
+  >
+    Administrative gender. Possible values are: - `male` - `female` - `other` -
+    `unknown`
   </Property>
 </Properties>
 
@@ -110,6 +130,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 ---
 
 ## Conditionally update a Patient {{ tag: 'PUT', label: '/Patient?identifier=<system>|<value>' }}
+
 <Row>
   <Col>
     This endpoint allows you to update a Patient by matching on specific criteria. The search criteria are provided as query parameters, and the updated Patient data is provided in the request body.
@@ -269,6 +290,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 </Row>
 
 ---
+
 ## Delete an existing Patient {{ tag: 'DELETE', label: '/Patient/:id' }}
 
 <Row>

@@ -9,6 +9,7 @@ import { Header } from '@/components/Header'
 import { Logo } from '@/components/Logo'
 import { Navigation } from '@/components/Navigation'
 import { type Section, SectionProvider } from '@/components/SectionProvider'
+import { useMermaid } from './MermaidDiagram'
 
 export function Layout({
   children,
@@ -18,6 +19,8 @@ export function Layout({
   allSections: Record<string, Array<Section>>
 }) {
   let pathname = usePathname()
+
+  useMermaid()
 
   return (
     <SectionProvider sections={allSections[pathname] ?? []}>

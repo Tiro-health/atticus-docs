@@ -1,0 +1,156 @@
+export const metadata = {
+  title: 'Tiro.health Form SDK',
+  description:
+    'The Tiro.health Form SDK is a library and a set of docker images to integrate Tiro.health into your EHR or LIS.',
+}
+
+# Getting started with the Tiro.health Form SDK
+
+This guide covers the technical setup for accessing and configuring the Tiro.health Form SDK packages. For a broader overview of the Form SDK architecture and components, see the [introduction page](/).
+
+Going through this guide is the quickest way to get started with the Tiro.health Form SDK, allowing you to integrate structured data capture capabilities into your healthcare information system and should only take 15 minutes.
+
+## Prerequisites
+
+In order to gain access to the Tiro.health Form SDK packages, you'll need a dedicated Tiro.health service account and a service account key. This key will provide access for your local `docker` and `npm` clients to the Tiro.health registry.
+
+If you don't have a service account yet, please contact your Tiro.health representative or email us at [support@tiro.health](mailto:support@tiro.health?subject=Service%20account%20request) to request one.
+
+## Configure your docker environment to use the Tiro.health registry
+
+Once you have your service account key JSON file, you'll need to configure Docker to authenticate with the Tiro.health registry.
+
+### 1. Authenticate Docker with Google Cloud Artifact Registry
+
+First, use the service account key to authenticate Docker:
+
+```bash
+# Use the service account key to authenticate Docker
+cat path/to/your/service-account-key.json | docker login -u _json_key --password-stdin https://europe-west1-docker.pkg.dev
+```
+
+Replace `path/to/your/service-account-key.json` with the actual path to your service account key file.
+
+### 2. Verify Docker authentication
+
+Test that Docker can access the Tiro.health registry:
+
+```bash
+# Test access to the registry
+docker pull europe-west1-docker.pkg.dev/tiro-health/docker-ext/form-sdk-backend:latest
+```
+
+If authentication is successful, Docker will be able to pull images from the Tiro.health registry.
+
+## Configure your npm environment to use the Tiro.health registry
+
+To access Tiro.health's private npm packages, you'll need to configure npm to use your service account key for authentication.
+
+### 1. Configure npm registry authentication
+
+Create or update your `.npmrc` file to include the Tiro.health registry configuration:
+
+```bash
+# Navigate to your project directory or home directory
+cd your-project-directory
+
+# Create or edit .npmrc file
+echo "@tiro-health:registry=https://npm.pkg.dev/tiro-health/npm-ext/" >> .npmrc
+echo "//npm.pkg.dev/tiro-health/npm-ext/:_authToken=$(gcloud auth print-access-token)" >> .npmrc
+```
+
+### 2. Authenticate with Google Cloud
+
+First, authenticate using your service account key:
+
+```bash
+# Authenticate using the service account key
+gcloud auth activate-service-account --key-file=path/to/your/service-account-key.json
+
+# Set your project (replace with actual Tiro.health project ID)
+gcloud config set project tiro-health
+```
+
+### 3. Alternative: Use service account key directly
+
+If you prefer not to use gcloud CLI, you can configure npm authentication directly:
+
+```bash
+# Generate base64 encoded credentials
+echo "_json_key:$(cat path/to/your/service-account-key.json | base64 -w 0)" | base64 -w 0
+```
+
+Then add the result to your `.npmrc`:
+
+```
+@tiro-health:registry=https://npm.pkg.dev/tiro-health/npm-ext/
+//npm.pkg.dev/tiro-health/npm-ext/:_authToken=<base64-encoded-credentials>
+```
+
+### 4. Verify npm authentication
+
+Test that npm can access the Tiro.health packages:
+
+```bash
+# Search for Tiro.health packages
+npm search @tiro-health
+
+# Or try to install a specific package
+npm install @tiro-health/form-sdk
+```
+
+## Start with our demo repository
+
+Once you have both Docker and npm configured, you can get started with a complete demo setup that showcases the Tiro.health Toolkit integration.
+
+### 1. Clone the demo repository
+
+```bash
+# Clone the Tiro.health demo repository
+git clone https://github.com/tiro-health/form-sdk-demo.git
+cd form-sdk-demo
+```
+
+### 2. Set up environment variables
+
+Create a `.env` file with your configuration:
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the .env file with your service account details
+# TIRO_SERVICE_ACCOUNT_KEY=/path/to/your/service-account-key.json
+# TIRO_PROJECT_ID=your-tiro-health-project-id
+```
+
+### 3. Install dependencies and start the demo
+
+```bash
+# Install npm dependencies
+npm install
+
+# Start the Docker containers
+docker-compose up -d
+
+# Run the demo application
+npm run dev
+```
+
+### 4. Access the demo
+
+Once everything is running, you can access:
+
+- **Demo Application**: http://localhost:3000
+- **API Documentation**: http://localhost:3000/api/docs
+- **Health Check**: http://localhost:3000/health
+
+### Troubleshooting
+
+If you encounter issues:
+
+1. **Docker authentication errors**: Verify your service account key has the necessary permissions for the Artifact Registry
+2. **npm package not found**: Ensure your `.npmrc` is configured correctly and the service account has Artifact Registry Reader permissions
+3. **Demo won't start**: Check that all required environment variables are set in your `.env` file
+
+For additional support, contact [support@tiro.health](mailto:support@tiro.health).

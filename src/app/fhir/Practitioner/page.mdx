@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'Practitioner',
-  description: "On this page, we'll dive into the different Practitioner endpoints you can use to manage practitioners programmatically"
+  description:
+    "On this page, we'll dive into the different Practitioner endpoints you can use to manage practitioners programmatically",
 }
 
 # Practitioner
@@ -17,13 +18,25 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
 
 <Properties>
   <Property name="resourceType" type="'Practitioner'" required>
-      The FHIR resource type. This must be set to `'Practitioner'`.
+    The FHIR resource type. This must be set to `'Practitioner'`.
   </Property>
-  <Property name="name" type="HumanName[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.name'>
-      The name of the practitioner. This includes given names and family name. Name contains an array of FHIR [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+  <Property
+    name="name"
+    type="HumanName[]"
+    href="https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.name"
+  >
+    The name of the practitioner. This includes given names and family name.
+    Name contains an array of FHIR
+    [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
   </Property>
-  <Property name="telecom" type="ContactPoint[]" href='https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.telecom'>
-      The contact details of the practitioner. Telecom contains an array of FHIR [`ContactPoint`](https://hl7.org/fhir/R5/datatypes.html#ContactPoint) objects. Currently only email is imported and stored.
+  <Property
+    name="telecom"
+    type="ContactPoint[]"
+    href="https://hl7.org/fhir/R5/practitioner-definitions.html#Practitioner.telecom"
+  >
+    The contact details of the practitioner. Telecom contains an array of FHIR
+    [`ContactPoint`](https://hl7.org/fhir/R5/datatypes.html#ContactPoint)
+    objects. Currently only email is imported and stored.
   </Property>
 </Properties>
 
@@ -89,6 +102,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
 ---
 
 ## Conditionally update a Practitioner {{ tag: 'PUT', label: '/Practitioner?identifier=<system>|<value>' }}
+
 <Row>
   <Col>
     This endpoint allows you to update a Practitioner by matching on specific criteria. The search criteria are provided as query parameters, and the updated Practitioner data is provided in the request body.

@@ -18,27 +18,40 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
 
 <Properties>
   <Property name="resourceType" type="'Encounter'" required>
-      The FHIR resource type. This must be set to `'Encounter'`.
+    The FHIR resource type. This must be set to `'Encounter'`.
   </Property>
-  <Property name="status" type="code" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.status'>
-    The status of the encounter. Possible values are:
-    - `planned`
-    - `arrived`
-    - `triaged`
-    - `in-progress`
-    - `onleave`
-    - `finished`
-    - `cancelled`
-    - `entered-in-error`
-    \
-    This is only stored as metadata and does not affect any business logic.
+  <Property
+    name="status"
+    type="code"
+    required
+    href="https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.status"
+  >
+    The status of the encounter. Possible values are: - `planned` - `arrived` -
+    `triaged` - `in-progress` - `onleave` - `finished` - `cancelled` -
+    `entered-in-error` \ This is only stored as metadata and does not affect any
+    business logic.
   </Property>
-  <Property name="identifier" type="Identifier[]" href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.identifier'>
-      An array of [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects for this Encounter (e.g. MRN, SSN). This is the place to store EHR identifiers or hospital identifiers for the patient.
-      More information about identifiers in Atticus can be found [here](./tips#linking-resources-to-your-internal-identifiers).
+  <Property
+    name="identifier"
+    type="Identifier[]"
+    href="https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.identifier"
+  >
+    An array of
+    [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects
+    for this Encounter (e.g. MRN, SSN). This is the place to store EHR
+    identifiers or hospital identifiers for the patient. More information about
+    identifiers in Atticus can be found
+    [here](./tips#linking-resources-to-your-internal-identifiers).
   </Property>
-  <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject'>
-      A FHIR [`Reference`](https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject) object pointing to the patient which is the subject of the encounter.
+  <Property
+    name="subject"
+    type="Reference"
+    required
+    href="https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject"
+  >
+    A FHIR
+    [`Reference`](https://hl7.org/fhir/R5/encounter-definitions.html#Encounter.subject)
+    object pointing to the patient which is the subject of the encounter.
   </Property>
 </Properties>
 ---
@@ -104,10 +117,10 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
   </Col>
 </Row>
 
-
 ---
 
 ## Conditionally update an Encounter {{ tag: 'PUT', label: '/Encounter?identifier=<system>|<value>' }}
+
 <Row>
   <Col>
     This endpoint allows you to update an Encounter by matching on specific criteria. A common use case is to update the status of an Encounter. Some systems may want to mark encounters as 'entered-in-error' when they are no longer relevant.\
@@ -207,6 +220,7 @@ The Encounter model conforms to the FHIR Encounter resource. The following prope
 </Row>
 
 ---
+
 ## Delete an existing Encounter {{ tag: 'DELETE', label: '/Encounter/:id' }}
 
 <Row>

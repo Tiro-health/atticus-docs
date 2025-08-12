@@ -233,43 +233,54 @@ export const navigation: Array<NavGroup> = [
   {
     title: 'Guides',
     links: [
-      { title: 'Introduction', href: '/' },
+      { title: 'How should I integrate?', href: '/' },
       { title: 'Data Tenants', href: '/guides/data-tenants' },
       { title: 'Content Versioning', href: '/guides/content-versioning' },
     ],
   },
   {
-    title: 'Supported Integrations',
-    links: [
-      { title: 'Introduction', href: '/supported' },
-      {
-        title: 'Nexuzhealth KWS',
-        href: '/supported/nexuzhealth-kws',
-      },
-      { title: 'Synops', href: '/supported/synops' },
-    ],
-  },
-  {
-    title: 'Context Launch',
+    title: 'Form SDK (self-hosted)',
     links: [
       {
         title: 'Introduction',
-        href: '/context',
+        href: '/form-sdk',
       },
       {
-        title: '.NET',
-        href: '/context/dotnet',
+        title: 'Getting started (15min)',
+        href: '/form-sdk/getting-started',
       },
       {
-        title: 'Java',
-        href: '/context/java',
+        title: 'SDC Backend Service',
+        href: '/form-sdk/sdc-backend',
       },
       {
-        title: 'Web',
-        href: '/context/react',
+        title: 'Web UI SDK',
+        href: '/form-sdk/web',
+      },
+      {
+        title: '.NET UI SDK',
+        href: '/form-sdk/dotnet',
+      },
+      {
+        title: 'Java UI SDK',
+        href: '/form-sdk/java',
       },
     ],
   },
+  {
+    title: 'API (managed)',
+    links: [
+      {
+        title: 'Overview',
+        href: '/api',
+      },
+      {
+        title: 'KWS (Nexuzhealth)',
+        href: '/api/kws',
+      },
+    ],
+  },
+
   {
     title: 'Identity Provider',
     links: [
@@ -298,22 +309,13 @@ export const navigation: Array<NavGroup> = [
       { title: 'Integration engines', href: '/integration-engines' },
     ],
   },
-  {
-    title: 'SMART on FHIR',
-    links: [
-      {
-        title: 'Introduction',
-        href: '/smart-on-fhir',
-      },
-    ],
-  },
 ]
 
 export function Navigation(props: React.ComponentPropsWithoutRef<'nav'>) {
   return (
     <nav {...props}>
       <ul role="list">
-        <TopLevelNavItem href="/">API</TopLevelNavItem>
+        <TopLevelNavItem href="/">Home</TopLevelNavItem>
         <TopLevelNavItem href="#">Documentation</TopLevelNavItem>
         <TopLevelNavItem href="#">Support</TopLevelNavItem>
         {navigation.map((group, groupIndex) => (

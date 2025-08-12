@@ -1,6 +1,7 @@
 export const metadata = {
   title: 'QuestionnaireResponse',
-  description: 'On this page, we’ll dive into the different QuestionnaireResponse endpoints you can use to manage responses programmatically.',
+  description:
+    'On this page, we’ll dive into the different QuestionnaireResponse endpoints you can use to manage responses programmatically.',
 }
 
 # QuestionnaireResponse
@@ -42,7 +43,6 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
     A FHIR [`Reference`](https://hl7.org/fhir/R5/references.html#Reference) to the encounter to which this response is related.
 </Property>
 </Properties>
-
 
 ---
 
@@ -199,7 +199,6 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
 
 ---
 
-
 ## Special considerations in Response
 
 A QuestionnaireResponse resource has some special headers and response body properties that you should be aware of.
@@ -209,6 +208,7 @@ A QuestionnaireResponse resource has some special headers and response body prop
 When making GET, POST, or PUT requests to QuestionnaireResponse endpoints, the response includes a `Link` header with the URL to open the report form in the browser. The URL is specified with the relation `edit-form`. You can use this URL to redirect users to the web-based form editor.
 
 Example response header for a QuestionnaireResponse with id `123`:
+
 ```http
 Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; rel="edit-form"
 ```
@@ -224,19 +224,18 @@ When sending a request with a partial version:
 {
   "resourceType": "QuestionnaireResponse",
   //...
-  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1",
+  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1"
   //...
 }
 ```
 
 you will receive aresponse with a full version
 
-
 ```json
 {
   "resourceType": "QuestionnaireResponse",
   //...
-  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1",
+  "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1"
   //...
 }
 ```

@@ -1,11 +1,13 @@
 export const metadata = {
   title: 'Task',
-  description: 'On this page, we will dive into the different Task endpoints you can use to manage tasks programmatically.'
+  description:
+    'On this page, we will dive into the different Task endpoints you can use to manage tasks programmatically.',
 }
 
 # Task
 
 Tasks are essential to reporting workflow inside Atticus. There are two types of tasks to distinguish:
+
 - **Complete Questionnaire** tasks: a programmatic way of telling Atticus that a practitioner has to create and complete a report. This report will be attached as a QuestionnaireResponse to the output of the task.
 - **Process Response** tasks: a programmatic way of telling Atticus that it should process a report in a specific way. This task can cover "forwarding to an EHR" or "loading into a data warehouse".
 
@@ -65,6 +67,7 @@ The Task model conforms to the FHIR Task resource and implements the SDC Task Qu
     <Property name="output" type="BackboneElement[]" href='https://hl7.org/fhir/R5/task-definitions.html#Task.output'>
         Output parameters from the task execution. This captures the results produced by the task. This can only be added by the Tiro.health and should not be provided by the client.
     </Property>
+
 </Properties>
 
 ## Input and Output Types
@@ -73,10 +76,10 @@ The Task resource uses the `input` and `output` arrays to configure the task and
 
 The following table details the available input types for Complete Questionnaire tasks:
 
-| Input Type | Required | Purpose | Data Type | Code |
-|------------|----------|---------|-----------|------|
-| **Questionnaire** | optional |Specifies which questionnaire form the practitioner should complete | [Canonical](https://hl7.org/fhir/R5/references.html#canonical) reference to a [Questionnaire](https://hl7.org/fhir/R5/Questionnaire) | `questionnaire` |
-| **Initial Response** | optional | Provides a partial QuestionnaireResponse to pre-fill the form with initial data | [Reference](https://hl7.org/fhir/R5/references.html#reference) to a [QuestionnaireResponse](https://hl7.org/fhir/R5/QuestionnaireResponse) |`initial-response` |
+| Input Type           | Required | Purpose                                                                         | Data Type                                                                                                                                  | Code               |
+| -------------------- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
+| **Questionnaire**    | optional | Specifies which questionnaire form the practitioner should complete             | [Canonical](https://hl7.org/fhir/R5/references.html#canonical) reference to a [Questionnaire](https://hl7.org/fhir/R5/Questionnaire)       | `questionnaire`    |
+| **Initial Response** | optional | Provides a partial QuestionnaireResponse to pre-fill the form with initial data | [Reference](https://hl7.org/fhir/R5/references.html#reference) to a [QuestionnaireResponse](https://hl7.org/fhir/R5/QuestionnaireResponse) | `initial-response` |
 
 All codes assume to have system [http://fhir.tiro.health/CodeSystem/task-input](http://fhir.tiro.health/CodeSystem/task-input)
 
@@ -98,10 +101,10 @@ Example of a task input for specifying a questionnaire:
 
 The following table details the available output types for Complete Questionnaire tasks:
 
-| Output Type | Purpose | Data Type | Coding |
-|-------------|---------|-----------|--------|
-| **QuestionnairResponse** | Contains the reference to the completed form | [Reference](https://hl7.org/fhir/R5/references.html#reference) to [QuestionnaireResponse](http://hl7.org/fhir/R5/QuestionnaireResponse) | `questionnaire-response` |
-| **OperationOutcome** | Contains errors or issues encountered during task processing | [Reference](https://hl7.org/fhir/R5/references.html#reference) to [OperationOutcome](http://hl7.org/fhir/R5/OperationOutcome) | `operation-outcome` |
+| Output Type              | Purpose                                                      | Data Type                                                                                                                               | Coding                   |
+| ------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| **QuestionnairResponse** | Contains the reference to the completed form                 | [Reference](https://hl7.org/fhir/R5/references.html#reference) to [QuestionnaireResponse](http://hl7.org/fhir/R5/QuestionnaireResponse) | `questionnaire-response` |
+| **OperationOutcome**     | Contains errors or issues encountered during task processing | [Reference](https://hl7.org/fhir/R5/references.html#reference) to [OperationOutcome](http://hl7.org/fhir/R5/OperationOutcome)           | `operation-outcome`      |
 
 All codes assume to have system [http://fhir.tiro.health/CodeSystem/task-output](http://fhir.tiro.health/CodeSystem/task-output)
 
@@ -128,7 +131,7 @@ Example of a task output containing a completed questionnaire response:
 The status of a Complete Questionnaire task progresses through several stages as practitioners interact with it:
 
 1. **`draft`** Task appears in practitioners' worklists as available for completion
-  The **questionnaire** input is optional, if provided the task status will be set to `ready` automatically.
+   The **questionnaire** input is optional, if provided the task status will be set to `ready` automatically.
 2. **`ready`** The **questionnaire** input is present either through the API or through the user interface. The task is ready to be fullfilled.
 3. **`in-progress`** Practitioner has started filling out the questionnaire. A incomplete QuestionnairResponse is present in the output.
 4. **`completed`** Practitioner has successfully submitted the completed questionnaire. All processing steps have been full-filled.
@@ -251,6 +254,7 @@ Each status change affects how and where the task appears in the practitioner's 
 
           client.Create(task)
           ```
+
 </CodeGroup>
 
 ```json {{ title: 'Response' }}
@@ -283,6 +287,7 @@ Each status change affects how and where the task appears in the practitioner's 
   }
 }
 ```
+
 </Col>
 </Row>
 
@@ -302,21 +307,22 @@ This endpoint allows you to retrieve a specific task by its ID. This is useful f
   -H "Content-Type: application/fhir+json"
   ```
 
-  ```bash {{ title: 'httpie' }}
-  http GET https://reports.tiro.health/fhir/r5/Task/456 \
-  Authorization:"Basic {{apikey}}" \
-  Content-Type:"application/fhir+json"
-  ```
+```bash {{ title: 'httpie' }}
+http GET https://reports.tiro.health/fhir/r5/Task/456 \
+Authorization:"Basic {{apikey}}" \
+Content-Type:"application/fhir+json"
+```
 
-  ```cs {{ title: 'C#' }}
-  var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
-  var task = client.Read<Task>("456");
-  ```
+```cs {{ title: 'C#' }}
+var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+var task = client.Read<Task>("456");
+```
 
-  ```vb {{ title: 'VB.NET' }}
-  Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
-  Dim task = client.Read(Of Task)("456")
-  ```
+```vb {{ title: 'VB.NET' }}
+Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+Dim task = client.Read(Of Task)("456")
+```
+
 </CodeGroup>
 
 ```json {{ title: 'Response' }}
@@ -376,6 +382,7 @@ This endpoint allows you to retrieve a specific task by its ID. This is useful f
   ]
 }
 ```
+
 </Col>
 </Row>
 
@@ -406,34 +413,35 @@ This endpoint allows you to search for tasks based on various criteria. This is 
   -H "Content-Type: application/fhir+json"
   ```
 
-  ```bash {{ title: 'httpie' }}
-  http GET https://reports.tiro.health/fhir/r5/Task \
-  patient==Patient/123 \
-  status==completed \
-  code==complete-questionnaire \
-  Authorization:"Basic {{apikey}}" \
-  Content-Type:"application/fhir+json"
-  ```
+```bash {{ title: 'httpie' }}
+http GET https://reports.tiro.health/fhir/r5/Task \
+patient==Patient/123 \
+status==completed \
+code==complete-questionnaire \
+Authorization:"Basic {{apikey}}" \
+Content-Type:"application/fhir+json"
+```
 
-  ```cs {{ title: 'C#' }}
-  var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
-  var searchParams = new SearchParams()
-      .Where("patient=Patient/123")
-      .Where("status=completed")
-      .Where("code=complete-questionnaire");
+```cs {{ title: 'C#' }}
+var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+var searchParams = new SearchParams()
+    .Where("patient=Patient/123")
+    .Where("status=completed")
+    .Where("code=complete-questionnaire");
 
-  var results = client.Search<Task>(searchParams);
-  ```
+var results = client.Search<Task>(searchParams);
+```
 
-  ```vb {{ title: 'VB.NET' }}
-  Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
-  Dim searchParams = New SearchParams() _
-      .Where("patient=Patient/123") _
-      .Where("status=completed") _
-      .Where("code=complete-questionnaire")
+```vb {{ title: 'VB.NET' }}
+Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
+Dim searchParams = New SearchParams() _
+    .Where("patient=Patient/123") _
+    .Where("status=completed") _
+    .Where("code=complete-questionnaire")
 
-  Dim results = client.Search(Of Task)(searchParams)
-  ```
+Dim results = client.Search(Of Task)(searchParams)
+```
+
 </CodeGroup>
 
 ```json {{ title: 'Response' }}
@@ -488,5 +496,6 @@ This endpoint allows you to search for tasks based on various criteria. This is 
   ]
 }
 ```
+
 </Col>
 </Row>

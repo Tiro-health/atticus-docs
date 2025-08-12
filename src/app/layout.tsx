@@ -6,6 +6,7 @@ import { Layout } from '@/components/Layout'
 import { type Section } from '@/components/SectionProvider'
 
 import '@/styles/tailwind.css'
+import { useMermaid } from '@/components/MermaidDiagram'
 
 export const metadata: Metadata = {
   title: {
