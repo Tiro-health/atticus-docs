@@ -14,7 +14,6 @@ import clsx from 'clsx'
 import { create } from 'zustand'
 
 import { Tag } from '@/components/Tag'
-import MermaidDiagram from './MermaidDiagram'
 
 const languageNames: Record<string, string> = {
   js: 'JavaScript',
@@ -375,9 +374,6 @@ export function Pre({
   language?: string
   code?: string
 }) {
-  if (props.language == 'mermaid' && props.code) {
-    return <MermaidDiagram code={props.code} />
-  }
   let isGrouped = useContext(CodeGroupContext)
 
   if (isGrouped) {
