@@ -4,6 +4,7 @@ import { toString } from 'mdast-util-to-string'
 import { mdxAnnotations } from 'mdx-annotations'
 import shiki from 'shiki'
 import { visit } from 'unist-util-visit'
+import { rehypeMermaidToSvg } from './mermaid-to-svg.mjs'
 
 function rehypeParseCodeBlocks() {
   return (tree) => {
@@ -113,6 +114,7 @@ function getSections(node) {
 export const rehypePlugins = [
   mdxAnnotations.rehype,
   rehypeParseCodeBlocks,
+  rehypeMermaidToSvg,
   rehypeShiki,
   rehypeSlugify,
   [

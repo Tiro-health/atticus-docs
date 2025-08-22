@@ -152,7 +152,7 @@ export function SchemaProperties({ schema }: { schema: Schema }) {
   return (
     <Properties>
       {properties.map(([name, details]) => (
-        <Property name={name} type={details?.type}>
+        <Property key={name} name={name} type={details?.type}>
           {details.description ?? null}
         </Property>
       ))}
