@@ -30,9 +30,9 @@ The **UI component** handles the presentation layer:
 </section>
 
 <section>
-### 2. SDC Backend Service
+### 2. Backend Service
 
-The **SDC backend** provides the data processing services:
+The **backend** provides the data processing services:
 
 - **Form retrieval**: Access to questionnaire definitions
 - **Population**: Pre-filling forms with existing data
@@ -47,7 +47,7 @@ The **SDC backend** provides the data processing services:
 
 
 All Tiro.health services are built on top of the FHIR standard, which means you can use any FHIR client to interact with them.
-The API's follow the [**Structured Data Capturing IG**](https://www.hl7.org/fhir/uv/sdc/index.html) standard for structured data capture, which is a set of FHIR profiles and extensions that standardizes how electronic forms are created, distributed, completed, and processed in healthcare systems.
+The API's follow the [**Structured Data Capturing IG**](https://www.hl7.org/fhir/uv/sdc/index.html) standard, which is a set of FHIR profiles and extensions that standardizes how electronic forms are created, distributed, completed, and processed in healthcare systems.
 
 ## Architecture
 
@@ -96,7 +96,7 @@ sequenceDiagram
 	loop Background activity during reporting
 	ff <<-->>	val: Validated current response
 	ff <<-->> text: Generate text narrative
-	ff <<-->> tx: Fetch terms and codes
+	ff <<-->> tx: Fetch codings
 	ff -->> client: Event with in-progress response
 	end
 	User ->> ff: Submit

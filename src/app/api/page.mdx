@@ -14,7 +14,16 @@ Tiro.health provides a set of APIs to integrate structured data capture capabili
 The API integration allow you to leverage Tiro.health's technology for structured data capture without needing to implement a full UI integration. This is particularly useful for EHR or LIS systems that support a simple URL-based integration, allowing you to quickly set up Tiro.health.
 
 
-## Overview
+## Supported Integrations
+The Tiro.health platform supports a variety of EHR integrations through standardized FHIR APIs.
+Overview of supported integrations:
+
+1. **KWS by Nexuzhealth**: [Learn more](./api/kws) about the KWS integration.
+2. **Synops by AZ Maria Middelares**: Tiro.health is deeply integrated in Synops. Please contact the application manager of your hospital for more information.
+3. **HiX by ChipSoft**: [Contact us](mailto:support@tiro.health?subject=HiX%20integration%20request) for more information on the HiX integration.
+4. **Primuz**: [Contact us](mailto:support@tiro.health?subject=Primuz%20integration%20request) for more information on the Primuz integration.
+
+## High-level Integration Flow
 Here's how a typical integration with Tiro.health API looks like:
 
 1. **Data Exchange**:
@@ -36,13 +45,3 @@ More info about this can be found on the [context launch](./context) page and th
 The Atticus API lets external systems configure destinations for submitted data.
 When a user submits a form, their QuestionnaireResponse data is sent to Atticus and forwarded to the configured endpoints.
 ![Sketch illustrating the submission step.](/submission.svg)
-
-## Supported Integrations
-The Tiro.health platform supports a variety of EHR integrations through standardized FHIR APIs. {{ className: 'lead' }}
-
-Overview of supported integrations:
-
-1. **KWS by Nexuzhealth**: [Learn more](./api/kws) about the KWS integration.
-2. **Synops by AZ Maria Middelares**: Tiro.health is deeply integrated in Synops. Please contact the application manager of your hospital for more information.
-3. **HiX by ChipSoft**: [Contact us](mailto:support@tiro.health?subject=HiX%20integration%20request) for more information on the HiX integration.
-4. **Primuz**: [Contact us](mailto:support@tiro.health?subject=Primuz%20integration%20request) for more information on the Primuz integration.
