@@ -9,8 +9,8 @@ import '@/styles/tailwind.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s - Atticus API Reference',
-    default: 'Atticus API Reference',
+    template: '%s - Tiro.health Integration Docs',
+    default: 'Tiro.health Integration Docs',
   },
 }
 
