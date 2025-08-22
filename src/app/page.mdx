@@ -16,18 +16,7 @@ Welcome to the Tiro.health Integration docs! This documentation is designed to h
 ### How should I integrate? Form SDK vs API?
 Tiro.health offers two main ways to integrate with your healthcare information system:
 
-| Audience | Type | Description |
-|----------|------------------|-------------|
-| EHR or LIS-developers | [**Form SDK**](./form-sdk) | A UI package and and a docker images to integrate Tiro.health into your EHR or LIS.<br/> It provides a seamless user experience and allows you to leverage the full power of Tiro.health's technology. Developers stay in control of the patient data flow. They can use backend api's for form processing tasks like text narrative generation or validation.|
-| EHR application managers | [**API**](./api) | A set of APIs to integrate Tiro.health Capture into your EHR or LIS.<br/>This is a more flexible way to integrate Tiro.health into your system, but it requires more work to set up and maintain. This integration is recommended for EHR or LIS systems that support a simple URL based integration. It allows you to quickly set up Tiro.health without being dependent on software development. However, it does not provide the same level of control over the data flow as the Form SDK. |
-
-
-
-
-### Form SDK vs API Overview
-A more detailed overview to highlighed the difference between both approaches
-
-| Feature | Form SDK | Tiro.health Managed API |
-|---------|---------|-----|
-| Integrated UI | Yes, provides a Form Filler component for seamless user experience | No, requires a browser window or iframe |
-| Patient Data Storage | Managed by customer | Cloud or on-prem FHIR server |
+| Audience | Solution       | Host          | Description of the integration |
+|----------|----------------|---------------|--------------------------------|
+| EHR or LIS-developers | [**Form SDK**](./form-sdk) | Customer infrastructure | A UI package and a Docker image to integrate Tiro.health Forms into your solution.<br/> This provides a seamless user experience and allows you to leverage the full power of Tiro.health's technology. Developers stay in control of the patient data flow. They can use backend api's for form processing tasks like text narrative generation or validation.<br/> [Read more about **Form SDK** ‣](./form-sdk)|
+| EHR or LIS application managers | [**Capture API**](./api) | Tiro.health infrastructure (on-prem storage possible) | A set of APIs to integrate the hosted Tiro.health Capture into your solution.<br/>This is a more flexible way to integrate Tiro.health into your system, but it requires more work to set up and maintain. This integration is recommended for EHR or LIS systems that support a simple URL based integration. It allows you to quickly set up Tiro.health without being dependent on software development. However, it does not provide the same level of control over the data flow as the Form SDK. <br/> [Read more about **Capture API** ‣](./api)|

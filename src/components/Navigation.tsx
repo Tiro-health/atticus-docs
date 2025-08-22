@@ -268,7 +268,7 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
-    title: 'API (managed)',
+    title: 'Capture API (managed)',
     links: [
       {
         title: 'Overview',
