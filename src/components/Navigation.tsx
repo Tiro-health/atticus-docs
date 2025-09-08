@@ -250,7 +250,7 @@ export const navigation: Array<NavGroup> = [
         href: '/form-sdk/getting-started',
       },
       {
-        title: 'SDC Backend Service',
+        title: 'Backend Service',
         href: '/form-sdk/sdc-backend',
       },
       {
