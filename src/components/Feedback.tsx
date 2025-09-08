@@ -39,6 +39,7 @@ const FeedbackForm = forwardRef<
     <form
       {...props}
       ref={ref}
+      name="user-feedback"
       onSubmit={onSubmit}
       className={clsx(
         className,
