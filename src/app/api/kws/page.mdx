@@ -55,7 +55,8 @@ sequenceDiagram
     Note over KWS: KWS stores report text in patient record
     deactivate KWS
 ```
-**Step-by-step user flow**
+<details open>
+    <summary>Step-by-step user flow</summary>
 1. The user selects a contact in KWS and launches Tiro.health using the configured External Viewer.
 
 2. A browser window opens with a context url. The browser redirects to the template picker page in Tiro.health, where the user can select a report template.
@@ -64,14 +65,15 @@ sequenceDiagram
 
 3. After selecting a template, the user is redirected to the report form page, where they can fill out the form.
   ![Report form page](/kws/report-form.png)
-
-  > When testing the integration, search for the "KWS test template".
+  **Integration tip:** When testing the integration, search for the "KWS test template".
 
 4. After filling out the form, the user submits the report by clicking on "Submit" (NL: Valideer) in the upper right corner. The report is sent to the Tiro.health backend and stored in the patient's record.
   ![Report submission page](/kws/report-submission.png)
 
 5. After submission, the user is redirected to a confirmation page in KWS, indicating that the report has been successfully stored in the patient's record.
   ![Report submission confirmation page](/kws/report-submission-confirmation.png)
+
+</details>
 
 Please test this flow after completing the integration. If you encounter any issues, please contact us at [support@tiro.health](mailto:support@tiro.health)
 
