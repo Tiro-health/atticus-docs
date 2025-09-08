@@ -8,6 +8,36 @@ export const metadata = {
 
 The Tiro.health Web UI NPM package provides a set of components to integrate Tiro.health Capture into your web application. {{ className: 'lead' }}
 
+## Installing from Private Registry
+
+The Tiro.health Web UI NPM package is hosted in our private Google Artifact Registry. After your service account has been granted access, configure npm to authenticate with the registry:
+
+### Configuration
+
+1. **Set up authentication** using one of these methods:
+
+   **Option A: Using npx (recommended for initial setup)**
+   ```bash
+   npx google-artifactregistry-auth
+   ```
+
+   **Option B: Manual configuration**
+   
+   Add the following to your `.npmrc` file:
+   ```bash
+   @tiro-health:registry=https://europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/
+   //europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/:always-auth=true
+   ```
+
+2. **Install the package**:
+   ```bash
+   npm install @tiro-health/web-ui-react
+   ```
+
+For more details on configuring authentication, see the [Google Cloud Artifact Registry documentation](https://cloud.google.com/artifact-registry/docs/nodejs/store-nodejs#config).
+
+## Components
+
 The package includes multiple components. Each of them is built for multiple frontend frameworks:
 
 -  Form Filler component allows users to fill out forms and submit them to the Tiro.health backend.
