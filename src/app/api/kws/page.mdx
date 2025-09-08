@@ -162,10 +162,10 @@ sequenceDiagram
 This channel fetches the report submitted in Tiro.health and exports it back to KWS using the KWS Import XML API. It ensures that the report is stored in the patient's record using the correct identifiers, allowing for easy access and retrieval.
 
 <MirthChannel
-  name="Context Launch Channel"
+  name="Report Export Channel"
   version="1.0.0"
   href="mailto:support@tiro.health?subject=KWS%20Mirth%20Channel%20Request&body=Dear%20Tiro.health%20support%2C%0A%0APlease%20send%20me%20the%20latest%20version%20of%20the%20KWS%20Mirth%20channels.%0A%0AThank%20you.%0A"
-  description="Intercept the URL launched from KWS and redirect to Tiro.health with patient and encounter context."
+  description="Retrieve the report from Tiro.health backend and send back to KWS XML Import API"
 />
 
 <details className="mt-2">
