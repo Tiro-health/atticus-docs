@@ -86,7 +86,8 @@ sequenceDiagram
     participant ts as Tiro.health Template Service
 	participant client as 3rd party <br/> Software Client
 	actor User
- 	client <<-->> ts: Fetches available Questionnaire resources
+ 	client -->> ts: Fetches available Questionnaire resources
+	ts ->> client: 
 	User ->> client: Create new report
 	activate client
 	client <<-->> pop: Build a initial QuestionnaireResponse
