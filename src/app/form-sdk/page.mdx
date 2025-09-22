@@ -66,7 +66,8 @@ flowchart TD
 	subgraph Tiro.health cloud
 			TS[Tiro.health Template Server]
 	end
-	FF --->|Fetch Questionnaire| TS
+	SDC --->|Fetch Questionnaire| TS
+	FF --->|Fetch Questionnaire| SDC
 	FF --->|Fetch Terminology| SDC
 	HA --->|Populate Form| SDC
 	FF --->|Generate Narrative| SDC
@@ -87,8 +88,8 @@ sequenceDiagram
     participant ts as Tiro.health Template Service
 	participant client as 3rd party <br/> Software Client
 	actor User
- 	client -->> ts: Fetches available Questionnaire resources
-	ts -->> client: 
+ 	client -->> bs: Fetch Questionnaire resources
+	bs -->> ts: Fetch Questionnaire resources
 	User ->> client: Create new report
 	activate client
 	client <<-->> pop: Build a initial QuestionnaireResponse
