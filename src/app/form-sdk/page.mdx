@@ -66,6 +66,7 @@ flowchart TD
 	subgraph Tiro.health cloud
 			TS[Tiro.health Template Server]
 	end
+	FF --->|Fetch Questionnaire| TS
 	FF --->|Fetch Terminology| SDC
 	HA --->|Populate Form| SDC
 	FF --->|Generate Narrative| SDC
