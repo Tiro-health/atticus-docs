@@ -94,7 +94,7 @@ sequenceDiagram
 	client ->> ff: Mount the Form Filler with Q & QR
 	User ->> ff: Start interacting with form
 	loop Background activity during reporting
-	ff <<-->>	val: Validated current response
+	ff <<-->> val: Validated current response
 	ff <<-->> text: Generate text narrative
 	ff <<-->> tx: Fetch codings
 	ff -->> client: Event with in-progress response
