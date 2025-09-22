@@ -79,24 +79,19 @@ A typical session for a user filling out a form looks like this:
 ```mermaid
 sequenceDiagram
 	autonumber
-	box Tiro.health Backend Service
-	participant text as Text Narrative API
-	participant pop as Population API
-	participant val as Validation API
-	participant tx as Terminology API
-	end
+	participant bs as Tiro.health Backend Service
 	participant client as 3rd party <br/> Software Client
 	actor User
 	User ->> client: Create new report
 	activate client
 	client <<-->> pop: Build a initial QuestionnaireResponse
-	create participant ff as Form Filler
+	create participant ff as Tiro.health Form Filler
 	client ->> ff: Mount the Form Filler with Q & QR
 	User ->> ff: Start interacting with form
 	loop Background activity during reporting
-	ff <<-->> val: Validated current response
-	ff <<-->> text: Generate text narrative
-	ff <<-->> tx: Fetch codings
+	ff <<-->> bs: Validated current response
+	ff <<-->> bs: Generate text narrative
+	ff <<-->> bs: Fetch codings
 	ff -->> client: Event with in-progress response
 	end
 	User ->> ff: Submit
