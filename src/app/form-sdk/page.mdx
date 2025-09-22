@@ -84,8 +84,8 @@ A typical session for a user filling out a form looks like this:
 ```mermaid
 sequenceDiagram
 	autonumber
-	participant bs as Tiro.health Backend Service
     participant ts as Tiro.health Template Service
+	participant bs as Tiro.health Backend Service
 	participant client as 3rd party <br/> Software Client
 	actor User
  	client -->> bs: Fetch Questionnaire resources
