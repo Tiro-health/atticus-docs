@@ -61,7 +61,10 @@ flowchart TD
 			HA[3rd Party Application]
 	end
 	subgraph Your Backend
-					SDC[Tiro.health SDC Server]
+			SDC[Tiro.health SDC Server]
+	end
+	subgraph Tiro.health cloud
+			TS[Tiro.health Template Server]
 	end
 	FF --->|Fetch Terminology| SDC
 	HA --->|Populate Form| SDC
@@ -80,8 +83,10 @@ A typical session for a user filling out a form looks like this:
 sequenceDiagram
 	autonumber
 	participant bs as Tiro.health Backend Service
+    participant ts as Tiro.health Template Service
 	participant client as 3rd party <br/> Software Client
 	actor User
+ 	client <<->> ts: Fetches available Questionnaire resources
 	User ->> client: Create new report
 	activate client
 	client <<-->> pop: Build a initial QuestionnaireResponse
