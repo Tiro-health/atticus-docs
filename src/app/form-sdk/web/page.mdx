@@ -31,7 +31,7 @@ The Tiro.health Web UI NPM package is hosted in our private Google Artifact Regi
 
 2. **Install the package**:
    ```bash
-   npm install @tiro-health/web-ui-react
+   npm install @tiro-health/web-sdk
    ```
 
 For more details on configuring authentication, see the [Google Cloud Artifact Registry documentation](https://cloud.google.com/artifact-registry/docs/nodejs/store-nodejs#config).
@@ -51,7 +51,7 @@ The package includes multiple components. Each of them is built for multiple fro
 The Form Filler component is the main component of the Tiro.health Web UI NPM package. It provides a user interface for filling out forms and submitting them to the Tiro.health backend. The Form Filler component is built on top of the SDC standard and supports all features of the SDC standard, including:
 
 ```jsx
-import { FormFiller, SDCClient } from '@tiro-health/web-ui-react'
+import { FormFiller, SDCClient } from '@tiro-health/web-sdk'
 
 const client = new SDCClient({
   baseUrl: 'https://your-sdc-backend-address',
@@ -73,7 +73,7 @@ const client = new SDCClient({
 The Narrative component is used to generate narrative text based on a QuestionnaireResponse. It can be used to display the narrative text in the Form Filler component or in other parts of your application.
 
 ```jsx
-import { Narrative } from '@tiro-health/web-ui-react'
+import { Narrative } from '@tiro-health/web-sdk'
 
 const client = new SDCClient({
   baseUrl: 'https://your-sdc-backend-address',
@@ -87,7 +87,7 @@ const client = new SDCClient({
 The Validation Feedback component is used to display validation errors and warnings for a QuestionnaireResponse. It can be used to provide feedback to the user while they are filling out the form.
 
 ```jsx
-import { ValidationFeedback } from '@tiro-health/web-ui-react'
+import { ValidationFeedback } from '@tiro-health/web-sdk'
 
 const client = new SDCClient({
   baseUrl: 'https://your-sdc-backend-address',
