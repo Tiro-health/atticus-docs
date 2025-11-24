@@ -22,28 +22,121 @@ Overview of supported integrations:
 2. **Synops by AZ Maria Middelares**: Tiro.health is deeply integrated in Synops. Please contact the application manager of your hospital for more information.
 3. **HiX by ChipSoft**: [Contact us](mailto:support@tiro.health?subject=HiX%20integration%20request) for more information on the HiX integration.
 4. **Primuz**: [Contact us](mailto:support@tiro.health?subject=Primuz%20integration%20request) for more information on the Primuz integration.
+5. **Web-based EHRs and LISs**: Tiro.health supports integration with any web-based EHR or LIS system that can launch external URLs. This includes systems like Epic, Cerner, and others. [Learn more](./context) about context launches and how to set up the integration.
 
 ## High-level Integration Flow
 Here's how a typical integration with Tiro.health API looks like:
 
-1. **Data Exchange**:
+### Data Import
 Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.
-Learn more about available APIs in the [FHIR API](./fhir) section. 
-    ![Sketch illustrating the data import step.](/data-import.svg)
+Learn more about available APIs in the [FHIR API](./fhir) section.
 
-2. **Context Launch**
-To provide a seamless user experience between your system and Atticus, we support contextual launches. This allows users to be redirected directly to a specific patient's information. The context launch flow is a two step process:
-- Authorize a new session: A healthcare information systems (eg. EHR or LIS) authorizes a new session with the Atticus Authorization Server.
-- Launch of Atticus: The user is redirected to the Atticus application in a new browser window.
+<details>
+<summary>Example: FHIR Transaction</summary>
+
+```bash
+curl -X POST https://reports.tiro.health/fhir/r5 \
+  -H "Authorization: Basic {{apikey}}" \
+  -H "Content-Type: application/fhir+json" \
+  -d '{
+    "resourceType": "Bundle",
+    "type": "transaction",
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:patient-001",
+        "resource": {
+          "resourceType": "Patient",
+          "identifier": [{
+            "system": "http://hospital.example.com/patients",
+            "value": "PAT-12345"
+          }],
+          "name": [{"family": "Smith", "given": ["John"]}]
+        },
+        "request": {
+          "method": "POST",
+          "url": "Patient"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:practitioner-001",
+        "resource": {
+          "resourceType": "Practitioner",
+          "identifier": [{
+            "system": "http://hospital.example.com/practitioners",
+            "value": "PRAC-67890"
+          }],
+          "name": [{"family": "Jones", "given": ["Sarah"]}]
+        },
+        "request": {
+          "method": "POST",
+          "url": "Practitioner"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:task-001",
+        "resource": {
+          "resourceType": "Task",
+          "identifier": [{
+            "system": "http://hospital.example.com/tasks",
+            "value": "TASK-54321"
+          }],
+          "status": "draft",
+          "intent": "order",
+          "code": {
+            "coding": [{
+              "system": "http://fhir.tiro.health/CodeSystem/task-type",
+              "code": "complete-questionnaire"
+            }],
+            "text": "Complete questionnaire"
+          },
+          "for": {
+            "reference": "urn:uuid:patient-001"
+          },
+          "owner": {
+            "reference": "urn:uuid:practitioner-001"
+          }
+        },
+        "request": {
+          "method": "POST",
+          "url": "Task"
+        }
+      }
+    ]
+  }'
+```
+
+</details>
+
+![Sketch illustrating the data import step.](/data-import.svg)
+
+### Context Launch
+To provide a seamless user experience between your system and Atticus, we support contextual launches that allow users to access patient-specific information directly. Tiro.health supports two authentication patterns:
+
+**Standard Identity Provider (Identity Verification Only)**
+When using off-the-shelf identity providers like Microsoft Entra ID or Google, Tiro.health verifies user identities but does not perform authorization. The host system can redirect users to specific reports via URL parameters, but no session-scoped access control is enforced.
+
+**Backchannel Authorization (Session-Scoped Access)**
+For seamless session handovers with context, the host system can authorize sessions through a backchannel API. This enables:
+- Sessions scoped to a specific patient
+- Granular session-scoped access control
+- Seamless context transfer from the host system to Tiro.health
+
 ![Sketch illustrating the context launch step.](/context-launch.svg)
-Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.
-When using a separate browser, external identity providers are required for authentication. SMART on FHIR enables exchange of both user identity and context.
-Standard identity providers like Microsoft Entra ID or Google are also supported, though they cannot exchange context information.
-\
-\
-More info about context launches can be found on the [context launch](./context) page and the [identity provider](./identity-provider) page.
 
-3. **Submission**:
-The Atticus API lets external systems configure destinations for submitted data.
-When a user submits a form, their QuestionnaireResponse data is sent to Atticus and forwarded to the configured endpoints.
+More info about context launches can be found on the [session managment](./session-managment) page and the [identity provider](./identity-provider) page.
+
+### Submission
+The submission process follows three distinct steps:
+
+   1. **User clicks submit**: The user completes their work in Atticus and clicks the submit button.
+   2. **Data persistence**: The submit action persists all data to the customer's data tenant.
+   3. **Redirect and data retrieval**: The user is redirected to a configured URL, which serves as both a return mechanism and a trigger for the host application to fetch all data from the data tenant.
+
+The redirect URL can be configured per session and supports different integration patterns:
+- **Web-based applications**: Use standard HTTP URLs to redirect users back to the EHR or LIS.
+- **Native applications**: Use custom URI schemes to return users to the application:
+  - Windows apps can implement [URI activation handlers](https://learn.microsoft.com/en-us/windows/apps/develop/launch/handle-uri-activation)
+  - Mac apps can define [custom URL schemes](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app)
+
+The redirect not only brings the user back to the host application but also signals that the data is ready to be retrieved from the data tenant.
 ![Sketch illustrating the submission step.](/submission.svg)
