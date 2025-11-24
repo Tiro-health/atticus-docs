@@ -58,4 +58,12 @@ In headers we need a special notation to combine the `system` and the `value` of
 
 ## OAuth2 with a token
 
-_To be documented_
+For machine-to-machine API access, Tiro.health supports OAuth2 client credentials flow. This is the recommended authentication method for server-side integrations such as:
+
+- Creating sessions programmatically via the Session Management API
+- Background data synchronization with EHR/LIS systems
+- Automated workflows that access FHIR resources
+
+OAuth2 provides token-based authentication where you exchange your client credentials (`client_id` and `client_secret`) for a temporary access token. The access token is then included in API requests using the `Authorization: Bearer` header.
+
+For detailed information on how to authenticate using OAuth2 client credentials, including code examples in multiple languages, see the **[API Authentication](/api/authentication)** guide.

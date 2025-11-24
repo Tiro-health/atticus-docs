@@ -37,6 +37,8 @@ This API is particularly useful when you need to:
 - Integrate Tiro.health into your application's authentication flow
 - Provide seamless user experience with session continuity
 
+**Authentication Required**: All Session Management API endpoints require OAuth2 authentication using client credentials. See the [Authentication](/api/authentication) guide for details on obtaining and using access tokens.
+
 ---
 
 ## Session Lifecycle
@@ -106,6 +108,7 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
 
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/session \
+      -H "Authorization: Bearer <access_token>" \
       -H "Content-Type: application/json" \
       -d '{
         "scope": "patient/Patient.read patient/Observation.write",
@@ -116,6 +119,8 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
 
     ```csharp {{ title: 'C#' }}
     var client = new HttpClient();
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("Bearer", accessToken);
 
     var payload = new {
       scope = "patient/Patient.read patient/Observation.write",
