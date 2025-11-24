@@ -30,87 +30,6 @@ Here's how a typical integration with Tiro.health API looks like:
 Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.
 Learn more about available APIs in the [FHIR API](./fhir) section. 
     ![Sketch illustrating the data import step.](/data-import.svg)
-    <details>
-    <summary>**Example: Data Import Request**</summary>Below is an example of a FHIR transaction bundle that imports a patient with an identifier and creates a "complete-questionnaire" task. This task references the patient and includes a questionnaire input parameter.
-    **Key Fields to Customize:** Update the **patient identifier** (`system` and `value` on lines 10-11), the **task identifier** (`system` and `value` on lines 26-27), and the **questionnaire URL** (`valueCanonical` on line 50) to match your EHR's systems and the form you want users to complete.
-    ```json {{ title: 'POST /fhir' }}
-    {
-    "resourceType": "Bundle",
-    "type": "transaction",
-    "entry": [
-        {
-        "fullUrl": "urn:uuid:patient-example",
-        "resource": {
-            "resourceType": "Patient",
-            "identifier": [
-            {
-                "system": "http://hospital.example.org/patients",
-                "value": "12345"
-            }
-            ],
-            "name": [
-            {
-                "family": "Doe",
-                "given": ["John"]
-            }
-            ],
-            "gender": "male",
-            "birthDate": "1980-01-01"
-        },
-        "request": {
-            "method": "POST",
-            "url": "Patient"
-        }
-        },
-        {
-        "fullUrl": "urn:uuid:task-example",
-        "resource": {
-            "resourceType": "Task",
-            "identifier": [
-            {
-                "system": "http://hospital.example.org/tasks",
-                "value": "task-67890"
-            }
-            ],
-            "status": "requested",
-            "intent": "order",
-            "code": {
-            "coding": [
-                {
-                "system": "http://tiro.health/fhir/CodeSystem/task-code",
-                "code": "complete-questionnaire",
-                "display": "Complete Questionnaire"
-                }
-            ]
-            },
-            "for": {
-            "reference": "urn:uuid:patient-example"
-            },
-            "authoredOn": "2025-01-15T10:00:00Z",
-            "input": [
-            {
-                "type": {
-                "coding": [
-                    {
-                    "system": "http://tiro.health/fhir/CodeSystem/task-input-type",
-                    "code": "questionnaire",
-                    "display": "Questionnaire"
-                    }
-                ]
-                },
-                "valueCanonical": "https://tiro.health/fhir/Questionnaire/example-form"
-            }
-            ]
-        },
-        "request": {
-            "method": "POST",
-            "url": "Task"
-        }
-        }
-    ]
-    }
-    ```
-    </details>
 
 2. **Context Launch**
 To provide a seamless user experience between your system and Atticus, we support contextual launches. This allows users to be redirected directly to a specific patient's information. The context launch flow is a two step process:
@@ -120,9 +39,8 @@ To provide a seamless user experience between your system and Atticus, we suppor
 Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.
 When using a separate browser, external identity providers are required for authentication. SMART on FHIR enables exchange of both user identity and context.
 Standard identity providers like Microsoft Entra ID or Google are also supported, though they cannot exchange context information.
-
-For Capture API customers, we provide a [Session Management API](./api/session-management) that allows you to programmatically create sessions with fine-grained scope-based access control. This gives you full control over what data users can access during their session and enables seamless integration with your existing authentication flow.
-
+\
+\
 More info about context launches can be found on the [context launch](./context) page and the [identiy provider](./identity-provider) page.
 
 3. **Submission**:
