@@ -27,19 +27,21 @@ Overview of supported integrations:
 Here's how a typical integration with Tiro.health API looks like:
 
 1. **Data Exchange**:
-Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.\
-Learn more about available APIs in the [Atticus FHIR API](./fhir) section.
-![Sketch illustrating the data import step.](/data-import.svg)
+Atticus requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.
+Learn more about available APIs in the [FHIR API](./fhir) section. 
+    ![Sketch illustrating the data import step.](/data-import.svg)
 
 2. **Context Launch**
 To provide a seamless user experience between your system and Atticus, we support contextual launches. This allows users to be redirected directly to a specific patient's information. The context launch flow is a two step process:
 - Authorize a new session: A healthcare information systems (eg. EHR or LIS) authorizes a new session with the Atticus Authorization Server.
 - Launch of Atticus: The user is redirected to the Atticus application in a new browser window.
 ![Sketch illustrating the context launch step.](/context-launch.svg)
-Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.\
+Most native applications can configure an embedded browser, allowing the authenticated session to be created in the background. Once established, users are redirected to the Atticus form.
 When using a separate browser, external identity providers are required for authentication. SMART on FHIR enables exchange of both user identity and context.
 Standard identity providers like Microsoft Entra ID or Google are also supported, though they cannot exchange context information.
-More info about this can be found on the [context launch](./context) page and the [identity provider](./identity-provider) page.
+\
+\
+More info about context launches can be found on the [context launch](./context) page and the [identity provider](./identity-provider) page.
 
 3. **Submission**:
 The Atticus API lets external systems configure destinations for submitted data.
