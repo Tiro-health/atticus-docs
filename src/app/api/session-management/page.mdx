@@ -44,8 +44,7 @@ This API is particularly useful when you need to:
 A typical session follows this lifecycle:
 
 1. **Session Creation**: Your backend calls `POST /session`, optionally including scopes and FHIR context (Patient, Encounter)
-2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST
-3. **Session Activation**: The session is activated, a secure cookie is set, and the user is redirected to Tiro.health
+2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST. The session will be activated, a secure cookie is set, and the user is redirected to Tiro.health
 4. **Active Session**: The user operates within Tiro.health with access controlled by the session's scopes
 5. **Session Termination**: The session is deleted via `DELETE /session` (equivalent to logout) or expires automatically
 
