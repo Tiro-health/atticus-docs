@@ -1,0 +1,683 @@
+export const metadata = {
+  title: 'Angular Integration',
+  description:
+    'Complete guide for integrating Tiro.health Web SDK into Angular applications with TypeScript, lifecycle hooks, and standalone components.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Prerequisites', id: 'prerequisites' },
+  { title: 'Project Setup', id: 'project-setup' },
+  { title: 'Basic Integration', id: 'basic-integration' },
+  { title: 'Complete Example', id: 'complete-example' },
+  { title: 'TypeScript Configuration', id: 'typescript-configuration' },
+  { title: 'Best Practices', id: 'best-practices' },
+  { title: 'Common Pitfalls', id: 'common-pitfalls' },
+]
+
+# Angular Integration
+
+Learn how to integrate the Tiro.health Web SDK into your Angular application using lifecycle hooks, ViewChild, and proper component architecture. {{ className: 'lead' }}
+
+## Overview
+
+The Web SDK's imperative API integrates naturally with Angular using:
+- **Lifecycle hooks** (ngAfterViewInit, ngOnDestroy) for mounting and cleanup
+- **ViewChild / ElementRef** for DOM element references
+- **Standalone components** (Angular 14+) or NgModule
+- **TypeScript** for full type safety
+- **Environment variables** for configuration
+
+This guide covers Angular 15+ with standalone components and TypeScript.
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- **Node.js** 18 or later
+- **Angular CLI** 15 or later
+- Access to Tiro.health private npm registry (see [Installation](/form-sdk/web#installation))
+- Basic knowledge of Angular components and lifecycle hooks
+
+---
+
+## Project Setup
+
+### Create a New Angular Project
+
+```bash
+npm install -g @angular/cli
+ng new my-forms-app
+cd my-forms-app
+```
+
+When prompted:
+- **Routing**: Yes
+- **Stylesheet format**: CSS (or your preference)
+- **Standalone components**: Yes (recommended)
+
+### Configure NPM Registry
+
+Add registry authentication to `.npmrc` in your project root:
+
+```bash
+@tiro-health:registry=https://europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/
+//europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/:always-auth=true
+```
+
+### Install the Web SDK
+
+```bash
+npm install @tiro-health/web-sdk
+```
+
+### Configure Environment Variables
+
+Angular uses `environment.ts` files for configuration. Update `src/environments/environment.ts`:
+
+```typescript
+export const environment = {
+  production: false,
+  sdcEndpoint: 'https://your-sdc-backend.example.com/fhir',
+  dataEndpoint: 'https://your-fhir-server.example.com/fhir',
+  questionnaireId: 'your-questionnaire-id',
+  patientId: 'your-patient-id',
+}
+```
+
+And `src/environments/environment.prod.ts` for production:
+
+```typescript
+export const environment = {
+  production: true,
+  sdcEndpoint: 'https://your-production-sdc-backend.example.com/fhir',
+  dataEndpoint: 'https://your-production-fhir-server.example.com/fhir',
+  questionnaireId: 'your-questionnaire-id',
+  patientId: 'your-patient-id',
+}
+```
+
+---
+
+## Basic Integration
+
+### Simple FormFiller Component
+
+Here's a minimal Angular component that integrates the FormFiller:
+
+**Component TypeScript:**
+```typescript
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core'
+import { FormFiller } from '@tiro-health/web-sdk'
+import { environment } from '../environments/environment'
+
+@Component({
+  selector: 'app-questionnaire-form',
+  standalone: true,
+  templateUrl: './questionnaire-form.component.html',
+  styleUrls: ['./questionnaire-form.component.css']
+})
+export class QuestionnaireFormComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('formContainer') formContainer!: ElementRef<HTMLDivElement>
+
+  private filler?: FormFiller
+
+  ngAfterViewInit(): void {
+    // Create FormFiller instance
+    this.filler = new FormFiller({
+      questionnaire: environment.questionnaireId,
+      sdcEndpoint: {
+        resourceType: 'Endpoint',
+        address: environment.sdcEndpoint,
+      },
+      onSubmit: (response) => {
+        console.log('Form submitted:', response)
+        alert('Form submitted successfully!')
+      },
+      onChange: (response) => {
+        console.log('Form changed:', response)
+      },
+      onError: (error) => {
+        console.error('Form error:', error)
+        alert(\`Error: \${error.message}\`)
+      },
+    })
+
+    // Mount to the DOM element
+    this.filler.mount(this.formContainer.nativeElement)
+  }
+
+  ngOnDestroy(): void {
+    // Clean up when component is destroyed
+    this.filler?.unmount()
+  }
+}
+```
+
+**Template HTML:**
+```html
+<div class="questionnaire-container">
+  <h1>Patient Questionnaire</h1>
+  <div #formContainer></div>
+</div>
+```
+
+### Key Angular Integration Patterns
+
+**1. Using ViewChild for DOM References:**
+```typescript
+@ViewChild('formContainer') formContainer!: ElementRef<HTMLDivElement>
+```
+
+**2. Mounting in ngAfterViewInit:**
+```typescript
+ngAfterViewInit(): void {
+  this.filler = new FormFiller(config)
+  this.filler.mount(this.formContainer.nativeElement)
+}
+```
+
+**3. Cleanup in ngOnDestroy:**
+```typescript
+ngOnDestroy(): void {
+  this.filler?.unmount()
+}
+```
+
+---
+
+## Complete Example
+
+### Full-Featured Angular Component
+
+This example includes all SDK components with visualization features:
+
+```typescript
+import {
+  Component,
+  AfterViewInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+} from '@angular/core'
+import { CommonModule } from '@angular/common'
+import {
+  FormFiller,
+  LaunchContextProvider,
+  Narrative,
+  ValidationFeedback,
+  VisualizationToggle,
+} from '@tiro-health/web-sdk'
+import { environment } from '../environments/environment'
+
+@Component({
+  selector: 'app-patient-form',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './patient-form.component.html',
+  styleUrls: ['./patient-form.component.css']
+})
+export class PatientFormComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('contextContainer') contextContainer!: ElementRef<HTMLDivElement>
+  @ViewChild('formContainer') formContainer!: ElementRef<HTMLDivElement>
+  @ViewChild('narrativeContainer') narrativeContainer!: ElementRef<HTMLDivElement>
+  @ViewChild('validationContainer') validationContainer!: ElementRef<HTMLDivElement>
+  @ViewChild('toggleContainer') toggleContainer!: ElementRef<HTMLDivElement>
+
+  private contextProvider?: LaunchContextProvider
+  private filler?: FormFiller
+  private narrative?: Narrative
+  private validation?: ValidationFeedback
+  private toggle?: VisualizationToggle
+
+  isLoading = true
+  error: Error | null = null
+
+  ngAfterViewInit(): void {
+    try {
+      // Create FormFiller
+      this.filler = new FormFiller({
+        questionnaire: environment.questionnaireId,
+        sdcEndpoint: {
+          resourceType: 'Endpoint',
+          address: environment.sdcEndpoint,
+        },
+        visualize: !environment.production,
+        onSubmit: (response) => {
+          console.log('Form submitted:', response)
+          alert('Form submitted successfully!')
+        },
+        onChange: (response) => {
+          console.log('Form updated:', response)
+        },
+        onError: (error) => {
+          console.error('Form error:', error)
+          this.error = error
+        },
+      })
+
+      // Create LaunchContextProvider
+      this.contextProvider = new LaunchContextProvider({
+        dataEndpoint: {
+          resourceType: 'Endpoint',
+          address: environment.dataEndpoint,
+        },
+        filler: this.filler,
+        patientId: environment.patientId,
+      })
+
+      // Create Narrative
+      this.narrative = new Narrative({
+        filler: this.filler,
+        visualize: !environment.production,
+      })
+
+      // Create ValidationFeedback
+      this.validation = new ValidationFeedback({
+        filler: this.filler,
+        visualize: !environment.production,
+      })
+
+      // Create VisualizationToggle
+      this.toggle = new VisualizationToggle()
+
+      // Mount all components
+      this.contextProvider.mount(this.contextContainer.nativeElement)
+      this.filler.mount(this.formContainer.nativeElement)
+      this.narrative.mount(this.narrativeContainer.nativeElement)
+      this.validation.mount(this.validationContainer.nativeElement)
+      this.toggle.mount(this.toggleContainer.nativeElement)
+
+      this.isLoading = false
+    } catch (error) {
+      console.error('Failed to initialize components:', error)
+      this.error = error as Error
+      this.isLoading = false
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up all components
+    this.contextProvider?.unmount()
+    this.filler?.unmount()
+    this.narrative?.unmount()
+    this.validation?.unmount()
+    this.toggle?.unmount()
+  }
+
+  retry(): void {
+    this.error = null
+    this.isLoading = true
+    this.ngAfterViewInit()
+  }
+}
+```
+
+### Using in App Module
+
+If using NgModule-based architecture, add to your `app.module.ts`:
+
+```typescript
+import { NgModule } from '@angular/core'
+import { BrowserModule } from '@angular/platform-browser'
+import { AppComponent } from './app.component'
+import { PatientFormComponent } from './patient-form/patient-form.component'
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [
+    BrowserModule,
+    PatientFormComponent, // Standalone component
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
+
+### Using in Routes
+
+Add to your `app.routes.ts`:
+
+```typescript
+import { Routes } from '@angular/router'
+import { PatientFormComponent } from './patient-form/patient-form.component'
+
+export const routes: Routes = [
+  { path: '', redirectTo: '/form', pathMatch: 'full' },
+  { path: 'form', component: PatientFormComponent },
+]
+```
+
+---
+
+## TypeScript Configuration
+
+### Update tsconfig.json
+
+Ensure your `tsconfig.json` includes proper configuration:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node"
+  }
+}
+```
+
+### Type Definitions
+
+Create custom type definitions if needed (`src/types/web-sdk.d.ts`):
+
+```typescript
+declare module '@tiro-health/web-sdk' {
+  export interface QuestionnaireResponse {
+    resourceType: 'QuestionnaireResponse'
+    status: string
+    authored?: string
+    item?: any[]
+  }
+
+  export interface EndpointConfig {
+    resourceType: 'Endpoint'
+    address: string
+  }
+
+  export interface FormFillerConfig {
+    questionnaire: string
+    sdcEndpoint: EndpointConfig
+    initialResponse?: QuestionnaireResponse
+    onSubmit?: (response: QuestionnaireResponse) => void
+    onChange?: (response: QuestionnaireResponse) => void
+    onError?: (error: Error) => void
+    visualize?: boolean
+  }
+
+  export class FormFiller {
+    constructor(config: FormFillerConfig)
+    mount(element: HTMLElement): void
+    unmount(): void
+  }
+
+  export class LaunchContextProvider {
+    constructor(config: {
+      dataEndpoint: EndpointConfig
+      filler: FormFiller
+      patientId?: string
+    })
+    mount(element: HTMLElement): void
+    unmount(): void
+  }
+
+  export class Narrative {
+    constructor(config: { filler: FormFiller; visualize?: boolean })
+    mount(element: HTMLElement): void
+    unmount(): void
+  }
+
+  export class ValidationFeedback {
+    constructor(config: { filler: FormFiller; visualize?: boolean })
+    mount(element: HTMLElement): void
+    unmount(): void
+  }
+
+  export class VisualizationToggle {
+    constructor()
+    mount(element: HTMLElement): void
+    unmount(): void
+  }
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Use Angular Services for Configuration
+
+Create a configuration service:
+
+```typescript
+import { Injectable } from '@angular/core'
+import { environment } from '../environments/environment'
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FormConfigService {
+  getSDCEndpoint() {
+    return {
+      resourceType: 'Endpoint' as const,
+      address: environment.sdcEndpoint,
+    }
+  }
+
+  getDataEndpoint() {
+    return {
+      resourceType: 'Endpoint' as const,
+      address: environment.dataEndpoint,
+    }
+  }
+
+  getQuestionnaireId(): string {
+    return environment.questionnaireId
+  }
+
+  getPatientId(): string {
+    return environment.patientId
+  }
+
+  shouldVisualize(): boolean {
+    return !environment.production
+  }
+}
+
+// Usage in component:
+constructor(private config: FormConfigService) {}
+
+ngAfterViewInit(): void {
+  this.filler = new FormFiller({
+    questionnaire: this.config.getQuestionnaireId(),
+    sdcEndpoint: this.config.getSDCEndpoint(),
+    visualize: this.config.shouldVisualize(),
+  })
+}
+```
+
+### 2. Error Handling Service
+
+Create a dedicated error handling service:
+
+```typescript
+import { Injectable } from '@angular/core'
+import { Subject } from 'rxjs'
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FormErrorService {
+  private errorSubject = new Subject<Error>()
+  public errors$ = this.errorSubject.asObservable()
+
+  handleError(error: Error): void {
+    console.error('Form error:', error)
+    this.errorSubject.next(error)
+    // Could also send to logging service, show toast, etc.
+  }
+}
+
+// Usage in component:
+constructor(private errorService: FormErrorService) {}
+
+ngAfterViewInit(): void {
+  this.filler = new FormFiller({
+    // ...
+    onError: (error) => this.errorService.handleError(error),
+  })
+}
+```
+
+### 3. Loading State Management
+
+Use Angular's built-in change detection:
+
+```typescript
+export class PatientFormComponent {
+  isLoading = true
+
+  ngAfterViewInit(): void {
+    // Component initialization...
+
+    // Use setTimeout to ensure change detection runs
+    setTimeout(() => {
+      this.isLoading = false
+    }, 0)
+  }
+}
+```
+
+### 4. Cleanup
+
+Always implement `OnDestroy` and clean up:
+
+```typescript
+export class MyComponent implements OnDestroy {
+  private filler?: FormFiller
+
+  ngOnDestroy(): void {
+    this.filler?.unmount() // Prevents memory leaks
+  }
+}
+```
+
+---
+
+## Common Pitfalls
+
+### 1. Mounting Before View is Ready
+
+**Problem:**
+```typescript
+// ❌ ViewChild not available yet
+ngOnInit(): void {
+  this.filler = new FormFiller(config)
+  this.filler.mount(this.formContainer.nativeElement) // Error!
+}
+```
+
+**Solution:**
+```typescript
+// ✅ Use ngAfterViewInit
+ngAfterViewInit(): void {
+  this.filler = new FormFiller(config)
+  this.filler.mount(this.formContainer.nativeElement)
+}
+```
+
+### 2. Forgetting ngOnDestroy
+
+**Problem:**
+```typescript
+// ❌ No cleanup - memory leak
+export class MyComponent implements AfterViewInit {
+  ngAfterViewInit(): void {
+    this.filler = new FormFiller(config)
+    this.filler.mount(this.formContainer.nativeElement)
+  }
+}
+```
+
+**Solution:**
+```typescript
+// ✅ Implement OnDestroy
+export class MyComponent implements AfterViewInit, OnDestroy {
+  ngAfterViewInit(): void {
+    this.filler = new FormFiller(config)
+    this.filler.mount(this.formContainer.nativeElement)
+  }
+
+  ngOnDestroy(): void {
+    this.filler?.unmount()
+  }
+}
+```
+
+### 3. Missing ViewChild Type
+
+**Problem:**
+```typescript
+// ❌ No type - harder to debug
+@ViewChild('formContainer') formContainer: any
+```
+
+**Solution:**
+```typescript
+// ✅ Properly typed
+@ViewChild('formContainer') formContainer!: ElementRef<HTMLDivElement>
+```
+
+### 4. Not Handling Change Detection
+
+**Problem:**
+```typescript
+// ❌ State change might not trigger view update
+ngAfterViewInit(): void {
+  this.isLoading = false // Might not update view
+}
+```
+
+**Solution:**
+```typescript
+// ✅ Use setTimeout for async state changes
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    this.isLoading = false
+  }, 0)
+}
+
+// Or inject ChangeDetectorRef and call detectChanges()
+constructor(private cdr: ChangeDetectorRef) {}
+
+ngAfterViewInit(): void {
+  this.isLoading = false
+  this.cdr.detectChanges()
+}
+```
+
+### 5. Accessing nativeElement Too Early
+
+**Problem:**
+```typescript
+// ❌ ViewChild might not be initialized
+@ViewChild('container') container!: ElementRef
+
+constructor() {
+  console.log(this.container.nativeElement) // Undefined!
+}
+```
+
+**Solution:**
+```typescript
+// ✅ Access in ngAfterViewInit
+ngAfterViewInit(): void {
+  console.log(this.container.nativeElement) // Available now
+}
+```
+
+---
+
+## Next Steps
+
+- Explore the [FormFiller API Reference](/form-sdk/web/api/form-filler) for advanced configuration
+- Learn about [LaunchContextProvider](/form-sdk/web/api/launch-context-provider) for patient context
+- Check out other [framework integrations](/form-sdk/web#framework-integration)
+- View [live examples](https://github.com/Tiro-health/web-sdk-tutorial) in the tutorial repository
+
+For questions or support, please contact the Tiro.health team.
