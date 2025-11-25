@@ -268,6 +268,25 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
+    title: 'Web SDK: Integration',
+    links: [
+      { title: 'React', href: '/form-sdk/web/integration/react' },
+      { title: 'Angular', href: '/form-sdk/web/integration/angular' },
+      { title: 'Vanilla JS', href: '/form-sdk/web/integration/vanilla-js' },
+      { title: 'CDN (No Build)', href: '/form-sdk/web/integration/cdn' },
+    ],
+  },
+  {
+    title: 'Web SDK: API Reference',
+    links: [
+      { title: 'FormFiller', href: '/form-sdk/web/api/form-filler' },
+      { title: 'LaunchContextProvider', href: '/form-sdk/web/api/launch-context-provider' },
+      { title: 'Narrative', href: '/form-sdk/web/api/narrative' },
+      { title: 'ValidationFeedback', href: '/form-sdk/web/api/validation-feedback' },
+      { title: 'SDCClient', href: '/form-sdk/web/api/sdc-client' },
+    ],
+  },
+  {
     title: 'Capture API (managed)',
     links: [
       {

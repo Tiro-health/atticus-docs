@@ -37,7 +37,7 @@ Test that Docker can access the Tiro.health registry:
 
 ```bash
 # Test access to the registry
-docker pull europe-west1-docker.pkg.dev/tiro-health/docker-ext/form-sdk-backend:latest
+docker pull europe-west1-docker.pkg.dev/tiroapp-4cb17/docker-ext/form-sdk-backend:latest
 ```
 
 If authentication is successful, Docker will be able to pull images from the Tiro.health registry.
@@ -55,8 +55,8 @@ Create or update your `.npmrc` file to include the Tiro.health registry configur
 cd your-project-directory
 
 # Create or edit .npmrc file
-echo "@tiro-health:registry=https://npm.pkg.dev/tiro-health/npm-ext/" >> .npmrc
-echo "//npm.pkg.dev/tiro-health/npm-ext/:_authToken=$(gcloud auth print-access-token)" >> .npmrc
+echo "@tiro-health:registry=https://npm.pkg.dev/tiroapp-4cb17/npm-ext/" >> .npmrc
+echo "//npm.pkg.dev/tiroapp-4cb17/npm-ext/:_authToken=$(gcloud auth print-access-token)" >> .npmrc
 ```
 
 ### 2. Authenticate with Google Cloud
@@ -68,7 +68,7 @@ First, authenticate using your service account key:
 gcloud auth activate-service-account --key-file=path/to/your/service-account-key.json
 
 # Set your project (replace with actual Tiro.health project ID)
-gcloud config set project tiro-health
+gcloud config set project tiroapp-4cb17
 ```
 
 ### 3. Alternative: Use service account key directly
@@ -83,8 +83,8 @@ echo "_json_key:$(cat path/to/your/service-account-key.json | base64 -w 0)" | ba
 Then add the result to your `.npmrc`:
 
 ```
-@tiro-health:registry=https://npm.pkg.dev/tiro-health/npm-ext/
-//npm.pkg.dev/tiro-health/npm-ext/:_authToken=<base64-encoded-credentials>
+@tiro-health:registry=https://npm.pkg.dev/tiroapp-4cb17/npm-ext/
+//npm.pkg.dev/tiroapp-4cb17/npm-ext/:_authToken=<base64-encoded-credentials>
 ```
 
 ### 4. Verify npm authentication
@@ -96,7 +96,7 @@ Test that npm can access the Tiro.health packages:
 npm search @tiro-health
 
 # Or try to install a specific package
-npm install @tiro-health/form-sdk
+npm install @tiro-health/web-sdk
 ```
 
 ## Start with our demo repository
@@ -144,6 +144,39 @@ Once everything is running, you can access:
 - **Demo Application**: http://localhost:3000
 - **API Documentation**: http://localhost:3000/api/docs
 - **Health Check**: http://localhost:3000/health
+
+## Quick Start for Web SDK
+
+After configuring your npm environment, you can quickly integrate the Web UI SDK into your application.
+
+### Live Examples
+
+For hands-on learning and working examples, explore our [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with live demos:
+
+- **[React Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-react/)** - Complete React + TypeScript example
+- **[Angular Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-angular/)** - Angular standalone components example
+- **[Vanilla JS](https://tiro-health.github.io/web-sdk-tutorial/npm-vanillajs/)** - Modern JavaScript with Vite
+- **[HTML + CDN](https://tiro-health.github.io/web-sdk-tutorial/html-js/)** - No build tools required
+
+### Integration Guides
+
+Choose your framework and follow our comprehensive integration guides:
+
+- **[React Integration](/form-sdk/web/integration/react)** - Hooks, refs, and proper cleanup patterns
+- **[Angular Integration](/form-sdk/web/integration/angular)** - Lifecycle hooks, ViewChild, and standalone components
+- **[Vanilla JS Integration](/form-sdk/web/integration/vanilla-js)** - ES modules with Vite
+- **[CDN Integration](/form-sdk/web/integration/cdn)** - Quick prototyping without build tools
+
+### API Documentation
+
+Explore the complete API reference:
+
+- **[FormFiller](/form-sdk/web/api/form-filler)** - Main form component
+- **[LaunchContextProvider](/form-sdk/web/api/launch-context-provider)** - Patient context integration
+- **[Narrative](/form-sdk/web/api/narrative)** - Clinical narrative generation
+- **[ValidationFeedback](/form-sdk/web/api/validation-feedback)** - Real-time validation display
+
+For complete Web SDK documentation, see the [Web UI SDK overview](/form-sdk/web).
 
 ### Troubleshooting
 

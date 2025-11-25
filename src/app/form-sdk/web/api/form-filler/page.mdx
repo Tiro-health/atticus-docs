@@ -1,0 +1,575 @@
+export const metadata = {
+  title: 'FormFiller API',
+  description:
+    'Complete API reference for the FormFiller component, including constructor options, methods, event handlers, and advanced configuration.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Constructor', id: 'constructor' },
+  { title: 'Configuration Options', id: 'configuration-options' },
+  { title: 'Methods', id: 'methods' },
+  { title: 'Event Handlers', id: 'event-handlers' },
+  { title: 'Advanced Usage', id: 'advanced-usage' },
+  { title: 'Examples', id: 'examples' },
+]
+
+# FormFiller API
+
+Complete API reference for the FormFiller component, the primary component for rendering and managing FHIR Questionnaire forms with full SDC support. {{ className: 'lead' }}
+
+## Overview
+
+The FormFiller component provides:
+- **Interactive form rendering** with full SDC (Structured Data Capture) compliance
+- **Real-time validation** and conditional logic
+- **Pre-population support** through LaunchContextProvider
+- **Event-driven architecture** for submission, changes, and errors
+- **Imperative API** with mount/unmount lifecycle
+
+---
+
+## Constructor
+
+### Signature
+
+```typescript
+new FormFiller(config: FormFillerConfig): FormFiller
+```
+
+### Parameters
+
+**config** `FormFillerConfig` (required)
+
+Configuration object with the following properties:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `questionnaire` | `string` | Yes | Questionnaire ID or URL to load |
+| `sdcEndpoint` | `EndpointConfig` | Yes | FHIR R5 SDC endpoint configuration |
+| `initialResponse` | `QuestionnaireResponse` | No | Pre-filled response data |
+| `onSubmit` | `(response: QuestionnaireResponse) => void` | No | Submission handler callback |
+| `onChange` | `(response: QuestionnaireResponse) => void` | No | Change handler callback |
+| `onError` | `(error: Error) => void` | No | Error handler callback |
+| `visualize` | `boolean` | No | Enable visualization border (default: false) |
+
+### EndpointConfig Type
+
+```typescript
+interface EndpointConfig {
+  resourceType: 'Endpoint'
+  address: string
+}
+```
+
+### Basic Example
+
+```javascript
+import { FormFiller } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'phq-9',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc-backend.example.com/fhir'
+  }
+})
+```
+
+---
+
+## Configuration Options
+
+### questionnaire
+
+**Type:** `string` (required)
+
+The Questionnaire resource to load and render. Can be:
+- **Questionnaire ID**: e.g., `'phq-9'`
+- **Full URL**: e.g., `'http://example.com/Questionnaire/phq-9'`
+- **Canonical URL**: e.g., `'http://hl7.org/fhir/Questionnaire/phq-9'`
+
+```javascript
+// Using ID
+questionnaire: 'phq-9'
+
+// Using full URL
+questionnaire: 'https://fhir.example.com/Questionnaire/phq-9'
+```
+
+### sdcEndpoint
+
+**Type:** `EndpointConfig` (required)
+
+FHIR R5 SDC-compliant endpoint that provides:
+- Questionnaire resources (read)
+- $extract operation support
+- $populate operation support (optional)
+- QuestionnaireResponse processing
+
+```javascript
+sdcEndpoint: {
+  resourceType: 'Endpoint',
+  address: 'https://sdc-backend.example.com/fhir'
+}
+```
+
+The endpoint must support these operations:
+- `GET /Questionnaire/{id}` - Retrieve questionnaire
+- `POST /QuestionnaireResponse/$extract` - Extract structured data (optional)
+
+### initialResponse
+
+**Type:** `QuestionnaireResponse` (optional)
+
+Pre-populated QuestionnaireResponse to initialize the form with existing data.
+
+```javascript
+initialResponse: {
+  resourceType: 'QuestionnaireResponse',
+  status: 'in-progress',
+  authored: '2024-01-15T10:30:00Z',
+  item: [
+    {
+      linkId: '1',
+      answer: [{ valueString: 'John Doe' }]
+    }
+  ]
+}
+```
+
+Use cases:
+- **Edit mode**: Allow users to modify existing responses
+- **Draft saving**: Resume partially completed forms
+- **Pre-population**: Initialize with patient data
+
+### onSubmit
+
+**Type:** `(response: QuestionnaireResponse) => void` (optional)
+
+Callback invoked when the form is submitted (user clicks submit button).
+
+```javascript
+onSubmit: (response) => {
+  console.log('Form submitted:', response)
+
+  // Send to your backend
+  fetch('/api/questionnaire-responses', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(response)
+  })
+}
+```
+
+**Parameters:**
+- **response**: Complete QuestionnaireResponse resource with all answers
+
+**Note:** Form validation is automatically performed before this callback is invoked.
+
+### onChange
+
+**Type:** `(response: QuestionnaireResponse) => void` (optional)
+
+Callback invoked whenever any form field changes.
+
+```javascript
+onChange: (response) => {
+  console.log('Form updated:', response)
+
+  // Auto-save to local storage
+  localStorage.setItem('draft-response', JSON.stringify(response))
+
+  // Track progress
+  const progress = calculateProgress(response)
+  updateProgressBar(progress)
+}
+```
+
+**Parameters:**
+- **response**: Current QuestionnaireResponse with latest changes
+
+**Note:** This fires frequently during form interaction. Debounce if performing expensive operations.
+
+### onError
+
+**Type:** `(error: Error) => void` (optional)
+
+Callback invoked when errors occur during form operations.
+
+```javascript
+onError: (error) => {
+  console.error('Form error:', error)
+
+  // Show user-friendly error message
+  showNotification({
+    type: 'error',
+    message: 'Failed to load form. Please try again.',
+    details: error.message
+  })
+
+  // Send to error tracking service
+  trackError(error)
+}
+```
+
+**Common errors:**
+- Failed to fetch Questionnaire
+- Network connectivity issues
+- Invalid QuestionnaireResponse structure
+- SDC endpoint unavailable
+
+### visualize
+
+**Type:** `boolean` (optional, default: `false`)
+
+Enable colored border around the component for development and debugging.
+
+```javascript
+// Enable in development only
+visualize: import.meta.env.DEV
+
+// Or explicitly
+visualize: true
+```
+
+**Recommendation:** Use environment variables to control this setting.
+
+---
+
+## Methods
+
+### mount()
+
+Mounts the FormFiller component to a DOM element.
+
+**Signature:**
+```typescript
+mount(element: HTMLElement): void
+```
+
+**Parameters:**
+- **element**: DOM element to mount the form into
+
+**Example:**
+```javascript
+const container = document.getElementById('form-container')
+filler.mount(container)
+```
+
+**Important:**
+- Element must exist in the DOM before calling
+- Any existing content in the element will be replaced
+- Can only be called once per instance
+
+**Errors:**
+- Throws if element is null or undefined
+- Throws if already mounted
+
+### unmount()
+
+Unmounts the FormFiller component and cleans up resources.
+
+**Signature:**
+```typescript
+unmount(): void
+```
+
+**Example:**
+```javascript
+filler.unmount()
+```
+
+**Cleanup performed:**
+- Removes all DOM elements
+- Cancels pending network requests
+- Clears event listeners
+- Frees memory
+
+**Important:**
+- Always call before removing the component
+- Safe to call multiple times
+- Required to prevent memory leaks
+
+---
+
+## Event Handlers
+
+### QuestionnaireResponse Structure
+
+All event handlers receive a QuestionnaireResponse object:
+
+```typescript
+interface QuestionnaireResponse {
+  resourceType: 'QuestionnaireResponse'
+  id?: string
+  questionnaire?: string
+  status: 'in-progress' | 'completed' | 'amended' | 'entered-in-error' | 'stopped'
+  subject?: Reference
+  authored?: string
+  author?: Reference
+  item?: QuestionnaireResponseItem[]
+}
+
+interface QuestionnaireResponseItem {
+  linkId: string
+  text?: string
+  answer?: Answer[]
+  item?: QuestionnaireResponseItem[]
+}
+
+interface Answer {
+  valueBoolean?: boolean
+  valueDecimal?: number
+  valueInteger?: number
+  valueDate?: string
+  valueDateTime?: string
+  valueTime?: string
+  valueString?: string
+  valueUri?: string
+  valueAttachment?: Attachment
+  valueCoding?: Coding
+  valueQuantity?: Quantity
+  valueReference?: Reference
+}
+```
+
+### Processing Responses
+
+**Extract specific answers:**
+
+```javascript
+function findAnswer(response, linkId) {
+  const item = response.item?.find(i => i.linkId === linkId)
+  return item?.answer?.[0]
+}
+
+onSubmit: (response) => {
+  const name = findAnswer(response, 'patient-name')?.valueString
+  const age = findAnswer(response, 'patient-age')?.valueInteger
+  const condition = findAnswer(response, 'diagnosis')?.valueCoding
+
+  console.log({ name, age, condition })
+}
+```
+
+**Calculate completion:**
+
+```javascript
+function calculateCompletion(response) {
+  let total = 0
+  let answered = 0
+
+  function countItems(items) {
+    items?.forEach(item => {
+      total++
+      if (item.answer && item.answer.length > 0) answered++
+      if (item.item) countItems(item.item)
+    })
+  }
+
+  countItems(response.item)
+  return (answered / total) * 100
+}
+
+onChange: (response) => {
+  const completion = calculateCompletion(response)
+  updateProgressBar(completion)
+}
+```
+
+---
+
+## Advanced Usage
+
+### Form Validation
+
+FormFiller automatically validates based on Questionnaire constraints:
+- **Required fields**: Enforces `required: true`
+- **Data types**: Validates answer types
+- **Min/max length**: Enforces string length constraints
+- **Min/max value**: Enforces numeric ranges
+- **Regex patterns**: Validates string patterns
+- **Answer options**: Enforces allowed values
+
+Validation happens:
+- **On change**: Real-time validation as user types
+- **On submit**: Final validation before onSubmit fires
+
+### Pre-population with Launch Context
+
+Use with LaunchContextProvider for patient data pre-population:
+
+```javascript
+import { FormFiller, LaunchContextProvider } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'patient-intake',
+  sdcEndpoint: { /* ... */ }
+})
+
+const contextProvider = new LaunchContextProvider({
+  dataEndpoint: { /* ... */ },
+  filler: filler,
+  patientId: 'patient-123'
+})
+
+contextProvider.mount(document.getElementById('context'))
+filler.mount(document.getElementById('form'))
+```
+
+See [LaunchContextProvider API](/form-sdk/web/api/launch-context-provider) for details.
+
+### Conditional Display
+
+FormFiller automatically handles SDC conditional logic:
+- **enableWhen**: Show/hide items based on answers
+- **enableBehavior**: AND/OR logic for multiple conditions
+- **calculatedExpression**: Computed values using FHIRPath
+
+These are defined in the Questionnaire resource and automatically processed.
+
+### Extract Operation
+
+Use the SDC $extract operation to convert QuestionnaireResponse to other FHIR resources:
+
+```javascript
+onSubmit: async (response) => {
+  // FormFiller can trigger $extract operation
+  const extracted = await extractData(response)
+
+  console.log('Extracted resources:', extracted)
+  // Could include Observation, Condition, etc.
+}
+```
+
+Configuration for extract is typically in the Questionnaire resource.
+
+---
+
+## Examples
+
+### Complete Form with All Features
+
+```javascript
+import { FormFiller } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'comprehensive-assessment',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc.example.com/fhir'
+  },
+  initialResponse: loadDraftFromStorage(),
+  onSubmit: async (response) => {
+    try {
+      // Save to backend
+      await fetch('/api/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(response)
+      })
+
+      // Clear draft
+      clearDraftFromStorage()
+
+      // Show success
+      alert('Form submitted successfully!')
+
+      // Redirect
+      window.location.href = '/success'
+    } catch (error) {
+      console.error('Submission failed:', error)
+      alert('Failed to submit. Please try again.')
+    }
+  },
+  onChange: (response) => {
+    // Auto-save draft every change
+    saveDraftToStorage(response)
+
+    // Update progress indicator
+    const progress = calculateCompletion(response)
+    updateProgress(progress)
+
+    // Track analytics
+    trackFormProgress(progress)
+  },
+  onError: (error) => {
+    // Log error
+    console.error('Form error:', error)
+
+    // Send to error tracking
+    sendToSentry(error)
+
+    // Show user message
+    showErrorNotification(error.message)
+  },
+  visualize: import.meta.env.DEV
+})
+
+// Mount
+const container = document.getElementById('form-container')
+filler.mount(container)
+
+// Helper functions
+function loadDraftFromStorage() {
+  const draft = localStorage.getItem('form-draft')
+  return draft ? JSON.parse(draft) : undefined
+}
+
+function saveDraftToStorage(response) {
+  localStorage.setItem('form-draft', JSON.stringify(response))
+}
+
+function clearDraftFromStorage() {
+  localStorage.removeItem('form-draft')
+}
+
+function calculateCompletion(response) {
+  // Implementation from previous examples
+  return 0 // Simplified
+}
+```
+
+### Multiple Forms on Same Page
+
+```javascript
+const forms = {
+  demographics: new FormFiller({
+    questionnaire: 'demographics',
+    sdcEndpoint: { /* ... */ },
+    onSubmit: (response) => saveDemographics(response)
+  }),
+  medical: new FormFiller({
+    questionnaire: 'medical-history',
+    sdcEndpoint: { /* ... */ },
+    onSubmit: (response) => saveMedicalHistory(response)
+  }),
+  lifestyle: new FormFiller({
+    questionnaire: 'lifestyle',
+    sdcEndpoint: { /* ... */ },
+    onSubmit: (response) => saveLifestyle(response)
+  })
+}
+
+// Mount each form
+forms.demographics.mount(document.getElementById('demographics-form'))
+forms.medical.mount(document.getElementById('medical-form'))
+forms.lifestyle.mount(document.getElementById('lifestyle-form'))
+
+// Cleanup all
+window.addEventListener('beforeunload', () => {
+  Object.values(forms).forEach(form => form.unmount())
+})
+```
+
+---
+
+## Next Steps
+
+- Learn about [LaunchContextProvider](/form-sdk/web/api/launch-context-provider) for patient context
+- Explore [Narrative](/form-sdk/web/api/narrative) for clinical text generation
+- See [ValidationFeedback](/form-sdk/web/api/validation-feedback) for real-time validation display
+- Check [integration guides](/form-sdk/web#framework-integration) for framework-specific patterns
+
+For questions or support, please contact the Tiro.health team.

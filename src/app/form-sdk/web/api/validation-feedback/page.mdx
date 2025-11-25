@@ -1,0 +1,443 @@
+export const metadata = {
+  title: 'ValidationFeedback API',
+  description:
+    'Complete API reference for the ValidationFeedback component, which displays real-time validation errors and warnings for questionnaire forms.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Constructor', id: 'constructor' },
+  { title: 'Configuration Options', id: 'configuration-options' },
+  { title: 'Methods', id: 'methods' },
+  { title: 'Use Cases', id: 'use-cases' },
+  { title: 'Examples', id: 'examples' },
+]
+
+# ValidationFeedback API
+
+Complete API reference for the ValidationFeedback component, which provides real-time validation feedback to guide users through form completion. {{ className: 'lead' }}
+
+## Overview
+
+The ValidationFeedback component:
+- **Displays validation errors** and warnings in real-time
+- **Guides users** to complete forms correctly
+- **Shows missing required fields** with clear indicators
+- **Highlights data type mismatches** and constraint violations
+- **Updates automatically** as users interact with the form
+- **Integrates seamlessly** with FormFiller
+
+---
+
+## Constructor
+
+### Signature
+
+```typescript
+new ValidationFeedback(config: ValidationFeedbackConfig): ValidationFeedback
+```
+
+### Parameters
+
+**config** `ValidationFeedbackConfig` (required)
+
+Configuration object with the following properties:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `filler` | `FormFiller` | Yes | FormFiller instance to display validation for |
+| `visualize` | `boolean` | No | Enable visualization border (default: false) |
+
+### Basic Example
+
+```javascript
+import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'patient-registration',
+  sdcEndpoint: { /* ... */ }
+})
+
+const validation = new ValidationFeedback({
+  filler: filler
+})
+```
+
+---
+
+## Configuration Options
+
+### filler
+
+**Type:** `FormFiller` (required)
+
+The FormFiller instance to display validation feedback for.
+
+```javascript
+const filler = new FormFiller({ /* ... */ })
+
+const validation = new ValidationFeedback({
+  filler: filler
+})
+```
+
+**How it works:**
+- Listens to filler's onChange and validation events
+- Displays current validation state
+- Updates in real-time as user fills the form
+- Shows errors, warnings, and informational messages
+
+### visualize
+
+**Type:** `boolean` (optional, default: `false`)
+
+Enable colored border around the component for development and debugging.
+
+```javascript
+visualize: import.meta.env.DEV  // Enable in development only
+```
+
+---
+
+## Methods
+
+### mount()
+
+Mounts the ValidationFeedback component to a DOM element.
+
+**Signature:**
+```typescript
+mount(element: HTMLElement): void
+```
+
+**Parameters:**
+- **element**: DOM element to mount the validation feedback into
+
+**Example:**
+```javascript
+const container = document.getElementById('validation-container')
+validation.mount(container)
+```
+
+**What it displays:**
+- List of current validation errors
+- Required fields not yet filled
+- Data type mismatches
+- Constraint violations (min/max, pattern, etc.)
+- Warnings and informational messages
+- Empty state when all validations pass
+
+### unmount()
+
+Unmounts the ValidationFeedback component and cleans up resources.
+
+**Signature:**
+```typescript
+unmount(): void
+```
+
+**Example:**
+```javascript
+validation.unmount()
+```
+
+**Cleanup performed:**
+- Removes all DOM elements
+- Stops listening to filler events
+- Clears event listeners
+- Frees memory
+
+---
+
+## Use Cases
+
+### Form Guidance
+
+Help users complete forms correctly by showing validation errors:
+
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'registration-form',
+  sdcEndpoint: { /* ... */ }
+})
+
+const validation = new ValidationFeedback({ filler })
+
+// Place validation feedback in sidebar for visibility
+filler.mount(document.getElementById('form'))
+validation.mount(document.getElementById('validation-sidebar'))
+```
+
+### Required Field Tracking
+
+Show users which required fields still need to be filled:
+
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'patient-intake',
+  sdcEndpoint: { /* ... */ }
+})
+
+const validation = new ValidationFeedback({ filler })
+
+// Place above submit button
+validation.mount(document.getElementById('validation'))
+filler.mount(document.getElementById('form'))
+
+// ValidationFeedback will show incomplete required fields
+```
+
+### Data Quality Assurance
+
+Ensure data meets quality constraints before submission:
+
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'clinical-data-entry',
+  sdcEndpoint: { /* ... */ },
+  onSubmit: (response) => {
+    // Form is guaranteed to be valid if onSubmit fires
+    submitToBackend(response)
+  }
+})
+
+const validation = new ValidationFeedback({ filler })
+
+validation.mount(document.getElementById('validation'))
+filler.mount(document.getElementById('form'))
+```
+
+---
+
+## Examples
+
+### Basic Integration
+
+```javascript
+import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+// Create FormFiller
+const filler = new FormFiller({
+  questionnaire: 'patient-registration',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc.example.com/fhir'
+  }
+})
+
+// Create ValidationFeedback
+const validation = new ValidationFeedback({
+  filler: filler,
+  visualize: import.meta.env.DEV
+})
+
+// Mount both components
+filler.mount(document.getElementById('form'))
+validation.mount(document.getElementById('validation'))
+```
+
+### With Styled Container
+
+```html
+<div class="form-container">
+  <div class="validation-panel">
+    <h3>Validation Status</h3>
+    <div id="validation"></div>
+  </div>
+
+  <div class="form-panel">
+    <h2>Patient Registration</h2>
+    <div id="form"></div>
+  </div>
+</div>
+
+<style>
+  .form-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+  }
+
+  .validation-panel {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 1.5rem;
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+  }
+
+  .validation-panel h3 {
+    margin-top: 0;
+    color: #856404;
+  }
+
+  .form-panel {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+  }
+</style>
+
+<script type="module">
+  import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+  const filler = new FormFiller({ /* ... */ })
+  const validation = new ValidationFeedback({ filler })
+
+  filler.mount(document.getElementById('form'))
+  validation.mount(document.getElementById('validation'))
+</script>
+```
+
+### React Integration
+
+```tsx
+import { useEffect, useRef } from 'react'
+import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+export function FormWithValidation() {
+  const formRef = useRef<HTMLDivElement>(null)
+  const validationRef = useRef<HTMLDivElement>(null)
+  const fillerRef = useRef<FormFiller | null>(null)
+  const validationCompRef = useRef<ValidationFeedback | null>(null)
+
+  useEffect(() => {
+    if (!formRef.current || !validationRef.current) return
+
+    // Create components
+    const filler = new FormFiller({
+      questionnaire: 'patient-registration',
+      sdcEndpoint: { /* ... */ }
+    })
+
+    const validation = new ValidationFeedback({
+      filler: filler,
+      visualize: import.meta.env.DEV
+    })
+
+    // Mount
+    filler.mount(formRef.current)
+    validation.mount(validationRef.current)
+
+    // Store refs
+    fillerRef.current = filler
+    validationCompRef.current = validation
+
+    // Cleanup
+    return () => {
+      filler.unmount()
+      validation.unmount()
+    }
+  }, [])
+
+  return (
+    <div className="form-layout">
+      <aside className="validation-sidebar">
+        <h3>Validation Status</h3>
+        <div ref={validationRef} />
+      </aside>
+
+      <main className="form-main">
+        <h2>Patient Registration</h2>
+        <div ref={formRef} />
+      </main>
+    </div>
+  )
+}
+```
+
+### Angular Integration
+
+```typescript
+import { Component, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core'
+import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+@Component({
+  selector: 'app-form-with-validation',
+  templateUrl: './form-with-validation.component.html',
+  styleUrls: ['./form-with-validation.component.css']
+})
+export class FormWithValidationComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('formContainer') formContainer!: ElementRef
+  @ViewChild('validationContainer') validationContainer!: ElementRef
+
+  private filler?: FormFiller
+  private validation?: ValidationFeedback
+
+  ngAfterViewInit(): void {
+    this.filler = new FormFiller({
+      questionnaire: 'patient-registration',
+      sdcEndpoint: { /* ... */ }
+    })
+
+    this.validation = new ValidationFeedback({
+      filler: this.filler
+    })
+
+    this.filler.mount(this.formContainer.nativeElement)
+    this.validation.mount(this.validationContainer.nativeElement)
+  }
+
+  ngOnDestroy(): void {
+    this.filler?.unmount()
+    this.validation?.unmount()
+  }
+}
+```
+
+### Complete Application
+
+```javascript
+import {
+  FormFiller,
+  LaunchContextProvider,
+  Narrative,
+  ValidationFeedback
+} from '@tiro-health/web-sdk'
+
+// Create FormFiller
+const filler = new FormFiller({
+  questionnaire: 'comprehensive-assessment',
+  sdcEndpoint: { /* ... */ },
+  onSubmit: (response) => {
+    console.log('Valid response submitted:', response)
+  }
+})
+
+// Create supporting components
+const contextProvider = new LaunchContextProvider({
+  dataEndpoint: { /* ... */ },
+  filler: filler,
+  patientId: 'patient-123'
+})
+
+const narrative = new Narrative({ filler })
+const validation = new ValidationFeedback({ filler })
+
+// Mount in logical layout
+contextProvider.mount(document.getElementById('patient-context'))
+validation.mount(document.getElementById('validation-status'))
+filler.mount(document.getElementById('questionnaire-form'))
+narrative.mount(document.getElementById('clinical-summary'))
+
+// Cleanup
+window.addEventListener('beforeunload', () => {
+  contextProvider.unmount()
+  validation.unmount()
+  filler.unmount()
+  narrative.unmount()
+})
+```
+
+---
+
+## Next Steps
+
+- Learn about [FormFiller](/form-sdk/web/api/form-filler) for complete form capabilities
+- Explore [Narrative](/form-sdk/web/api/narrative) for clinical text generation
+- See [LaunchContextProvider](/form-sdk/web/api/launch-context-provider) for patient context
+- Check [integration guides](/form-sdk/web#framework-integration) for framework patterns
+
+For questions or support, please contact the Tiro.health team.
