@@ -143,12 +143,14 @@ function CodePanel({
   label?: string
   code?: string
 }) {
-  let child = Children.only(children)
+  // Filter children to find valid React elements
+  const childArray = Children.toArray(children)
+  const validElement = childArray.find((child) => isValidElement(child))
 
-  if (isValidElement(child)) {
-    tag = child.props.tag ?? tag
-    label = child.props.label ?? label
-    code = child.props.code ?? code
+  if (validElement && isValidElement(validElement)) {
+    tag = validElement.props.tag ?? tag
+    label = validElement.props.label ?? label
+    code = validElement.props.code ?? code
   }
 
   if (!code) {
