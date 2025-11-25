@@ -26,6 +26,8 @@ Overview of supported integrations:
 ## High-level Integration Flow
 Here's how a typical integration with Tiro.health API looks like:
 
+<a name="data-import"/>
+
 ### Data Import
 Tiro.health requires minimal patient data to associate with the QuestionnaireResponse. At minimum, a patient resource with a single identifier is required. You can optionally provide an encounter resource as well. This data can be imported in your data tenant in the background before users are writing structured report to prevent users from having to enter patient data manually.
 Learn more about available APIs in the [FHIR API](./fhir) section.
@@ -105,6 +107,8 @@ curl -X POST https://reports.tiro.health/fhir/r5 \
 
 ![Sketch illustrating the data import step.](/data-import.svg)
 
+<a name="context-launch"/>
+
 ### Context Launch
 To provide a seamless user experience between your system and Tiro.health, we support contextual launches that allow users to access patient-specific information directly. Tiro.health supports two authentication patterns:
 
@@ -121,7 +125,9 @@ For seamless session handovers with context, the host system can authorize sessi
 
 More info about context launches can be found on the [session managment](./session-managment) page and the [identity provider](./identity-provider) page.
 
-### Submission
+<a name="submission"/>
+
+### Submission 
 The submission process follows three distinct steps:
 
    1. **User clicks submit**: The user completes their work in Tiro.health and clicks the submit button.
