@@ -1,0 +1,172 @@
+export const metadata = {
+  title: 'Embedded Browsers',
+  description:
+    'Learn how to integrate Tiro.health session handover in native applications using embedded browsers like WebView2 and JxBrowser.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Session Handover Pattern', id: 'session-handover-pattern' },
+  { title: 'WebView2', id: 'webview2' },
+  { title: 'JxBrowser', id: 'jxbrowser' },
+]
+
+# Embedded Browsers
+
+Embedded browsers enable native applications to integrate Tiro.health's session handover flow seamlessly within the application UI.{{ className: 'lead' }}
+
+When integrating Tiro.health with native applications (Windows, macOS, or cross-platform desktop apps), embedded browsers provide several advantages:
+
+- Seamless user experience: Users remain within your application
+- Session control: Your application maintains control over the session lifecycle
+- Context preservation: Easily pass context and handle redirects programmatically
+- Security: Keep authentication tokens within the application boundary
+
+This guide covers two popular embedded browser solutions:
+
+- **WebView2**: Microsoft's modern WebView for Windows applications
+- **JxBrowser**: Cross-platform Chromium-based browser for Java applications
+
+---
+
+## Session Handover Pattern
+
+The embedded browser integration follows the standard [Session Management](/api/session-management) flow:
+
+1. Create a session via the backend API (POST /session)
+2. Inject an HTML form containing the session token into the embedded browser
+3. Submit the form to the handover endpoint (POST /session/$handover)
+4. Intercept the redirect response to capture the redirect URL
+5. Handle the redirect in your application
+
+The HTML form for session handover:
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <form id="handover" action="https://reports.tiro.health/session/$handover" method="POST">
+    <input type="hidden" name="token" value="YOUR_SESSION_TOKEN" />
+    <input type="hidden" name="next" value="https://app.tiro.health/reports/edit" />
+  </form>
+  <script>document.getElementById('handover').submit();</script>
+</body>
+</html>
+```
+
+---
+
+## WebView2
+
+WebView2 is Microsoft's recommended embedded browser solution for Windows applications. It uses the Microsoft Edge (Chromium) rendering engine.
+
+**Documentation:**
+
+- [WebView2 Overview](https://learn.microsoft.com/en-us/microsoft-edge/webview2/)
+- [WebResourceRequested Event](https://learn.microsoft.com/en-us/microsoft-edge/webview2/reference/winrt/microsoft_web_webview2_core/corewebview2?view=webview2-winrt-1.0.3537.50#webresourcerequested)
+
+### Initialize WebView2
+
+```csharp
+await webView.EnsureCoreWebView2Async();
+```
+
+### Inject HTML Form
+
+```csharp
+var html = $@"<!DOCTYPE html>
+<html><body>
+  <form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>
+    <input type='hidden' name='token' value='{sessionToken}' />
+    <input type='hidden' name='next' value='{nextUrl}' />
+  </form>
+  <script>document.getElementById('handover').submit();</script>
+</body></html>";
+
+webView.CoreWebView2.NavigateToString(html);
+```
+
+### Intercept Redirect
+
+```csharp
+webView.CoreWebView2.AddWebResourceRequestedFilter(
+    "https://app.tiro.health/*",
+    CoreWebView2WebResourceContext.Document
+);
+
+webView.CoreWebView2.WebResourceRequested += (sender, args) =>
+{
+    var uri = args.Request.Uri;
+    if (uri.StartsWith("https://app.tiro.health/"))
+    {
+        args.Response = sender.Environment.CreateWebResourceResponse(
+            null, 204, "No Content", ""
+        );
+        // Handle redirect in your application
+    }
+};
+```
+
+---
+
+## JxBrowser
+
+JxBrowser is a commercial Chromium-based browser for Java applications that works on Windows, macOS, and Linux.
+
+**Documentation:**
+
+- [JxBrowser Overview](https://jxbrowser.support.teamdev.com/)
+- [InterceptUrlRequestCallback](https://javadoc.io/doc/com.teamdev.jxbrowser/jxbrowser/latest/com/teamdev/jxbrowser/net/callback/InterceptUrlRequestCallback.html)
+
+### Initialize JxBrowser
+
+```java
+Engine engine = Engine.newInstance(
+    EngineOptions.newBuilder(renderingMode).build()
+);
+Browser browser = engine.newBrowser();
+```
+
+### Inject HTML Form
+
+```java
+String html = "<!DOCTYPE html><html><body>" +
+    "<form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>" +
+    "<input type='hidden' name='token' value='" + sessionToken + "' />" +
+    "<input type='hidden' name='next' value='" + nextUrl + "' />" +
+    "</form>" +
+    "<script>document.getElementById('handover').submit();</script>" +
+    "</body></html>";
+
+browser.navigation().loadHtml(html);
+```
+
+### Intercept Redirect
+
+```java
+engine.network().set(
+    InterceptUrlRequestCallback.class,
+    params -> {
+        String url = params.urlRequest().url();
+        if (url.startsWith("https://app.tiro.health/")) {
+            // Handle redirect
+            return Response.intercept(params.urlRequest().newUrlRequest());
+        }
+        return Response.proceed();
+    }
+);
+```
+
+---
+
+## Security Considerations
+
+When implementing embedded browser integration:
+
+1. **Token Security**: Never log or store session tokens
+2. **HTTPS Only**: Always use HTTPS for all communication
+3. **Validate Redirects**: Verify redirect URLs match expected domains
+4. **Session Cleanup**: Implement proper session cleanup on logout
+5. **Keep Updated**: Update WebView2 and JxBrowser regularly
+
+For more information, see the [Session Management API](/api/session-management#security-considerations).

@@ -16,7 +16,7 @@ An integration typically has three parts:
 - A **report export** using a Mirth channel that exports the completed report back to KWS, ensuring that the report is stored in the patiets's record at the right encounter
 This **Mirth channel** makes use of the KWS Import XML API to send the report back to KWS.
 
-- A [Microsoft Entra ID](/entra-id) integration that allows users to authenticate with Tiro.health using their existing hospital credentials. This provides a seamless user experience and ensures that user data is securely managed.
+- A [Microsoft Entra ID](/identity-provider/microsoft-entra-id) integration that allows users to authenticate with Tiro.health using their existing hospital credentials. This provides a seamless user experience and ensures that user data is securely managed.
 
 ## Integration Checklist
 The following steps will help you setup the integration between Tiro.health and Nexuzhealth KWS:
@@ -245,12 +245,14 @@ The Mirth channels require a configuration map to store environment-specific set
 
 | Key | Description | Example Value |
 |-----|-------------|--------------|
-| `tiroHealthServerUrl` | Base URL for Tiro.health API | `https://reports.tiro.health` |
 | `tiroHealthAppUrl` | Base URL for Tiro.health application | `https://app.tiro.health` |
-| `tiroHealthAppNaam` | KWS application identifier for Tiro.health | `tiro-health` |
-| `tiroHealthZiekenhuis` | Hospital identifier for KWS | `my-hospital` |
 | `tiroHealthClientId` | Client ID for Tiro.health API access | `my-client-id` |
 | `tiroHealthClientSecret` | Client secret for Tiro.health API access | `my-client-secret` |
+| `tiroHealthKwsAppNaam` | KWS application identifier for Tiro.health | `tiro-health` |
+| `tiroHealthKwsZiekenhuis` | Hospital identifier for KWS | `my-hospital` |
+| `tiroHealthPostSubmitPort` | Tiro Health Post Submit Port | `8081` |
+| `tiroHealthPostSubmitUrl` | Tiro Health Post Submit Url | `http://localhost` |
+| `tiroHealthServerUrl` | Base URL for Tiro.health API | `https://reports.tiro.health` |
 
 3. Click **Save** to create the configuration map.
 

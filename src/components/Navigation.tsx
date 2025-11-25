@@ -294,6 +294,18 @@ export const navigation: Array<NavGroup> = [
         href: '/api',
       },
       {
+        title: 'Authentication',
+        href: '/api/authentication',
+      },
+      {
+        title: 'Session Management',
+        href: '/api/session-management',
+      },
+      {
+        title: 'Embedded Browsers',
+        href: '/api/embedded-browsers',
+      },
+      {
         title: 'KWS (Nexuzhealth)',
         href: '/api/kws',
       },
