@@ -453,10 +453,50 @@ export default function Page() {
       <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white">
         From Template to Structured Data
       </h1>
-      <p className="mb-8 text-lg text-gray-600 dark:text-gray-400">
+      <p className="mb-4 text-lg text-gray-600 dark:text-gray-400">
         This guide walks through how Tiro.health transforms a pathology report
         template into a fully structured, computable FHIR Questionnaire. We will
         build up the data model step by step.
+      </p>
+      <p className="mb-4 text-gray-600 dark:text-gray-400">
+        The data model follows the{' '}
+        <a
+          href="https://hl7.org/fhir/questionnaire.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          FHIR R5 Questionnaire
+        </a>{' '}
+        and{' '}
+        <a
+          href="https://hl7.org/fhir/questionnaireresponse.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          QuestionnaireResponse
+        </a>{' '}
+        standards. For advanced functionality like calculated expressions and
+        variables, we use the{' '}
+        <a
+          href="https://hl7.org/fhir/uv/sdc/2025Jan/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          FHIR SDC Implementation Guide
+        </a>
+        . Tiro.health also defines{' '}
+        <a
+          href="https://fhir.tiro.health/artifacts.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline dark:text-blue-400"
+        >
+          custom extensions and code systems
+        </a>{' '}
+        for additional functionality like narrative template generation.
       </p>
 
       {/* Source Template */}
