@@ -595,7 +595,7 @@ export default function Page() {
       {/* Step 1: Basic Structure */}
       <section className="mb-12">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-300 text-sm font-medium text-blue-600 dark:border-blue-700 dark:text-blue-400">
             1
           </span>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
@@ -638,7 +638,7 @@ export default function Page() {
       {/* Step 2: Variables & Calculations */}
       <section className="mb-12">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-300 text-sm font-medium text-blue-600 dark:border-blue-700 dark:text-blue-400">
             2
           </span>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
@@ -677,7 +677,7 @@ export default function Page() {
       {/* Step 3: Narrative Template */}
       <section className="mb-12">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-300 text-sm font-medium text-blue-600 dark:border-blue-700 dark:text-blue-400">
             3
           </span>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
@@ -715,7 +715,7 @@ export default function Page() {
       {/* Step 4: UI Controls */}
       <section className="mb-12">
         <div className="mb-4 flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-blue-300 text-sm font-medium text-blue-600 dark:border-blue-700 dark:text-blue-400">
             4
           </span>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
