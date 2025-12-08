@@ -465,7 +465,14 @@ function JsonObject({
   collapsible?: CollapsibleConfig
   isLast: boolean
 }) {
-  const entries = Object.entries(obj)
+  // Check for inline __collapsed field
+  const hasInlineCollapsed =
+    '__collapsed' in obj && typeof obj['__collapsed'] === 'boolean'
+  const inlineCollapsedValue = hasInlineCollapsed
+    ? (obj['__collapsed'] as boolean)
+    : undefined
+  // Filter out __collapsed from rendered entries
+  const entries = Object.entries(obj).filter(([key]) => key !== '__collapsed')
   const indent = '  '.repeat(depth)
   const innerIndent = '  '.repeat(depth + 1)
   const comma = isLast ? '' : ','
@@ -515,9 +522,16 @@ function JsonObject({
     </>
   )
 
-  if (collapsibleRule && depth > 0) {
+  // Collapsible if has inline __collapsed or matches external config
+  const isCollapsible = (hasInlineCollapsed || collapsibleRule) && depth > 0
+  // Inline __collapsed takes precedence over external config
+  const defaultOpen = hasInlineCollapsed
+    ? !inlineCollapsedValue
+    : collapsibleRule?.defaultOpen ?? true
+
+  if (isCollapsible) {
     return (
-      <Disclosure defaultOpen={collapsibleRule.defaultOpen ?? true}>
+      <Disclosure defaultOpen={defaultOpen}>
         {({ open }) => (
           <>
             <DisclosureButton className="inline-flex items-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200">

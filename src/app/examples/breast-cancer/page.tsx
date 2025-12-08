@@ -43,6 +43,7 @@ const step2Data = {
   type: 'group',
   extension: [
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'differentiation',
@@ -51,6 +52,7 @@ const step2Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'pleomorphism',
@@ -59,6 +61,7 @@ const step2Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'mitoses',
@@ -85,7 +88,7 @@ const step2Data = {
           url: 'http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-calculatedExpression',
           valueExpression: {
             language: 'text/fhirpath',
-            expression: '%differentiation + %pleomorphism + %mitoses',
+            expression: '%sbrGradeTotal',
           },
         },
       ],
@@ -115,6 +118,7 @@ const step3Data = {
   type: 'group',
   extension: [
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'differentiation',
@@ -123,6 +127,7 @@ const step3Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'pleomorphism',
@@ -131,6 +136,7 @@ const step3Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'mitoses',
@@ -139,6 +145,7 @@ const step3Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'sbrGradeTotal',
@@ -162,6 +169,7 @@ const step3Data = {
       type: 'integer',
       extension: [
         {
+          __collapsed: true,
           url: 'http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-calculatedExpression',
           valueExpression: {
             language: 'text/fhirpath',
@@ -195,6 +203,7 @@ const step4Data = {
   type: 'group',
   extension: [
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'differentiation',
@@ -203,6 +212,7 @@ const step4Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'pleomorphism',
@@ -211,6 +221,7 @@ const step4Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'mitoses',
@@ -219,6 +230,7 @@ const step4Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://hl7.org/fhir/StructureDefinition/variable',
       valueExpression: {
         name: 'sbrGradeTotal',
@@ -227,6 +239,7 @@ const step4Data = {
       },
     },
     {
+      __collapsed: true,
       url: 'http://fhir.tiro.health/StructureDefinition/narrative-template-snippet',
       valueExpression: {
         language: 'text/liquid',
@@ -242,6 +255,7 @@ const step4Data = {
       type: 'integer',
       extension: [
         {
+          __collapsed: true,
           url: 'http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-calculatedExpression',
           valueExpression: {
             language: 'text/fhirpath',
@@ -256,6 +270,7 @@ const step4Data = {
       type: 'integer',
       extension: [
         {
+          __collapsed: true,
           url: 'http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl',
           valueCodeableConcept: {
             coding: [
@@ -269,9 +284,9 @@ const step4Data = {
         },
       ],
       answerOption: [
-        { valueCoding: { code: '1', display: 'Score 1 - >75% tubules' } },
-        { valueCoding: { code: '2', display: 'Score 2 - 10-75% tubules' } },
-        { valueCoding: { code: '3', display: 'Score 3 - <10% tubules' } },
+        { valueInteger: 1 },
+        { valueInteger: 2 },
+        { valueInteger: 3 },
       ],
     },
     {
@@ -280,6 +295,7 @@ const step4Data = {
       type: 'integer',
       extension: [
         {
+          __collapsed: true,
           url: 'http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl',
           valueCodeableConcept: {
             coding: [
@@ -293,9 +309,9 @@ const step4Data = {
         },
       ],
       answerOption: [
-        { valueCoding: { code: '1', display: 'Score 1 - Mild' } },
-        { valueCoding: { code: '2', display: 'Score 2 - Moderate' } },
-        { valueCoding: { code: '3', display: 'Score 3 - Severe' } },
+        { valueInteger: 1 },
+        { valueInteger: 2 },
+        { valueInteger: 3 },
       ],
     },
     {
@@ -304,6 +320,7 @@ const step4Data = {
       type: 'integer',
       extension: [
         {
+          __collapsed: true,
           url: 'http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl',
           valueCodeableConcept: {
             coding: [
@@ -317,9 +334,9 @@ const step4Data = {
         },
       ],
       answerOption: [
-        { valueCoding: { code: '1', display: 'Score 1 - 0-5 mitoses' } },
-        { valueCoding: { code: '2', display: 'Score 2 - 6-10 mitoses' } },
-        { valueCoding: { code: '3', display: 'Score 3 - >10 mitoses' } },
+        { valueInteger: 1 },
+        { valueInteger: 2 },
+        { valueInteger: 3 },
       ],
     },
   ],
@@ -418,19 +435,17 @@ const tooltips: TooltipRule[] = [
   },
 ]
 
-const collapsible: CollapsibleConfig = [
-  { path: /\.?item$/, defaultOpen: true },
-  { path: /\.?extension$/, defaultOpen: false },
-]
+// Item arrays are collapsible via external config (defaultOpen: true)
+// Extension objects use inline __collapsed: true for per-object control
+const collapsible: CollapsibleConfig = [{ path: /\.?item$/, defaultOpen: true }]
 
 const collapsibleOpen: CollapsibleConfig = [
   { path: /\.?item$/, defaultOpen: true },
-  { path: /\.?extension$/, defaultOpen: true },
 ]
 
 export default function Page() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Header */}
       <p className="mb-2 text-sm font-medium uppercase tracking-wide text-blue-600 dark:text-blue-400">
         Tiro.health Data Model
@@ -479,6 +494,61 @@ export default function Page() {
           <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">!</code>{' '}
           placeholders are fields to be filled in. The total grade is calculated
           as the sum of three component scores.
+        </p>
+      </section>
+
+      {/* Full Questionnaire Context */}
+      <section className="mb-12">
+        <h2 className="mb-3 text-xl font-semibold text-gray-800 dark:text-gray-200">
+          The Complete Report Structure
+        </h2>
+        <p className="mb-4 text-gray-600 dark:text-gray-400">
+          The SBR grade fragment we are building is part of a larger breast
+          cancer pathology report. Here is the full hierarchy - we will focus on
+          the highlighted section:
+        </p>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-sm dark:border-gray-700 dark:bg-gray-800/50">
+          <div className="space-y-1 text-gray-600 dark:text-gray-400">
+            <p>1. Specimen information</p>
+            <p className="pl-4 text-gray-400 dark:text-gray-500">
+              1.1 Nature of specimen, 1.2 Laterality/location
+            </p>
+            <p>2. Clinical information</p>
+            <p className="pl-4 text-gray-400 dark:text-gray-500">
+              2.1 Clinical indication
+            </p>
+            <p>3. Histopathological examination</p>
+            <p className="pl-4 text-gray-400 dark:text-gray-500">
+              3.1 Macroscopic description (weight, fragments)
+            </p>
+            <p className="pl-4">3.2 Microscopic findings</p>
+            <p className="pl-8 text-gray-400 dark:text-gray-500">
+              3.2.1 Invasive carcinoma (differentiation grade)
+            </p>
+            <p className="pl-8 text-gray-400 dark:text-gray-500">
+              3.2.2 In situ component - DCIS (nuclear grade, pattern, necrosis,
+              microcalcifications)
+            </p>
+            <p className="rounded bg-blue-100 pl-8 font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+              3.2.3 SBR grade (total score, tubule formation, nuclear
+              pleomorphism, mitotic count)
+            </p>
+            <p className="pl-8 text-gray-400 dark:text-gray-500">
+              3.2.4 Tumour extent (fragments, size)
+            </p>
+            <p className="pl-4 text-gray-400 dark:text-gray-500">
+              3.3 Immunohistochemistry (ER, PR, HER2, Ki67)
+            </p>
+            <p>4. Conclusion</p>
+            <p className="pl-4 text-gray-400 dark:text-gray-500">
+              4.1-4.8 Summary findings (laterality, grade, receptor status)
+            </p>
+          </div>
+        </div>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          Each section follows the same patterns we will explore below. The SBR
+          grade is a good example because it combines data capture, automatic
+          calculation, and narrative generation.
         </p>
       </section>
 
