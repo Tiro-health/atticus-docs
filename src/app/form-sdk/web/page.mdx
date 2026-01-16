@@ -65,17 +65,8 @@ For applications without build tools:
 
 ```html
 <tiro-form-filler
-  id="my-form"
-  questionnaire="http://templates.tiro.health/example|1.0.0"
-  sdc-endpoint-address="https://sdc.tiro.health/fhir/r5">
+  questionnaire="http://templates.tiro.health/example|1.0.0">
 </tiro-form-filler>
-
-<script>
-  document.getElementById('my-form')
-    .addEventListener('tiro-submit', (e) => {
-      console.log('Submitted:', e.detail.response)
-    })
-</script>
 ```
 
 ### With Narrative and Validation
