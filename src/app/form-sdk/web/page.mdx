@@ -8,7 +8,6 @@ export const sections = [
   { title: 'Installation', id: 'installation' },
   { title: 'Quick Start', id: 'quick-start' },
   { title: 'Components', id: 'components' },
-  { title: 'Events', id: 'events' },
   { title: 'Framework Integration', id: 'framework-integration' },
 ]
 
@@ -26,7 +25,18 @@ The SDK is built with **native Web Components** that work with any JavaScript fr
 
 ## Installation
 
-### NPM (Recommended)
+### CDN (Recommended for Quick Start)
+
+The fastest way to get started. No build tools required - just add two lines to your HTML. Ideal for proof of concepts and rapid prototyping.
+
+```html
+<link rel="stylesheet" href="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.css">
+<script src="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.iife.js"></script>
+```
+
+### NPM
+
+For production applications with build tools:
 
 ```bash
 npm install @tiro-health/web-sdk
@@ -42,15 +52,6 @@ import '@tiro-health/web-sdk/style.css'
 <Note>
   **CSS is required.** The Web Components will not render correctly without the stylesheet.
 </Note>
-
-### CDN (Recommended for Quick Start)
-
-The fastest way to get started. No build tools required - just add two lines to your HTML. Ideal for proof of concepts and rapid prototyping.
-
-```html
-<link rel="stylesheet" href="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.css">
-<script src="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.iife.js"></script>
-```
 
 ### Bundle Options
 
@@ -142,51 +143,40 @@ The primary component for rendering FHIR Questionnaires.
 - `submit()` - Programmatically submit the form
 - `checkValidity()` - Check if form is valid
 
+**Events:**
+- `tiro-ready` - Fired when the questionnaire is loaded. `e.detail.questionnaire`
+- `tiro-update` - Fired on every form change. `e.detail.response`
+- `tiro-submit` - Fired when the form is submitted. `e.detail.response`
+- `tiro-validate` - Fired after validation. `e.detail.isValid`
+- `tiro-error` - Fired on errors. `e.detail.error`
+
 ### `<tiro-narrative>`
 
 Generates human-readable clinical narratives from questionnaire responses.
+
+**Attributes:**
+- `for` - ID of the `<tiro-form-filler>` to link to
 
 ```html
 <tiro-narrative for="my-form"></tiro-narrative>
 ```
 
+**Events:**
+- `tiro-update` - Fired when narrative content changes. `e.detail.narrative`
+
 ### `<tiro-validation-report>`
 
 Displays FHIR OperationOutcome validation results. Automatically hides when valid.
+
+**Attributes:**
+- `for` - ID of the `<tiro-form-filler>` to link to
 
 ```html
 <tiro-validation-report for="my-form"></tiro-validation-report>
 ```
 
----
-
-## Events
-
-All components emit custom DOM events with the `tiro-` prefix:
-
-```javascript
-const form = document.getElementById('my-form')
-
-form.addEventListener('tiro-update', (e) => {
-  console.log('Response:', e.detail.response)
-})
-
-form.addEventListener('tiro-submit', (e) => {
-  console.log('Submitted:', e.detail.response)
-})
-
-form.addEventListener('tiro-validate', (e) => {
-  console.log('Valid:', e.detail.isValid)
-})
-
-form.addEventListener('tiro-error', (e) => {
-  console.error('Error:', e.detail.error)
-})
-
-form.addEventListener('tiro-ready', (e) => {
-  console.log('Loaded:', e.detail.questionnaire)
-})
-```
+**Events:**
+- `tiro-update` - Fired when validation results change. `e.detail.operationOutcome`
 
 ---
 
