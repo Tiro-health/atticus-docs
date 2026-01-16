@@ -93,6 +93,45 @@ Components link together using the `for` attribute:
 <tiro-validation-report for="patient-form"></tiro-validation-report>
 ```
 
+### Inline Questionnaire
+
+For simple forms or testing, you can embed the questionnaire definition directly in HTML using a `<script>` tag with `type="application/fhir+json"`:
+
+```html
+<tiro-form-filler id="inline-form">
+  <script type="application/fhir+json" slot="questionnaire">
+    {
+      "resourceType": "Questionnaire",
+      "status": "draft",
+      "title": "Feedback Form",
+      "item": [
+        {
+          "linkId": "name",
+          "type": "string",
+          "text": "What is your name?"
+        },
+        {
+          "linkId": "feedback",
+          "type": "text",
+          "text": "Any feedback?"
+        }
+      ]
+    }
+  </script>
+</tiro-form-filler>
+
+<script>
+  const form = document.getElementById('inline-form')
+  form.addEventListener('tiro-submit', (e) => {
+    console.log('Submitted:', e.detail.response)
+  })
+</script>
+```
+
+<Note>
+  Inline questionnaires don't require an SDC endpoint for basic rendering, but advanced features like population and extraction still need a backend.
+</Note>
+
 ---
 
 ## Components
