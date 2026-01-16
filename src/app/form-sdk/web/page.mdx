@@ -72,6 +72,8 @@ import '@tiro-health/web-sdk/style.css'
 </tiro-form-filler>
 ```
 
+This renders an interactive form based on the FHIR Questionnaire. Users can fill in fields, and the component manages all form state internally.
+
 ### With Narrative and Validation
 
 Components link together using the `for` attribute:
@@ -86,6 +88,8 @@ Components link together using the `for` attribute:
 <tiro-narrative for="patient-form"></tiro-narrative>
 <tiro-validation-report for="patient-form"></tiro-validation-report>
 ```
+
+This displays three linked components: the form, a live-updating clinical narrative generated from the responses, and validation errors that appear when required fields are missing or invalid.
 
 ### Inline Questionnaire
 
@@ -121,6 +125,8 @@ For simple forms or testing, you can embed the questionnaire definition directly
   })
 </script>
 ```
+
+This renders a simple two-field form with a text input and a textarea. When submitted, the FHIR QuestionnaireResponse is logged to the console.
 
 <Note>
   Inline questionnaires don't require an SDC endpoint for basic rendering, but advanced features like population and extraction still need a backend.
