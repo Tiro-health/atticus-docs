@@ -8,6 +8,7 @@ export const sections = [
   { title: 'Installation', id: 'installation' },
   { title: 'Quick Start', id: 'quick-start' },
   { title: 'Components', id: 'components' },
+  { title: 'Custom Authentication', id: 'custom-authentication' },
   { title: 'Framework Integration', id: 'framework-integration' },
 ]
 
@@ -185,6 +186,58 @@ Displays FHIR OperationOutcome validation results. Automatically hides when vali
 
 **Events:**
 - `tiro-update` - Fired when validation results change. `e.detail.operationOutcome`
+
+---
+
+## Custom Authentication
+
+For applications requiring custom authentication (OAuth, JWT, session tokens), create an `SDCClient` programmatically instead of using the `sdc-endpoint-address` attribute.
+
+### Basic Setup
+
+```javascript
+import { SDCClient } from '@tiro-health/web-sdk'
+
+const sdcClient = new SDCClient({
+  baseUrl: 'https://sdc.example.com/fhir/r5',
+  auth: async () => {
+    const token = await getAccessToken() // Your auth logic
+    return `Bearer ${token}`
+  }
+})
+
+const form = document.querySelector('tiro-form-filler')
+form.sdcClient = sdcClient
+```
+
+The `auth` function is called before each request, allowing you to handle token refresh automatically.
+
+### With Interceptors
+
+Add request/response interceptors for logging or error handling:
+
+```javascript
+const sdcClient = new SDCClient({
+  baseUrl: 'https://sdc.example.com/fhir/r5',
+  auth: async () => `Bearer ${await getAccessToken()}`
+})
+
+// Log outgoing requests
+sdcClient.interceptors.request.use(async (req) => {
+  console.log('Request:', req.method, req.url)
+  return req
+})
+
+// Handle auth errors
+sdcClient.interceptors.response.use(async (res) => {
+  if (res.status === 401) {
+    // Trigger re-authentication
+  }
+  return res
+})
+
+document.querySelector('tiro-form-filler').sdcClient = sdcClient
+```
 
 ---
 
