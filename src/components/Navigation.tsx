@@ -253,10 +253,8 @@ export const navigation: Array<NavGroup> = [
         title: 'Backend Service',
         href: '/form-sdk/sdc-backend',
       },
-      {
-        title: 'Web UI SDK',
-        href: '/form-sdk/web',
-      },
+      // Legacy Web SDK docs kept but hidden from navigation - accessible via direct URL at /form-sdk/web
+      // { title: 'Web UI SDK', href: '/form-sdk/web' },
       {
         title: '.NET UI SDK',
         href: '/form-sdk/dotnet',
