@@ -1,0 +1,507 @@
+export const metadata = {
+  title: 'Web UI SDK (Legacy)',
+  description:
+    'Integrate Tiro.health form filling capabilities into any web application using our framework-agnostic JavaScript SDK with imperative mount/unmount API.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Installation', id: 'installation' },
+  { title: 'Quick Start', id: 'quick-start' },
+  { title: 'Core Components', id: 'core-components' },
+  { title: 'Configuration', id: 'configuration' },
+  { title: 'Visualization Features', id: 'visualization-features' },
+  { title: 'Lifecycle Management', id: 'lifecycle-management' },
+  { title: 'Framework Integration', id: 'framework-integration' },
+]
+
+# Web UI SDK (Legacy)
+
+The Tiro.health Web UI SDK provides framework-agnostic JavaScript components for integrating FHIR-based form filling capabilities into your web application. {{ className: 'lead' }}
+
+<Note>
+  This is the legacy SDK documentation using the imperative `mount()`/`unmount()` API. For the recommended approach using native Web Components, see the [Web SDK documentation](/form-sdk/web).
+</Note>
+
+## Overview
+
+The Web UI SDK is built around an **imperative API** using constructor functions and `mount()`/`unmount()` methods, making it compatible with any JavaScript framework or vanilla JavaScript. The SDK provides:
+
+- **FormFiller**: Interactive form filling UI with full SDC (Structured Data Capture) support
+- **LaunchContextProvider**: Patient context integration for pre-population
+- **Narrative**: Clinical narrative generation from responses
+- **ValidationFeedback**: Real-time form validation display
+- **SDCClient**: FHIR R5 SDC backend communication
+
+All components work together seamlessly and can be mounted on any DOM element in your application.
+
+---
+
+## Installation
+
+The Web UI SDK is hosted in our private Google Artifact Registry. After your service account has been granted access, configure npm to authenticate with the registry.
+
+### Configure Registry Authentication
+
+**Option A: Using npx (recommended for initial setup)**
+```bash
+npx google-artifactregistry-auth
+```
+
+**Option B: Manual configuration**
+
+Add the following to your `.npmrc` file:
+```bash
+@tiro-health:registry=https://europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/
+//europe-npm.pkg.dev/tiroapp-4cb17/npm-ext/:always-auth=true
+```
+
+### Install the Package
+
+```bash
+npm install @tiro-health/web-sdk
+```
+
+For more details on configuring authentication, see the [Google Cloud Artifact Registry documentation](https://cloud.google.com/artifact-registry/docs/nodejs/store-nodejs#config).
+
+---
+
+## Quick Start
+
+Here's a minimal example showing how to mount a FormFiller component:
+
+```javascript
+import { FormFiller } from '@tiro-health/web-sdk'
+
+// Create FormFiller instance
+const filler = new FormFiller({
+  questionnaire: 'your-questionnaire-id',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://your-sdc-backend-address/fhir'
+  }
+})
+
+// Mount to a DOM element
+const container = document.getElementById('form-container')
+filler.mount(container)
+
+// Later: cleanup when done
+filler.unmount()
+```
+
+For complete framework-specific integration guides, see [Framework Integration](#framework-integration) below.
+
+---
+
+## Core Components
+
+### FormFiller
+
+The primary component for rendering and managing form interactions. Handles all SDC features including conditional logic, calculations, validation, and submission.
+
+**Constructor Signature:**
+```typescript
+new FormFiller(config: {
+  questionnaire: string;
+  sdcEndpoint: {
+    resourceType: 'Endpoint';
+    address: string;
+  };
+  initialResponse?: QuestionnaireResponse;
+  onSubmit?: (response: QuestionnaireResponse) => void;
+  onChange?: (response: QuestionnaireResponse) => void;
+  onError?: (error: Error) => void;
+})
+```
+
+**Methods:**
+- `mount(element: HTMLElement): void` - Mounts the component to the specified DOM element
+- `unmount(): void` - Removes the component and cleans up resources
+
+**Example:**
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'phq-9',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://your-sdc-backend.example.com/fhir'
+  },
+  onSubmit: (response) => {
+    console.log('Form submitted:', response)
+    // Handle submission (e.g., save to your backend)
+  },
+  onChange: (response) => {
+    console.log('Form updated:', response)
+    // Handle changes (e.g., auto-save)
+  },
+  onError: (error) => {
+    console.error('Form error:', error)
+    // Handle errors (e.g., show notification)
+  }
+})
+
+const container = document.getElementById('form-container')
+filler.mount(container)
+```
+
+For detailed API documentation, see [FormFiller API Reference](/form-sdk/web/api/form-filler).
+
+### LaunchContextProvider
+
+Provides patient context to the FormFiller for pre-populating forms with patient data. Connects to your FHIR R5 data endpoint to fetch relevant patient information.
+
+**Constructor Signature:**
+```typescript
+new LaunchContextProvider(config: {
+  dataEndpoint: {
+    resourceType: 'Endpoint';
+    address: string;
+  };
+  filler: FormFiller;
+  patientId?: string;
+})
+```
+
+**Methods:**
+- `mount(element: HTMLElement): void` - Mounts the context provider
+- `unmount(): void` - Removes the provider and cleans up
+
+**Example:**
+```javascript
+import { FormFiller, LaunchContextProvider } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'patient-intake',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc-backend.example.com/fhir'
+  }
+})
+
+const contextProvider = new LaunchContextProvider({
+  dataEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://fhir-server.example.com/fhir'
+  },
+  filler: filler,
+  patientId: 'patient-123'
+})
+
+// Mount both components
+const contextContainer = document.getElementById('context-container')
+const formContainer = document.getElementById('form-container')
+
+contextProvider.mount(contextContainer)
+filler.mount(formContainer)
+```
+
+For detailed API documentation, see [LaunchContextProvider API Reference](/form-sdk/web/api/launch-context-provider).
+
+### Narrative
+
+Generates human-readable clinical narratives from QuestionnaireResponse data. Useful for displaying summaries or generating clinical notes.
+
+**Constructor Signature:**
+```typescript
+new Narrative(config: {
+  filler: FormFiller;
+})
+```
+
+**Methods:**
+- `mount(element: HTMLElement): void` - Mounts the narrative component
+- `unmount(): void` - Removes the component
+
+**Example:**
+```javascript
+import { FormFiller, Narrative } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'clinical-assessment',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc-backend.example.com/fhir'
+  }
+})
+
+const narrative = new Narrative({
+  filler: filler
+})
+
+// Mount both components
+filler.mount(document.getElementById('form-container'))
+narrative.mount(document.getElementById('narrative-container'))
+```
+
+For detailed API documentation, see [Narrative API Reference](/form-sdk/web/api/narrative).
+
+### ValidationFeedback
+
+Displays real-time validation errors and warnings as users fill out forms. Helps guide users to complete forms correctly.
+
+**Constructor Signature:**
+```typescript
+new ValidationFeedback(config: {
+  filler: FormFiller;
+})
+```
+
+**Methods:**
+- `mount(element: HTMLElement): void` - Mounts the validation feedback component
+- `unmount(): void` - Removes the component
+
+**Example:**
+```javascript
+import { FormFiller, ValidationFeedback } from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'patient-registration',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: 'https://sdc-backend.example.com/fhir'
+  }
+})
+
+const validation = new ValidationFeedback({
+  filler: filler
+})
+
+// Mount both components
+filler.mount(document.getElementById('form-container'))
+validation.mount(document.getElementById('validation-container'))
+```
+
+For detailed API documentation, see [ValidationFeedback API Reference](/form-sdk/web/api/validation-feedback).
+
+---
+
+## Configuration
+
+### Endpoint Configuration
+
+The SDK requires two types of FHIR endpoints:
+
+**SDC Endpoint** (required for FormFiller)
+- Provides Questionnaire resources and processes QuestionnaireResponse submissions
+- Must be a FHIR R5 SDC-compliant endpoint
+- Used by: FormFiller component
+
+**Data Endpoint** (optional, for LaunchContextProvider)
+- Provides patient context and resources for pre-population
+- Must be a FHIR R5 compliant endpoint
+- Used by: LaunchContextProvider component
+
+**Example configuration:**
+```javascript
+const sdcEndpoint = {
+  resourceType: 'Endpoint',
+  address: 'https://your-sdc-backend.example.com/fhir'
+}
+
+const dataEndpoint = {
+  resourceType: 'Endpoint',
+  address: 'https://your-fhir-server.example.com/fhir'
+}
+```
+
+### Environment Variables
+
+For security, store endpoint URLs and sensitive configuration in environment variables:
+
+```bash
+# .env
+VITE_SDC_ENDPOINT=https://your-sdc-backend.example.com/fhir
+VITE_DATA_ENDPOINT=https://your-fhir-server.example.com/fhir
+```
+
+Then reference them in your code:
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'my-form',
+  sdcEndpoint: {
+    resourceType: 'Endpoint',
+    address: import.meta.env.VITE_SDC_ENDPOINT
+  }
+})
+```
+
+For detailed configuration options, see [SDCClient API Reference](/form-sdk/web/api/sdc-client).
+
+---
+
+## Visualization Features
+
+The Web UI SDK includes built-in visualization features to help developers understand component boundaries and behavior during development.
+
+### Component Borders
+
+Add colored borders to see which components are mounted:
+
+```javascript
+const filler = new FormFiller({
+  questionnaire: 'my-form',
+  sdcEndpoint: { /* ... */ },
+  visualize: true  // Adds colored border around FormFiller
+})
+
+const narrative = new Narrative({
+  filler: filler,
+  visualize: true  // Adds colored border around Narrative
+})
+```
+
+Each component type gets a distinct color:
+- **FormFiller**: Blue border
+- **LaunchContextProvider**: Green border
+- **Narrative**: Purple border
+- **ValidationFeedback**: Orange border
+
+### Toggle Button
+
+Add a toggle button to show/hide component visualizations:
+
+```javascript
+import { VisualizationToggle } from '@tiro-health/web-sdk'
+
+const toggle = new VisualizationToggle()
+toggle.mount(document.getElementById('toggle-container'))
+
+// The toggle will control all components with visualize: true
+```
+
+**Example with full visualization:**
+```javascript
+import {
+  FormFiller,
+  Narrative,
+  ValidationFeedback,
+  VisualizationToggle
+} from '@tiro-health/web-sdk'
+
+const filler = new FormFiller({
+  questionnaire: 'my-form',
+  sdcEndpoint: { resourceType: 'Endpoint', address: 'https://...' },
+  visualize: true
+})
+
+const narrative = new Narrative({ filler, visualize: true })
+const validation = new ValidationFeedback({ filler, visualize: true })
+const toggle = new VisualizationToggle()
+
+// Mount all components
+filler.mount(document.getElementById('form'))
+narrative.mount(document.getElementById('narrative'))
+validation.mount(document.getElementById('validation'))
+toggle.mount(document.getElementById('toggle'))
+```
+
+> **Note:** Visualization features should be disabled in production builds. Use environment variables to control this:
+> ```javascript
+> visualize: import.meta.env.DEV
+> ```
+
+---
+
+## Lifecycle Management
+
+Proper lifecycle management is crucial to prevent memory leaks and ensure clean component behavior.
+
+### Mounting Components
+
+All components follow the same mounting pattern:
+
+```javascript
+const component = new ComponentName(config)
+component.mount(domElement)
+```
+
+**Important considerations:**
+- The DOM element must exist before calling `mount()`
+- Mounting overwrites any existing content in the element
+- You can only mount a component instance once
+
+### Unmounting Components
+
+Always unmount components when they're no longer needed:
+
+```javascript
+component.unmount()
+```
+
+**Unmounting:**
+- Removes the component's DOM elements
+- Cleans up event listeners
+- Cancels pending network requests
+- Frees up memory
+
+### Framework-Specific Cleanup
+
+**React:**
+```javascript
+useEffect(() => {
+  const filler = new FormFiller(config)
+  filler.mount(containerRef.current)
+
+  return () => {
+    filler.unmount()  // Cleanup on unmount
+  }
+}, [])
+```
+
+**Angular:**
+```typescript
+ngOnDestroy() {
+  this.filler?.unmount()  // Cleanup on destroy
+}
+```
+
+**Vanilla JavaScript:**
+```javascript
+// When removing from DOM or navigating away
+window.addEventListener('beforeunload', () => {
+  filler.unmount()
+})
+```
+
+For complete lifecycle patterns, see [Framework Integration](#framework-integration).
+
+---
+
+## Framework Integration
+
+The Web UI SDK works with any JavaScript framework. Below are links to comprehensive integration guides:
+
+### React Integration
+
+Complete guide for integrating with React applications using hooks, refs, and proper cleanup patterns.
+
+[View React Integration Guide →](/form-sdk/web/integration/react)
+
+### Angular Integration
+
+Complete guide for integrating with Angular applications using lifecycle hooks, ViewChild, and standalone components.
+
+[View Angular Integration Guide →](/form-sdk/web/integration/angular)
+
+### Vanilla JavaScript Integration
+
+Complete guide for integrating with vanilla JavaScript using modern ES modules and Vite.
+
+[View Vanilla JS Integration Guide →](/form-sdk/web/integration/vanilla-js)
+
+### CDN (No Build Tools)
+
+Quick setup for prototyping and simple applications without build tools. Load the SDK directly from CDN.
+
+[View CDN Integration Guide →](/form-sdk/web/integration/cdn)
+
+---
+
+## Next Steps
+
+- **Framework Integration**: Choose your framework and follow the detailed integration guide
+- **API Reference**: Explore the complete API documentation for each component
+- **Live Examples**: Check out the [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with working demos
+
+For questions or support, please contact the Tiro.health team.
