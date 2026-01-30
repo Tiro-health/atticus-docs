@@ -37,7 +37,6 @@ Choose **one** of the following installation methods:
 The fastest way to get started. No build tools required - just add two lines to your HTML. Ideal for proof of concepts and rapid prototyping.
 
 ```html
-<link rel="stylesheet" href="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.css">
 <script src="https://cdn.tiro.health/sdk/latest/tiro-web-sdk.iife.js"></script>
 ```
 
@@ -49,16 +48,11 @@ For production applications with build tools:
 npm install @tiro-health/web-sdk
 ```
 
-Import the SDK and its stylesheet:
+Import the SDK:
 
 ```javascript
 import '@tiro-health/web-sdk'
-import '@tiro-health/web-sdk/style.css'
 ```
-
-<Note>
-  **CSS is required.** The Web Components will not render correctly without the stylesheet.
-</Note>
 
 ### Bundle Options
 
@@ -253,7 +247,6 @@ Web Components work with any framework using standard DOM APIs.
 
 ```jsx
 import '@tiro-health/web-sdk'
-import '@tiro-health/web-sdk/style.css'
 import { useRef, useEffect } from 'react'
 
 function FormPage() {
@@ -283,7 +276,6 @@ Add `CUSTOM_ELEMENTS_SCHEMA` to your module or component:
 ```typescript
 import { CUSTOM_ELEMENTS_SCHEMA, Component } from '@angular/core'
 import '@tiro-health/web-sdk'
-import '@tiro-health/web-sdk/style.css'
 
 @Component({
   selector: 'app-form',
@@ -310,7 +302,6 @@ export class FormComponent {
 
 ```javascript
 import '@tiro-health/web-sdk'
-import '@tiro-health/web-sdk/style.css'
 
 const form = document.createElement('tiro-form-filler')
 form.setAttribute('questionnaire', 'http://example.com/q|1.0.0')
