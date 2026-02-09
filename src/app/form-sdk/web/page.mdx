@@ -24,7 +24,6 @@ The SDK is built with **native Web Components** that work with any JavaScript fr
 
 - **`<tiro-form-filler>`**: Interactive form rendering with full SDC support
 - **`<tiro-narrative>`**: Clinical narrative generation from responses
-- **`<tiro-validation-report>`**: Real-time validation error display
 
 ---
 
@@ -73,7 +72,7 @@ import '@tiro-health/web-sdk'
 
 This renders an interactive form based on the FHIR Questionnaire. Users can fill in fields, and the component manages all form state internally.
 
-### With Narrative and Validation
+### With Narrative
 
 Components link together using the `for` attribute:
 
@@ -85,10 +84,9 @@ Components link together using the `for` attribute:
 </tiro-form-filler>
 
 <tiro-narrative for="patient-form"></tiro-narrative>
-<tiro-validation-report for="patient-form"></tiro-validation-report>
 ```
 
-This displays three linked components: the form, a live-updating clinical narrative generated from the responses, and validation errors that appear when required fields are missing or invalid.
+This displays two linked components: the form and a live-updating clinical narrative generated from the responses.
 
 ### Inline Questionnaire
 
@@ -170,20 +168,6 @@ Generates human-readable clinical narratives from questionnaire responses.
 
 **Events:**
 - `tiro-update` - Fired when narrative content changes. `e.detail.narrative`
-
-### `<tiro-validation-report>`
-
-Displays FHIR OperationOutcome validation results. Automatically hides when valid.
-
-**Attributes:**
-- `for` - ID of the `<tiro-form-filler>` to link to
-
-```html
-<tiro-validation-report for="my-form"></tiro-validation-report>
-```
-
-**Events:**
-- `tiro-update` - Fired when validation results change. `e.detail.operationOutcome`
 
 ---
 
