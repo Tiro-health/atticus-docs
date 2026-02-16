@@ -231,14 +231,21 @@ function NavigationGroup({
 
 export const navigation: Array<NavGroup> = [
   {
-    title: 'Form SDK',
+    title: 'Getting Started',
     links: [
       { title: 'Introduction', href: '/' },
-      { title: 'Getting started (15min)', href: '/getting-started' },
-      { title: 'Backend Service', href: '/sdc-backend' },
-      { title: 'Web UI SDK', href: '/web' },
-      { title: '.NET UI SDK', href: '/dotnet' },
-      { title: 'Java UI SDK', href: '/java' },
+      { title: 'Quick Start (15min)', href: '/getting-started' },
+    ],
+  },
+  {
+    title: 'Backend',
+    links: [{ title: 'Backend Service', href: '/sdc-backend' }],
+  },
+  {
+    title: 'UI SDKs',
+    links: [
+      { title: 'Web SDK', href: '/web' },
+      { title: 'Web SDK (Legacy)', href: '/web-legacy' },
     ],
   },
 ]
