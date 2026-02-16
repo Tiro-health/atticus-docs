@@ -12,7 +12,6 @@ export const sections = [
   { title: 'Configuration', id: 'configuration' },
   { title: 'Visualization Features', id: 'visualization-features' },
   { title: 'Lifecycle Management', id: 'lifecycle-management' },
-  { title: 'Framework Integration', id: 'framework-integration' },
 ]
 
 # Web UI SDK (Legacy)
@@ -89,8 +88,6 @@ filler.mount(container)
 // Later: cleanup when done
 filler.unmount()
 ```
-
-For complete framework-specific integration guides, see [Framework Integration](#framework-integration) below.
 
 ---
 
@@ -463,45 +460,5 @@ window.addEventListener('beforeunload', () => {
   filler.unmount()
 })
 ```
-
-For complete lifecycle patterns, see [Framework Integration](#framework-integration).
-
----
-
-## Framework Integration
-
-The Web UI SDK works with any JavaScript framework. Below are links to comprehensive integration guides:
-
-### React Integration
-
-Complete guide for integrating with React applications using hooks, refs, and proper cleanup patterns.
-
-[View React Integration Guide →](/web/integration/react)
-
-### Angular Integration
-
-Complete guide for integrating with Angular applications using lifecycle hooks, ViewChild, and standalone components.
-
-[View Angular Integration Guide →](/web/integration/angular)
-
-### Vanilla JavaScript Integration
-
-Complete guide for integrating with vanilla JavaScript using modern ES modules and Vite.
-
-[View Vanilla JS Integration Guide →](/web/integration/vanilla-js)
-
-### CDN (No Build Tools)
-
-Quick setup for prototyping and simple applications without build tools. Load the SDK directly from CDN.
-
-[View CDN Integration Guide →](/web/integration/cdn)
-
----
-
-## Next Steps
-
-- **Framework Integration**: Choose your framework and follow the detailed integration guide
-- **API Reference**: Explore the complete API documentation for each component
-- **Live Examples**: Check out the [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with working demos
 
 For questions or support, please contact the Tiro.health team.
