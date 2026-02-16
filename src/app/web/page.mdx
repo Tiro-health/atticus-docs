@@ -7,7 +7,6 @@ export const metadata = {
 export const sections = [
   { title: 'Installation', id: 'installation' },
   { title: 'Quick Start', id: 'quick-start' },
-  { title: 'Components', id: 'components' },
   { title: 'Custom Authentication', id: 'custom-authentication' },
   { title: 'Framework Integration', id: 'framework-integration' },
   { title: 'Live Examples', id: 'live-examples' },
@@ -131,44 +130,6 @@ This renders a simple two-field form with a text input and a textarea. When subm
 </Note>
 
 ---
-
-## Components
-
-### `<tiro-form-filler>`
-
-The primary component for rendering FHIR Questionnaires.
-
-**Attributes:**
-- `questionnaire` - Canonical URL with version (e.g., `url|version`)
-- `sdc-endpoint-address` - SDC FHIR server URL
-- `launch-context` - JSON object with FHIR resources (Patient, Encounter)
-- `read-only` - Disable form editing
-
-**Methods:**
-- `getResponse()` - Get current QuestionnaireResponse
-- `submit()` - Programmatically submit the form
-- `checkValidity()` - Check if form is valid
-
-**Events:**
-- `tiro-ready` - Fired when the questionnaire is loaded. `e.detail.questionnaire`
-- `tiro-update` - Fired on every form change. `e.detail.response`
-- `tiro-submit` - Fired when the form is submitted. `e.detail.response`
-- `tiro-validate` - Fired after validation. `e.detail.isValid`, `e.detail.operationOutcome`
-- `tiro-error` - Fired on errors. `e.detail.error`
-
-### `<tiro-narrative>`
-
-Generates human-readable clinical narratives from questionnaire responses.
-
-**Attributes:**
-- `for` - ID of the `<tiro-form-filler>` to link to
-
-```html
-<tiro-narrative for="my-form"></tiro-narrative>
-```
-
-**Events:**
-- `tiro-update` - Fired when narrative content changes. `e.detail.narrative`
 
 ---
 
