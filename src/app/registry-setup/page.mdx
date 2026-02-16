@@ -1,14 +1,16 @@
 export const metadata = {
-  title: 'Tiro.health Form SDK',
+  title: 'Registry & Authentication Setup',
   description:
-    'The Tiro.health Form SDK is a library and a set of docker images to integrate Tiro.health into your EHR or LIS.',
+    'Configure Docker and npm authentication to access Tiro.health private packages and container images.',
 }
 
-# Getting started with the Tiro.health Form SDK
+# Registry & Authentication Setup
 
-This guide covers the technical setup for accessing and configuring the Tiro.health Form SDK packages. For a broader overview of the Form SDK architecture and components, see the [introduction page](/).
+This guide covers the technical setup for accessing Tiro.health's private Docker images and npm packages. You'll need this when deploying the backend service or installing the SDK via npm.
 
-Going through this guide is the quickest way to get started with the Tiro.health Form SDK, allowing you to integrate structured data capture capabilities into your healthcare information system and should only take 15 minutes.
+<Note>
+  For a zero-setup quick start using the CDN, see the [Web SDK documentation](/web) — no registry authentication required.
+</Note>
 
 ## Prerequisites
 
@@ -145,24 +147,7 @@ Once everything is running, you can access:
 - **API Documentation**: http://localhost:3000/api/docs
 - **Health Check**: http://localhost:3000/health
 
-## Quick Start for Web SDK
-
-After configuring your npm environment, you can quickly integrate the Web UI SDK into your application.
-
-### Live Examples
-
-For hands-on learning and working examples, explore our [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with live demos:
-
-- **[React Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-react/)** - Complete React + TypeScript example
-- **[Angular Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-angular/)** - Angular standalone components example
-- **[Vanilla JS](https://tiro-health.github.io/web-sdk-tutorial/npm-vanillajs/)** - Modern JavaScript with Vite
-- **[HTML + CDN](https://tiro-health.github.io/web-sdk-tutorial/html-js/)** - No build tools required
-
-### Web SDK Documentation
-
-For complete documentation including framework integration guides and API reference, see the **[Web SDK documentation](/web)**.
-
-### Troubleshooting
+## Troubleshooting
 
 If you encounter issues:
 

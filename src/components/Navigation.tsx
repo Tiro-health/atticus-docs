@@ -234,7 +234,7 @@ export const navigation: Array<NavGroup> = [
     title: 'Getting Started',
     links: [
       { title: 'Introduction', href: '/' },
-      { title: 'Quick Start (15min)', href: '/getting-started' },
+      { title: 'Web SDK', href: '/web' },
     ],
   },
   {
@@ -242,9 +242,9 @@ export const navigation: Array<NavGroup> = [
     links: [{ title: 'Backend Service', href: '/sdc-backend' }],
   },
   {
-    title: 'UI SDKs',
+    title: 'Reference',
     links: [
-      { title: 'Web SDK', href: '/web' },
+      { title: 'Registry Setup', href: '/registry-setup' },
       { title: 'Web SDK (Legacy)', href: '/web-legacy' },
     ],
   },
