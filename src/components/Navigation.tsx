@@ -231,96 +231,14 @@ function NavigationGroup({
 
 export const navigation: Array<NavGroup> = [
   {
-    title: 'Guides',
+    title: 'Form SDK',
     links: [
-      { title: 'How should I integrate?', href: '/' },
-      { title: 'Data Tenants', href: '/guides/data-tenants' },
-      { title: 'Content Versioning', href: '/guides/content-versioning' },
-    ],
-  },
-  {
-    title: 'Form SDK (self-hosted)',
-    links: [
-      {
-        title: 'Introduction',
-        href: '/form-sdk',
-      },
-      {
-        title: 'Getting started (15min)',
-        href: '/form-sdk/getting-started',
-      },
-      {
-        title: 'Backend Service',
-        href: '/form-sdk/sdc-backend',
-      },
-      {
-        title: 'Web UI SDK',
-        href: '/form-sdk/web',
-      },
-      // Legacy Web SDK docs (imperative API) hidden from navigation - accessible via direct URL at /form-sdk/web-legacy
-      // { title: 'Web UI SDK (Legacy)', href: '/form-sdk/web-legacy' },
-      {
-        title: '.NET UI SDK',
-        href: '/form-sdk/dotnet',
-      },
-      {
-        title: 'Java UI SDK',
-        href: '/form-sdk/java',
-      },
-    ],
-  },
-  {
-    title: 'Capture API (managed)',
-    links: [
-      {
-        title: 'Overview',
-        href: '/api',
-      },
-      {
-        title: 'Authentication',
-        href: '/api/authentication',
-      },
-      {
-        title: 'Session Management',
-        href: '/api/session-management',
-      },
-      {
-        title: 'Embedded Browsers',
-        href: '/api/embedded-browsers',
-      },
-      {
-        title: 'KWS (Nexuzhealth)',
-        href: '/api/kws',
-      },
-    ],
-  },
-
-  {
-    title: 'Identity Provider',
-    links: [
-      {
-        title: 'Introduction',
-        href: '/identity-provider',
-      },
-      {
-        title: 'Microsoft Entra ID',
-        href: '/identity-provider/microsoft-entra-id',
-      },
-    ],
-  },
-  {
-    title: 'Atticus FHIR API',
-    links: [
-      { title: 'Introduction', href: '/fhir' },
-      { title: 'Authentication', href: '/fhir/authentication' },
-      { title: 'Practitioner', href: '/fhir/Practitioner' },
-      { title: 'Patient', href: '/fhir/Patient' },
-      { title: 'Encounter', href: '/fhir/Encounter' },
-      { title: 'QuestionnaireResponse', href: '/fhir/QuestionnaireResponse' },
-      { title: 'Task', href: '/fhir/Task' },
-      { title: 'Transactions', href: '/fhir/Transaction' },
-      { title: 'FHIR Tips', href: '/fhir/tips' },
-      { title: 'Integration engines', href: '/integration-engines' },
+      { title: 'Introduction', href: '/' },
+      { title: 'Getting started (15min)', href: '/getting-started' },
+      { title: 'Backend Service', href: '/sdc-backend' },
+      { title: 'Web UI SDK', href: '/web' },
+      { title: '.NET UI SDK', href: '/dotnet' },
+      { title: 'Java UI SDK', href: '/java' },
     ],
   },
 ]
