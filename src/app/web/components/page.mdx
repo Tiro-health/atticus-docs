@@ -5,13 +5,13 @@ export const metadata = {
 }
 
 export const sections = [
-  { title: 'tiro-form-filler', id: 'tiro-form-filler' },
-  { title: 'tiro-narrative', id: 'tiro-narrative' },
+  { title: 'Form Filler', id: 'form-filler' },
+  { title: 'Narrative', id: 'narrative' },
 ]
 
 # Components
 
-## `<tiro-form-filler>`
+## Form Filler{{ tag: 'GA', label: '<tiro-form-filler/>' }}
 
 The primary component for rendering FHIR Questionnaires.
 
@@ -33,7 +33,7 @@ The primary component for rendering FHIR Questionnaires.
 - `tiro-validate` - Fired after validation. `e.detail.isValid`, `e.detail.operationOutcome`
 - `tiro-error` - Fired on errors. `e.detail.error`
 
-## `<tiro-narrative>`
+## Narrative{{ tag: 'GA', label: '<tiro-narrative/>' }}
 
 Generates human-readable clinical narratives from questionnaire responses.
 
