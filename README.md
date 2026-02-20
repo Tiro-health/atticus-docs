@@ -1,4 +1,4 @@
-# Atticus Docs
+# Web SDK Docs
 
 ## Getting started
 

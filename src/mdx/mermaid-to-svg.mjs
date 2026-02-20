@@ -8,6 +8,15 @@ import { visit } from 'unist-util-visit'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Read basePath from next.config.mjs to prefix static asset paths
+let basePath = ''
+try {
+  const configPath = path.resolve(__dirname, '../../next.config.mjs')
+  const configSource = await fs.readFile(configPath, 'utf8')
+  const match = configSource.match(/basePath:\s*['"]([^'"]+)['"]/)
+  if (match) basePath = match[1]
+} catch {}
+
 let browser
 let page
 
@@ -70,7 +79,7 @@ async function saveSVGFile(svg, filename) {
   const filePath = path.join(publicDir, filename)
   await fs.writeFile(filePath, svg)
   
-  return `/diagrams/${filename}`
+  return `${basePath}/diagrams/${filename}`
 }
 
 function generateHash(content) {

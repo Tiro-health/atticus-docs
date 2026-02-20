@@ -12,7 +12,6 @@ export const sections = [
   { title: 'Configuration', id: 'configuration' },
   { title: 'Visualization Features', id: 'visualization-features' },
   { title: 'Lifecycle Management', id: 'lifecycle-management' },
-  { title: 'Framework Integration', id: 'framework-integration' },
 ]
 
 # Web UI SDK (Legacy)
@@ -20,7 +19,7 @@ export const sections = [
 The Tiro.health Web UI SDK provides framework-agnostic JavaScript components for integrating FHIR-based form filling capabilities into your web application. {{ className: 'lead' }}
 
 <Note>
-  This is the legacy SDK documentation using the imperative `mount()`/`unmount()` API. For the recommended approach using native Web Components, see the [Web SDK documentation](/form-sdk/web).
+  This is the legacy SDK documentation using the imperative `mount()`/`unmount()` API. For the recommended approach using native Web Components, see the [Web SDK documentation](/web).
 </Note>
 
 ## Overview
@@ -90,8 +89,6 @@ filler.mount(container)
 filler.unmount()
 ```
 
-For complete framework-specific integration guides, see [Framework Integration](#framework-integration) below.
-
 ---
 
 ## Core Components
@@ -145,7 +142,7 @@ const container = document.getElementById('form-container')
 filler.mount(container)
 ```
 
-For detailed API documentation, see [FormFiller API Reference](/form-sdk/web/api/form-filler).
+For detailed API documentation, see [FormFiller API Reference](/web/api/form-filler).
 
 ### LaunchContextProvider
 
@@ -172,7 +169,7 @@ new LaunchContextProvider(config: {
 import { FormFiller, LaunchContextProvider } from '@tiro-health/web-sdk'
 
 const filler = new FormFiller({
-  questionnaire: 'patient-intake',
+  questionnaire: 'http://templates.tiro.health/example|1.0.0',
   sdcEndpoint: {
     resourceType: 'Endpoint',
     address: 'https://sdc-backend.example.com/fhir'
@@ -196,7 +193,7 @@ contextProvider.mount(contextContainer)
 filler.mount(formContainer)
 ```
 
-For detailed API documentation, see [LaunchContextProvider API Reference](/form-sdk/web/api/launch-context-provider).
+For detailed API documentation, see [LaunchContextProvider API Reference](/web/api/launch-context-provider).
 
 ### Narrative
 
@@ -234,7 +231,7 @@ filler.mount(document.getElementById('form-container'))
 narrative.mount(document.getElementById('narrative-container'))
 ```
 
-For detailed API documentation, see [Narrative API Reference](/form-sdk/web/api/narrative).
+For detailed API documentation, see [Narrative API Reference](/web/api/narrative).
 
 ### ValidationFeedback
 
@@ -272,7 +269,7 @@ filler.mount(document.getElementById('form-container'))
 validation.mount(document.getElementById('validation-container'))
 ```
 
-For detailed API documentation, see [ValidationFeedback API Reference](/form-sdk/web/api/validation-feedback).
+For detailed API documentation, see [ValidationFeedback API Reference](/web/api/validation-feedback).
 
 ---
 
@@ -326,7 +323,7 @@ const filler = new FormFiller({
 })
 ```
 
-For detailed configuration options, see [SDCClient API Reference](/form-sdk/web/api/sdc-client).
+For detailed configuration options, see [SDCClient API Reference](/web/api/sdc-client).
 
 ---
 
@@ -463,45 +460,5 @@ window.addEventListener('beforeunload', () => {
   filler.unmount()
 })
 ```
-
-For complete lifecycle patterns, see [Framework Integration](#framework-integration).
-
----
-
-## Framework Integration
-
-The Web UI SDK works with any JavaScript framework. Below are links to comprehensive integration guides:
-
-### React Integration
-
-Complete guide for integrating with React applications using hooks, refs, and proper cleanup patterns.
-
-[View React Integration Guide →](/form-sdk/web/integration/react)
-
-### Angular Integration
-
-Complete guide for integrating with Angular applications using lifecycle hooks, ViewChild, and standalone components.
-
-[View Angular Integration Guide →](/form-sdk/web/integration/angular)
-
-### Vanilla JavaScript Integration
-
-Complete guide for integrating with vanilla JavaScript using modern ES modules and Vite.
-
-[View Vanilla JS Integration Guide →](/form-sdk/web/integration/vanilla-js)
-
-### CDN (No Build Tools)
-
-Quick setup for prototyping and simple applications without build tools. Load the SDK directly from CDN.
-
-[View CDN Integration Guide →](/form-sdk/web/integration/cdn)
-
----
-
-## Next Steps
-
-- **Framework Integration**: Choose your framework and follow the detailed integration guide
-- **API Reference**: Explore the complete API documentation for each component
-- **Live Examples**: Check out the [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with working demos
 
 For questions or support, please contact the Tiro.health team.

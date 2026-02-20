@@ -7,9 +7,9 @@ export const metadata = {
 export const sections = [
   { title: 'Installation', id: 'installation' },
   { title: 'Quick Start', id: 'quick-start' },
-  { title: 'Components', id: 'components' },
   { title: 'Custom Authentication', id: 'custom-authentication' },
   { title: 'Framework Integration', id: 'framework-integration' },
+  { title: 'Live Examples', id: 'live-examples' },
 ]
 
 # Web SDK
@@ -17,7 +17,7 @@ export const sections = [
 The Tiro.health Web SDK provides native Web Components for integrating FHIR-based form filling capabilities into any web application. {{ className: 'lead' }}
 
 <Note>
-  Looking for the legacy SDK with the imperative `mount()`/`unmount()` API? See the [legacy Web SDK documentation](/form-sdk/web-legacy).
+  Looking for the legacy SDK with the imperative `mount()`/`unmount()` API? See the [legacy Web SDK documentation](/web-legacy).
 </Note>
 
 The SDK is built with **native Web Components** that work with any JavaScript framework or vanilla JavaScript:
@@ -41,7 +41,7 @@ The fastest way to get started. No build tools required - just add two lines to 
 
 ### NPM
 
-For production applications with build tools:
+For production applications with build tools. Requires [registry authentication](/registry-setup).
 
 ```bash
 npm install @tiro-health/web-sdk
@@ -79,7 +79,7 @@ Components link together using the `for` attribute:
 ```html
 <tiro-form-filler
   id="patient-form"
-  questionnaire="http://templates.tiro.health/patient-intake|2.0.0"
+  questionnaire="http://templates.tiro.health/example|1.0.0"
   sdc-endpoint-address="https://sdc.tiro.health/fhir/r5">
 </tiro-form-filler>
 
@@ -130,44 +130,6 @@ This renders a simple two-field form with a text input and a textarea. When subm
 </Note>
 
 ---
-
-## Components
-
-### `<tiro-form-filler>`
-
-The primary component for rendering FHIR Questionnaires.
-
-**Attributes:**
-- `questionnaire` - Canonical URL with version (e.g., `url|version`)
-- `sdc-endpoint-address` - SDC FHIR server URL
-- `launch-context` - JSON object with FHIR resources (Patient, Encounter)
-- `read-only` - Disable form editing
-
-**Methods:**
-- `getResponse()` - Get current QuestionnaireResponse
-- `submit()` - Programmatically submit the form
-- `checkValidity()` - Check if form is valid
-
-**Events:**
-- `tiro-ready` - Fired when the questionnaire is loaded. `e.detail.questionnaire`
-- `tiro-update` - Fired on every form change. `e.detail.response`
-- `tiro-submit` - Fired when the form is submitted. `e.detail.response`
-- `tiro-validate` - Fired after validation. `e.detail.isValid`, `e.detail.operationOutcome`
-- `tiro-error` - Fired on errors. `e.detail.error`
-
-### `<tiro-narrative>`
-
-Generates human-readable clinical narratives from questionnaire responses.
-
-**Attributes:**
-- `for` - ID of the `<tiro-form-filler>` to link to
-
-```html
-<tiro-narrative for="my-form"></tiro-narrative>
-```
-
-**Events:**
-- `tiro-update` - Fired when narrative content changes. `e.detail.narrative`
 
 ---
 
@@ -293,6 +255,17 @@ form.setAttribute('sdc-endpoint-address', 'https://sdc.example.com/fhir/r5')
 form.addEventListener('tiro-submit', (e) => console.log(e.detail.response))
 document.body.appendChild(form)
 ```
+
+---
+
+## Live Examples
+
+For hands-on learning and working examples, explore our [web-sdk-tutorial repository](https://github.com/Tiro-health/web-sdk-tutorial) with live demos:
+
+- **[React Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-react/)** - Complete React + TypeScript example
+- **[Angular Integration](https://tiro-health.github.io/web-sdk-tutorial/npm-angular/)** - Angular standalone components example
+- **[Vanilla JS](https://tiro-health.github.io/web-sdk-tutorial/npm-vanillajs/)** - Modern JavaScript with Vite
+- **[HTML + CDN](https://tiro-health.github.io/web-sdk-tutorial/html-js/)** - No build tools required
 
 ---
 
