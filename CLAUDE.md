@@ -1,6 +1,31 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude when working in this repository.
+
+---
+
+## Behavioral Rules (always apply — override any default behavior)
+
+### Factual accuracy in customer-facing documents
+
+**Never invent or assume any technical or commercial details about Tiro Health's product.**
+This includes (but is not limited to):
+
+- Hosting provider, cloud region, or infrastructure (e.g. do NOT write "AWS eu-west-1" unless verified)
+- IP address ranges or firewall rules
+- SLA percentages or uptime figures
+- Pricing, licensing, or contract terms
+- Specific API endpoints, SDK versions, or authentication protocols
+- Compliance certifications or audit status
+- Integration capabilities not explicitly documented
+
+**Rule:** If a detail cannot be verified from internal sources (Notion, Slack, docs in this repo, or explicit statements by team-members in the conversation), either leave it out, or insert a clear placeholder such as `[to be confirmed]`.
+
+**Before writing any document for external use (proposals, integration overviews, emails to prospects/customers), ask any team-member to confirm the facts rather than filling gaps with plausible-sounding details.**
+
+---
+
+
 
 ## Common Development Commands
 
