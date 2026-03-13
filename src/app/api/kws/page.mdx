@@ -11,10 +11,9 @@ Integrating Tiro.health with Nexuzhealth KWS allows healthcare providers to laun
 
 An integration typically has three parts:
 
-- A **context launch** launch from an **External Viewer** in KWS that allows users to launch Tiro.health inside the KWS application. This launch is handled by a **Mirth channel** that intercepts the URL and redirects the user to Tiro.health with the necessary patient and encounter context.
+- A **context launch** from an **External Viewer** in KWS that allows users to launch Tiro.health inside the KWS application. This launch is handled by a **Mirth channel** that intercepts the URL and redirects the user to Tiro.health with the necessary patient and encounter context.
 
-- A **report export** using a Mirth channel that exports the completed report back to KWS, ensuring that the report is stored in the patiets's record at the right encounter
-This **Mirth channel** makes use of the KWS Import XML API to send the report back to KWS.
+- A **report export** using Mirth channels that export the completed report back to KWS using the KWS Import XML API, ensuring that the report is stored in the patient's record at the right encounter.
 
 - A [Microsoft Entra ID](/identity-provider/microsoft-entra-id) integration that allows users to authenticate with Tiro.health using their existing hospital credentials. This provides a seamless user experience and ensures that user data is securely managed.
 
@@ -136,7 +135,7 @@ This section is directed towards your Mirth configuration expert and provides an
 This channel intercepts the URL launched from KWS. Context passed in the URL is transformed into an encrypted HTTP POST request to Tiro.health, including patient and encounter context. Tiro.health matches patient and encounter identifiers with existing data in the system, allowing users to continue their work seamlessly. If the match succeeds, the user is redirected to Tiro.health with the appropriate context. An appropriate error message is shown if the match fails.
 
 <MirthChannel
-  name="Context Launch Channel"
+  name="tiroHealthKwsContextLaunch"
   version="1.0.0"
   href="mailto:support@tiro.health?subject=KWS%20Mirth%20Channel%20Request&body=Dear%20Tiro.health%20support%2C%0A%0APlease%20send%20me%20the%20latest%20version%20of%20the%20KWS%20Mirth%20channels.%0A%0AThank%20you.%0A"
   description="Intercept the URL launched from KWS and redirect to Tiro.health with patient and encounter context."
@@ -149,7 +148,7 @@ This channel intercepts the URL launched from KWS. Context passed in the URL is 
 sequenceDiagram
     participant C as Browser
     box Mirth
-    participant M as LaunchURLToFhir
+    participant M as tiroHealthKwsContextLaunch
     end
     participant T as Tiro.health (FHIR Server)
 
@@ -178,55 +177,62 @@ sequenceDiagram
 
 
 <a name="report-export-channel" className="m-0 leading-0" />
-### Report Export Channel
+### Report Export Channels
 
-This channel fetches the report submitted in Tiro.health and exports it back to KWS using the KWS Import XML API. It ensures that the report is stored in the patient's record using the correct identifiers, allowing for easy access and retrieval.
+These two channels work together to fetch the report submitted in Tiro.health and export it back to KWS using the KWS Import XML API. They ensure that the report is stored in the patient's record using the correct identifiers, allowing for easy access and retrieval.
 
 <MirthChannel
-  name="Report Export Channel"
+  name="tiroHealthReportExport"
   version="1.0.0"
   href="mailto:support@tiro.health?subject=KWS%20Mirth%20Channel%20Request&body=Dear%20Tiro.health%20support%2C%0A%0APlease%20send%20me%20the%20latest%20version%20of%20the%20KWS%20Mirth%20channels.%0A%0AThank%20you.%0A"
-  description="Retrieve the report from Tiro.health backend and send back to KWS XML Import API"
+  description="HTTP listener that handles post-submit redirects from Tiro.health and routes the report to tiroHealthKwsImport."
+/>
+
+<MirthChannel
+  name="tiroHealthKwsImport"
+  version="1.0.0"
+  href="mailto:support@tiro.health?subject=KWS%20Mirth%20Channel%20Request&body=Dear%20Tiro.health%20support%2C%0A%0APlease%20send%20me%20the%20latest%20version%20of%20the%20KWS%20Mirth%20channels.%0A%0AThank%20you.%0A"
+  description="Converts the FHIR bundle returned by Tiro.health into the KWS XML import format and sends it to the KWS API."
 />
 
 <details className="mt-2">
-<summary>Schematic overview of the report export channel</summary>
+<summary>Schematic overview of the report export channels</summary>
 
-  This Mirth channel contains two main components:
-  1. A **Post-Submit Redirect Listener** that handles the redirect after report submission in Tiro.health.
-  2. A **FHIR Bundle to KWS Transformer** that processes the FHIR bundle and sends the report to KWS in the required XML format.
+  These two Mirth channels work together:
+  1. **tiroHealthReportExport** — HTTP listener that handles the post-submit redirect from Tiro.health and fetches the report.
+  2. **tiroHealthKwsImport** — converts the FHIR bundle into KWS XML format and sends it to the KWS API.
 
   ```mermaid
   sequenceDiagram
   participant Browser
   participant Tiro.health backend
   box Mirth
-  participant PostSubmitRedirectListener
-  participant FhirBundleToKWS
+  participant tiroHealthReportExport
+  participant tiroHealthKwsImport
   end
   participant KWS API
 
   Note over Browser: After report submission, Tiro redirects to:<br/>http://localhost:8081/submit?response=QuestionnaireResponse/11427
 
-  Browser->>PostSubmitRedirectListener: GET /submit?response=QuestionnaireResponse/11427
+  Browser->>tiroHealthReportExport: GET /submit?response=QuestionnaireResponse/11427
 
-  Note over PostSubmitRedirectListener: Extract QuestionnaireResponse ID from URL
+  Note over tiroHealthReportExport: Extract QuestionnaireResponse ID from URL
 
-  PostSubmitRedirectListener->>Tiro.health backend: "GET /fhir/r5/QuestionnaireResponse?<br/>_id={id}&_include=QuestionnaireResponse:subject&_include=QuestionnaireResponse:encounter"
-  Tiro.health backend-->>PostSubmitRedirectListener: FHIR Bundle (QR + Patient + Encounter)
+  tiroHealthReportExport->>Tiro.health backend: "GET /fhir/r5/QuestionnaireResponse?<br/>_id={id}&_include=QuestionnaireResponse:subject&_include=QuestionnaireResponse:encounter"
+  Tiro.health backend-->>tiroHealthReportExport: FHIR Bundle (QR + Patient + Encounter)
 
-  PostSubmitRedirectListener->>FhirBundleToKWS: Route collection bundle
-  FhirBundleToKWS-->>PostSubmitRedirectListener: XML response with EAD, CNR, report text
+  tiroHealthReportExport->>tiroHealthKwsImport: Route collection bundle
+  tiroHealthKwsImport-->>tiroHealthReportExport: XML response with EAD, CNR, report text
 
-  Note over PostSubmitRedirectListener: Parse XML response to extract:<br/>- EAD Number<br/>- Contact Number<br/>- Report Text
+  Note over tiroHealthReportExport: Parse XML response to extract:<br/>- EAD Number<br/>- Contact Number<br/>- Report Text
 
-  PostSubmitRedirectListener->>Browser: HTML page (success/error) with submission details
+  tiroHealthReportExport->>Browser: HTML page (success/error) with submission details
 
   opt Optional: Delete existing report in KWS
-      FhirBundleToKWS->>KWS API: MLLP delete XML
+      tiroHealthKwsImport->>KWS API: MLLP delete XML
   end
 
-  FhirBundleToKWS->>KWS API: MLLP create XML
+  tiroHealthKwsImport->>KWS API: MLLP create XML
   Note over KWS API: Report created in KWS
   ```
 
