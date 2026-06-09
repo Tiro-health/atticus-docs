@@ -1,0 +1,319 @@
+export const metadata = {
+  title: 'Errors',
+  description:
+    'How the Atticus FHIR API reports errors: HTTP status codes and the FHIR OperationOutcome resource, with the issue codes and common errors you may encounter.',
+}
+
+export const sections = [
+  { title: 'Status codes', id: 'status-codes' },
+  { title: 'The OperationOutcome resource', id: 'the-operationoutcome-resource' },
+  { title: 'Issue codes', id: 'issue-codes' },
+  { title: 'Common errors', id: 'common-errors' },
+  { title: 'Handling errors in code', id: 'handling-errors-in-code' },
+]
+
+# Errors
+
+When something goes wrong while you work with the Atticus FHIR API, the response tells you what happened in two ways: the **HTTP status code** and a machine-readable **FHIR `OperationOutcome`** resource in the body. Together they let you detect, classify, and debug a failure programmatically before reaching out to support. {{ className: 'lead' }}
+
+You can tell whether a request succeeded from the HTTP status code. When a request fails, the `OperationOutcome` body carries one or more *issues* — each with a `severity`, a machine-readable `code`, and a human-readable `details.text` you can surface to your users or log.
+
+<Note>
+  Surface `details.text` to your users (or at least your logs) rather than a
+  generic "service unavailable". The API returns actionable messages — for
+  example, a misconfigured template version produces a `400` that explains the
+  exact URL and version at fault. Hiding it behind a generic error makes
+  incidents far harder to diagnose.
+</Note>
+
+---
+
+## Status codes
+
+The API uses conventional HTTP status codes to indicate the outcome of a request.
+
+<Properties>
+  <Property name="2xx">
+    Success. The request was accepted and processed.
+  </Property>
+  <Property name="4xx">
+    A client error — the request was rejected because of something in the input
+    (a malformed body, a missing resource, insufficient permissions, or a
+    configuration problem). The `OperationOutcome` body explains what to fix.
+  </Property>
+  <Property name="5xx">
+    A server error on our side. These are reported to our monitoring
+    automatically; retry with backoff and contact support if they persist.
+  </Property>
+</Properties>
+
+---
+
+## The OperationOutcome resource
+
+Every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutcome`](https://hl7.org/fhir/R5/operationoutcome.html) resource. Its `issue` array always contains at least one entry.
+
+<Row>
+  <Col>
+
+    <Properties>
+      <Property name="resourceType" type="'OperationOutcome'" required>
+        Always `'OperationOutcome'`.
+      </Property>
+      <Property name="issue" type="Issue[]" required>
+        One or more issues describing what went wrong. Each issue has the fields below.
+      </Property>
+      <Property name="issue[].severity" type="code" required href="https://hl7.org/fhir/R5/valueset-issue-severity.html">
+        One of `fatal`, `error`, `warning`, `information`. Errors that produce a
+        4xx/5xx are `error` (or `fatal` for aborted transactions).
+      </Property>
+      <Property name="issue[].code" type="code" required href="https://hl7.org/fhir/R5/valueset-issue-type.html">
+        A machine-readable classification of the issue (e.g. `invalid`,
+        `not-found`, `forbidden`). See [Issue codes](#issue-codes). Branch on
+        this — not on `details.text`.
+      </Property>
+      <Property name="issue[].details" type="CodeableConcept">
+        Carries the human-readable message in `details.text`. Error responses do
+        not populate a coded `details.coding` — use `issue.code` (above) for any
+        machine logic; treat `details.text` as a display/log string only.
+      </Property>
+      <Property name="issue[].diagnostics" type="string">
+        Optional additional debugging information.
+      </Property>
+      <Property name="issue[].expression" type="string[]">
+        Optional FHIRPath expression(s) pointing at the element(s) at fault —
+        present on validation (`422`) errors.
+      </Property>
+    </Properties>
+
+  </Col>
+  <Col>
+
+    ```json {{ title: "Example error response (400)" }}
+    {
+      "resourceType": "OperationOutcome",
+      "issue": [
+        {
+          "severity": "error",
+          "code": "invalid",
+          "details": {
+            "text": "The specified Questionnaire with URL http://templates.tiro.health/templates/0123456789abcdef0123456789abcdef and version 1.1.0 is not an active template, or doesn't exist. Please contact your support team to check configuration."
+          }
+        }
+      ]
+    }
+    ```
+
+  </Col>
+</Row>
+
+---
+
+## Issue codes
+
+The `issue[].code` value classifies the failure and maps to the HTTP status below. Always branch on `code` rather than parsing `details.text`.
+
+| `code`         | HTTP status | Meaning |
+| -------------- | ----------- | ------- |
+| `invalid`       | `400 Bad Request` | The request is syntactically valid but references something that cannot be used — e.g. a questionnaire canonical that does not resolve to an active template. |
+| `multiple-matches` | `400 Bad Request` | A search expected to match a single resource matched several. Narrow your search parameters. |
+| `not-supported` | `400 Bad Request` | The requested operation or combination of parameters is not supported. |
+| `forbidden`     | `403 Forbidden` | You are authenticated but not allowed to access this resource (includes row-level access denials). |
+| `not-found`     | `404 Not Found` | The referenced resource does not exist or is not visible to you. |
+| `conflict`      | `409 Conflict` | The request conflicts with the current state of the resource. |
+| `duplicate`     | `409 Conflict` | A resource with the same unique identity already exists. The `Location` header points at the existing resource. |
+| `conflict`      | `412 Precondition Failed` | A conditional request failed because the resource changed since you last read it (`If-Match`/ETag). |
+| `required` / `business-rule` | `422 Unprocessable Content` | The resource failed validation. `expression` points at the offending element(s); for questionnaire responses this is a FHIRPath into the submitted resource. |
+| `not-supported` | `501 Not Implemented` | The operation is recognised but not yet implemented. |
+| `exception`     | `500 Internal Server Error` | An unexpected error on our side. Reported to monitoring automatically. |
+
+---
+
+## Common errors
+
+### Questionnaire (template) is not active or doesn't exist
+
+When you create or `$initialize` a **Complete Questionnaire** [Task](./Task), you reference the template through a *questionnaire canonical* — the template URL, optionally pinned to a version with a `|<version>` suffix (for example `…/0123456789abcdef0123456789abcdef|1.1.0`).
+
+If that **exact version** is no longer `active` — because it was retired or superseded by a newer publication — the canonical resolves to nothing and the API returns a `400` with `code: invalid` and a `details.text` naming the URL and version at fault (see the example above).
+
+**Why it happens.** A *version-pinned* canonical only resolves while that precise version is active. Publishing a new version of the template retires the old one, so any integration still configured with the old pinned version starts failing — typically surfacing to the end user as "the application can't be opened".
+
+**How to fix it.** Configure a **version-independent** canonical by dropping the `|<version>` suffix; it always resolves to the latest active version of the template:
+
+- **Avoid** — version-pinned: `http://templates.tiro.health/templates/0123456789abcdef0123456789abcdef|1.1.0`\
+  Brittle: breaks as soon as `1.1.0` is retired or superseded.
+- **Prefer** — version-independent: `http://templates.tiro.health/templates/0123456789abcdef0123456789abcdef`\
+  Robust: always resolves to the latest active version.
+
+Pin a version only when you deliberately need a fixed historical template and you keep that version published.
+
+### Validation failures (422)
+
+When a submitted resource (for example a `QuestionnaireResponse`) fails validation, the API returns `422 Unprocessable Content`. Each `issue` carries an `expression` with the FHIRPath to the offending element, so you can map the error back to the exact field:
+
+```json {{ title: "Example validation error (422)" }}
+{
+  "resourceType": "OperationOutcome",
+  "issue": [
+    {
+      "severity": "error",
+      "code": "required",
+      "details": { "text": "Field required" },
+      "expression": ["QuestionnaireResponse.item[0].answer[0].valueCoding.system"]
+    }
+  ]
+}
+```
+
+### Resource not found (404)
+
+A `404` with `code: not-found` means the resource either does not exist or is not visible to your account. Because access is scoped per data tenant, a resource that exists for one tenant returns `404` (not `403`) for another — confirm you are operating in the correct [data tenant](../guides/data-tenants).
+
+---
+
+## Handling errors in code
+
+Handle errors in three layers, from coarse to fine. Each layer refines the previous one, so your handling keeps working even when the finer signal is absent:
+
+1. **HTTP status** — coarse control flow: authentication, retry, `4xx` vs `5xx`.
+2. **`issue.code`** — the standard FHIR issue type; always present. This is your primary semantic branch.
+3. **`issue.details.coding`** — when a coding from the Tiro detail code system (`http://fhir.tiro.health/CodeSystem/operation-outcome-issue-detail`) is present, branch on its `code` for a precise condition. Treat it as a refinement: most errors expose only `issue.code` + `details.text`, so never depend on a coding being present.
+
+The examples below use the [Firely .NET SDK](https://docs.fire.ly/projects/Firely-NET-SDK/) (`Hl7.Fhir.R5`). `FhirClient` raises a `FhirOperationException` that carries the parsed `OperationOutcome` (`ex.Outcome`) and the HTTP status (`ex.Status`). The Tiro detail codes are modelled as a strongly-typed enum decorated with `[EnumLiteral]` and parsed with `EnumUtility.ParseLiteral<T>`, which returns `null` for unknown/future codes — keeping the (open) binding forward-compatible.
+
+<CodeGroup title="Handle an OperationOutcome error">
+
+```cs {{ title: 'C#' }}
+using System;
+using System.Linq;
+using Hl7.Fhir.Introspection;   // FhirEnumeration
+using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
+using Hl7.Fhir.Utility;          // EnumLiteral, EnumUtility
+
+public static class TiroSystems
+{
+    public const string IssueDetail = "http://fhir.tiro.health/CodeSystem/operation-outcome-issue-detail";
+}
+
+// Strongly-typed view of the Tiro detail code system. The binding is open, so
+// EnumUtility.ParseLiteral returns null for any code not listed here (forward-compatible).
+[FhirEnumeration("TiroIssueDetail")]
+public enum TiroIssueDetail
+{
+    [EnumLiteral("TEMPLATE_NOT_ACTIVE", TiroSystems.IssueDetail)] TemplateNotActive,
+    [EnumLiteral("TEMPLATE_EXPERIMENTAL_VERSION_REQUIRED", TiroSystems.IssueDetail)] ExperimentalVersionRequired,
+    [EnumLiteral("INITIAL_RESPONSE_PATIENT_MISMATCH", TiroSystems.IssueDetail)] InitialResponsePatientMismatch,
+    [EnumLiteral("INITIAL_RESPONSE_CANONICAL_MISMATCH", TiroSystems.IssueDetail)] InitialResponseCanonicalMismatch,
+}
+
+// First recognized Tiro detail code, or null when none is present / the code is unknown.
+// Parse the raw Coding.Code string — never wrap an unmapped code in Code<T> (its .Value throws).
+static TiroIssueDetail? GetTiroDetail(OperationOutcome? outcome) =>
+    outcome?.Issue
+        .SelectMany(i => i.Details?.Coding ?? Enumerable.Empty<Coding>())
+        .Where(c => c.System == TiroSystems.IssueDetail)
+        .Select(c => EnumUtility.ParseLiteral<TiroIssueDetail>(c.Code))
+        .FirstOrDefault(v => v is not null);
+
+try
+{
+    await client.TypeOperationAsync("$initialize", "Task", input);
+}
+catch (FhirOperationException ex)
+{
+    // 1. HTTP status — retry/escalate on server errors.
+    if ((int)ex.Status >= 500) throw;
+
+    var outcome = ex.Outcome;                          // parsed OperationOutcome (null for non-FHIR bodies)
+    var issue   = outcome?.Issue.FirstOrDefault();
+    var message = issue?.Details?.Text ?? ex.Message;  // safe to display / log
+
+    // 2. Tenant detail code — precise and stable (populated as codes roll out).
+    switch (GetTiroDetail(outcome))
+    {
+        case TiroIssueDetail.TemplateNotActive:
+            // The pinned template version is retired — prompt to fix the canonical.
+            return;
+        // null / unknown code: fall through to issue.code below.
+    }
+
+    // 3. Standard FHIR issue type — always present; your primary branch.
+    switch (issue?.Code)
+    {
+        case OperationOutcome.IssueType.Forbidden: /* access denied */ break;
+        case OperationOutcome.IssueType.NotFound:  /* unknown id or wrong data tenant */ break;
+        case OperationOutcome.IssueType.Conflict:
+        case OperationOutcome.IssueType.Duplicate: /* state conflict */ break;
+        default:                                   /* show `message` */ break;
+    }
+}
+```
+
+```vb {{ title: 'VB.NET' }}
+Imports System.Linq
+Imports Hl7.Fhir.Introspection   ' FhirEnumeration
+Imports Hl7.Fhir.Model
+Imports Hl7.Fhir.Rest
+Imports Hl7.Fhir.Utility          ' EnumLiteral, EnumUtility
+
+Public Module TiroSystems
+    Public Const IssueDetail As String = "http://fhir.tiro.health/CodeSystem/operation-outcome-issue-detail"
+End Module
+
+' Strongly-typed view of the Tiro detail code system. The binding is open, so
+' EnumUtility.ParseLiteral returns Nothing for any code not listed here (forward-compatible).
+<FhirEnumeration("TiroIssueDetail")>
+Public Enum TiroIssueDetail
+    <EnumLiteral("TEMPLATE_NOT_ACTIVE", TiroSystems.IssueDetail)> TemplateNotActive
+    <EnumLiteral("TEMPLATE_EXPERIMENTAL_VERSION_REQUIRED", TiroSystems.IssueDetail)> ExperimentalVersionRequired
+    <EnumLiteral("INITIAL_RESPONSE_PATIENT_MISMATCH", TiroSystems.IssueDetail)> InitialResponsePatientMismatch
+    <EnumLiteral("INITIAL_RESPONSE_CANONICAL_MISMATCH", TiroSystems.IssueDetail)> InitialResponseCanonicalMismatch
+End Enum
+
+' First recognized Tiro detail code, or Nothing when none is present / the code is unknown.
+Function GetTiroDetail(outcome As OperationOutcome) As TiroIssueDetail?
+    If outcome Is Nothing Then Return Nothing
+    Return outcome.Issue _
+        .SelectMany(Function(i) If(i.Details?.Coding, Enumerable.Empty(Of Coding)())) _
+        .Where(Function(c) c.System = TiroSystems.IssueDetail) _
+        .Select(Function(c) EnumUtility.ParseLiteral(Of TiroIssueDetail)(c.Code)) _
+        .FirstOrDefault(Function(v) v.HasValue)
+End Function
+
+Try
+    Await client.TypeOperationAsync("$initialize", "Task", input)
+Catch ex As FhirOperationException
+    ' 1. HTTP status — retry/escalate on server errors.
+    If CInt(ex.Status) >= 500 Then Throw
+
+    Dim outcome = ex.Outcome                              ' parsed OperationOutcome (Nothing for non-FHIR bodies)
+    Dim issue = outcome?.Issue.FirstOrDefault()
+    Dim message = If(issue?.Details?.Text, ex.Message)    ' safe to display / log
+
+    ' 2. Tenant detail code — precise and stable (populated as codes roll out).
+    Select Case GetTiroDetail(outcome)
+        Case TiroIssueDetail.TemplateNotActive
+            ' The pinned template version is retired — prompt to fix the canonical.
+            Return
+        ' Nothing / unknown code: fall through to issue.code below.
+    End Select
+
+    ' 3. Standard FHIR issue type — always present; your primary branch.
+    Select Case issue?.Code
+        Case OperationOutcome.IssueType.Forbidden            ' access denied
+        Case OperationOutcome.IssueType.NotFound             ' unknown id or wrong data tenant
+        Case OperationOutcome.IssueType.Conflict, OperationOutcome.IssueType.Duplicate ' state conflict
+        Case Else                                            ' show `message`
+    End Select
+End Try
+```
+
+</CodeGroup>
+
+<Note>
+  Branch on `issue.code` (and the coded `issue.details.coding` when present) —
+  never on `details.text`. Message wording can change; treat `details.text` as a
+  display/log string only.
+</Note>

@@ -320,7 +320,7 @@ export const navigation: Array<NavGroup> = [
       { title: 'Task', href: '/fhir/Task' },
       { title: 'Transactions', href: '/fhir/Transaction' },
       { title: 'FHIR Tips', href: '/fhir/tips' },
-      { title: 'Integration engines', href: '/integration-engines' },
+      { title: 'Errors', href: '/fhir/errors' },
     ],
   },
 ]
