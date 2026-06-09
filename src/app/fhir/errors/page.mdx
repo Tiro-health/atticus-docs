@@ -72,10 +72,12 @@ Every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutc
         `not-found`, `forbidden`). See [Issue codes](#issue-codes). Branch on
         this — not on `details.text`.
       </Property>
-      <Property name="issue[].details" type="CodeableConcept">
-        Carries the human-readable message in `details.text`. Error responses do
-        not populate a coded `details.coding` — use `issue.code` (above) for any
-        machine logic; treat `details.text` as a display/log string only.
+      <Property name="issue[].details" type="CodeableConcept" href="https://fhir.tiro.health/CodeSystem-operation-outcome-issue-detail.html">
+        Carries the human-readable message in `details.text`, and — for some
+        conditions — a stable coded detail in `details.coding` from the
+        [`operation-outcome-issue-detail`](https://fhir.tiro.health/CodeSystem-operation-outcome-issue-detail.html)
+        code system. Branch on `issue.code` and, when present, that coding;
+        treat `details.text` as a display/log string only.
       </Property>
       <Property name="issue[].diagnostics" type="string">
         Optional additional debugging information.
@@ -178,7 +180,7 @@ Handle errors in three layers, from coarse to fine. Each layer refines the previ
 
 1. **HTTP status** — coarse control flow: authentication, retry, `4xx` vs `5xx`.
 2. **`issue.code`** — the standard FHIR issue type; always present. This is your primary semantic branch.
-3. **`issue.details.coding`** — when a coding from the Tiro detail code system (`http://fhir.tiro.health/CodeSystem/operation-outcome-issue-detail`) is present, branch on its `code` for a precise condition. Treat it as a refinement: most errors expose only `issue.code` + `details.text`, so never depend on a coding being present.
+3. **`issue.details.coding`** — when a coding from the Tiro detail [`operation-outcome-issue-detail`](https://fhir.tiro.health/CodeSystem-operation-outcome-issue-detail.html) code system (`http://fhir.tiro.health/CodeSystem/operation-outcome-issue-detail`) is present, branch on its `code` for a precise condition. Treat it as a refinement: many errors expose only `issue.code` + `details.text`, so never depend on a coding being present.
 
 The examples below use the [Firely .NET SDK](https://docs.fire.ly/projects/Firely-NET-SDK/) (`Hl7.Fhir.R5`). `FhirClient` raises a `FhirOperationException` that carries the parsed `OperationOutcome` (`ex.Outcome`) and the HTTP status (`ex.Status`). The Tiro detail codes are modelled as a strongly-typed enum decorated with `[EnumLiteral]` and parsed with `EnumUtility.ParseLiteral<T>`, which returns `null` for unknown/future codes — keeping the (open) binding forward-compatible.
 
