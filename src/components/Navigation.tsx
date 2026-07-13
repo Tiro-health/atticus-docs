@@ -239,37 +239,6 @@ export const navigation: Array<NavGroup> = [
     ],
   },
   {
-    title: 'Form SDK (self-hosted)',
-    links: [
-      {
-        title: 'Introduction',
-        href: '/form-sdk',
-      },
-      {
-        title: 'Getting started (15min)',
-        href: '/form-sdk/getting-started',
-      },
-      {
-        title: 'Backend Service',
-        href: '/form-sdk/sdc-backend',
-      },
-      {
-        title: 'Web UI SDK',
-        href: '/form-sdk/web',
-      },
-      // Legacy Web SDK docs (imperative API) hidden from navigation - accessible via direct URL at /form-sdk/web-legacy
-      // { title: 'Web UI SDK (Legacy)', href: '/form-sdk/web-legacy' },
-      {
-        title: '.NET UI SDK',
-        href: '/form-sdk/dotnet',
-      },
-      {
-        title: 'Java UI SDK',
-        href: '/form-sdk/java',
-      },
-    ],
-  },
-  {
     title: 'Capture API (managed)',
     links: [
       {
