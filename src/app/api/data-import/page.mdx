@@ -1,0 +1,186 @@
+export const metadata = {
+  title: 'Data Import',
+  description:
+    'Pre-load the clinical context Tiro.health needs to start a report by importing Patient, Practitioner and Task resources through the FHIR API.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'Minimum Resources', id: 'minimum-resources' },
+  { title: 'Import as a Transaction', id: 'import-as-a-transaction' },
+  { title: 'Idempotent Imports', id: 'idempotent-imports' },
+  { title: 'What Happens Next', id: 'what-happens-next' },
+]
+
+# Data Import
+
+Before a practitioner opens Tiro.health, import the clinical context of the report you want them to complete. This lets you pre-fill patient and encounter information so users never have to re-type it. {{ className: 'lead' }}
+
+Data import is the first step of a Capture API integration. Your backend writes a small set of FHIR resources into your [data tenant](/guides/data-tenants) — typically in the background, ahead of the [context launch](/api/session-management) — so that the report is ready to be filled in the moment the user arrives.
+
+---
+
+## Overview
+
+Data import uses the same [FHIR API](/fhir) as the rest of the platform, hosted at `https://reports.tiro.health/fhir/r5`. You can create resources one at a time, but the recommended approach is a single [transaction Bundle](/fhir/Transaction) so that all resources are created atomically and can reference each other.
+
+The goal of the import step is to represent one instruction: *"this practitioner should complete this report for this patient."* In FHIR terms that is a **Task** of type `complete-questionnaire`, pointing at a **Patient**, with the reporting **Practitioner** available as a user in the tenant.
+
+**Authentication required.** All import requests are authenticated. See [Authentication](/api/authentication) for how to obtain credentials.
+
+---
+
+## Minimum Resources
+
+At minimum you import three resources. Only the Patient is strictly required to start a report; importing the Practitioner and Task up front gives the practitioner a ready-to-open entry in their worklist.
+
+| Resource                                       | Required | Purpose                                                                                                                                             |
+| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**Patient**](/fhir/Patient)                   | Yes      | The subject of the report. A single `identifier` (system + value) is enough; `name` and other demographics are optional but improve the UI.        |
+| [**Practitioner**](/fhir/Practitioner)         | Yes      | The clinician who will author the report. Importing them ensures they exist as a user in the tenant. A single `identifier` is enough.              |
+| [**Task**](/fhir/Task)                         | Yes      | The `complete-questionnaire` order that appears in the practitioner's worklist. References the Patient via `for`.                                   |
+| [**Encounter**](/fhir/Encounter)               | Optional | Links the report to a specific visit. Referenced from the Task via `encounter` and carried onto the resulting QuestionnaireResponse.               |
+
+<Note>
+  The reporting clinician is imported as a Practitioner so that they exist as a
+  user in your data tenant. The Task itself is not linked to the Practitioner —
+  the acting practitioner is the authenticated user of the session that opens the
+  report. See the [Task](/fhir/Task) reference for the full set of supported
+  fields.
+</Note>
+
+---
+
+## Import as a Transaction {{ tag: 'POST', label: '/fhir/r5' }}
+
+Post a `transaction` Bundle to the FHIR API root. Resources reference each other by `fullUrl` using `urn:uuid:` placeholders; Tiro.health resolves those to real IDs and rewrites the references for you, regardless of the order the entries appear in.
+
+<Row>
+  <Col>
+
+The Bundle below imports a Patient, a Practitioner, and a draft `complete-questionnaire` Task in one atomic operation. If any entry fails, the whole transaction is rolled back.
+
+Because the Task's `code.text` becomes the title shown in the worklist, set it to something the practitioner will recognise (e.g. *"CT scan report"*).
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Import Bundle" tag="POST" label="/fhir/r5">
+
+    ```bash {{ title: 'cURL' }}
+    curl -X POST https://reports.tiro.health/fhir/r5 \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/fhir+json" \
+      -d '{
+        "resourceType": "Bundle",
+        "type": "transaction",
+        "entry": [
+          {
+            "fullUrl": "urn:uuid:patient-001",
+            "resource": {
+              "resourceType": "Patient",
+              "identifier": [{
+                "system": "http://hospital.example.com/patients",
+                "value": "PAT-12345"
+              }],
+              "name": [{"family": "Smith", "given": ["John"]}]
+            },
+            "request": { "method": "POST", "url": "Patient" }
+          },
+          {
+            "fullUrl": "urn:uuid:practitioner-001",
+            "resource": {
+              "resourceType": "Practitioner",
+              "identifier": [{
+                "system": "http://hospital.example.com/practitioners",
+                "value": "PRAC-67890"
+              }],
+              "name": [{"family": "Jones", "given": ["Sarah"]}]
+            },
+            "request": { "method": "POST", "url": "Practitioner" }
+          },
+          {
+            "fullUrl": "urn:uuid:task-001",
+            "resource": {
+              "resourceType": "Task",
+              "intent": "order",
+              "status": "draft",
+              "identifier": [{
+                "system": "http://hospital.example.com/tasks",
+                "value": "TASK-54321"
+              }],
+              "description": "Complete the CT scan report for John Smith.",
+              "code": {
+                "text": "CT scan report",
+                "coding": [{
+                  "system": "http://fhir.tiro.health/CodeSystem/task-type",
+                  "code": "complete-questionnaire"
+                }]
+              },
+              "for": { "reference": "urn:uuid:patient-001" }
+            },
+            "request": { "method": "POST", "url": "Task" }
+          }
+        ]
+      }'
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response (transaction-response)' }}
+    {
+      "resourceType": "Bundle",
+      "type": "transaction-response",
+      "entry": [
+        { "response": { "status": "201 Created", "location": "Patient/1" } },
+        { "response": { "status": "201 Created", "location": "Practitioner/1" } },
+        { "response": { "status": "201 Created", "location": "Task/1" } }
+      ]
+    }
+    ```
+
+  </Col>
+</Row>
+
+Each response entry carries a `location` with the assigned ID. Store the Task location (`Task/1`) if you want to track the report's progress or [fetch the result](/api/data-export) later.
+
+---
+
+## Idempotent Imports
+
+Because imports usually run in the background — and may run more than once for the same patient — use **conditional create** so repeated imports don't create duplicates. Add an `ifNoneExist` query on the entry: if a resource already matches, Tiro.health reuses it instead of creating a new one.
+
+```json {{ title: 'Conditional create entry' }}
+{
+  "fullUrl": "urn:uuid:patient-001",
+  "resource": {
+    "resourceType": "Patient",
+    "identifier": [{
+      "system": "http://hospital.example.com/patients",
+      "value": "PAT-12345"
+    }]
+  },
+  "request": {
+    "method": "POST",
+    "url": "Patient",
+    "ifNoneExist": "identifier=http://hospital.example.com/patients|PAT-12345"
+  }
+}
+```
+
+Alternatively, use a conditional update (`PUT Patient?identifier=...`) to upsert a resource — creating it if it does not exist, or updating the matching resource in place. The same pattern applies to Encounter and Practitioner. Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Linking resources to your internal identifiers](/fhir/tips#linking-resources-to-your-internal-identifiers).
+
+---
+
+## What Happens Next
+
+A `complete-questionnaire` Task moves through a short lifecycle as it is prepared and filled in:
+
+1. **`draft`** — imported without a questionnaire. The report is not yet ready to open.
+2. **`ready`** — a questionnaire (form template) has been attached, either through the API or by the practitioner choosing one in the UI.
+3. **`in-progress`** — the practitioner has started filling in the form.
+4. **`completed`** — the form has been submitted and processed.
+
+You can attach the questionnaire yourself by including a `questionnaire` input on the Task, or let the practitioner pick a template when they open the report. See the [Task](/fhir/Task) reference for input types and lifecycle operations.
+
+Once the context is imported, hand the user over to Tiro.health with a [context launch](/api/session-management), and retrieve the finished report through the [Data Export](/api/data-export) step.

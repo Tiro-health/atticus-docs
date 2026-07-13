@@ -1,0 +1,246 @@
+export const metadata = {
+  title: 'Data Export',
+  description:
+    'Retrieve completed reports from Tiro.health after submission by handling the post-submit redirect and fetching the QuestionnaireResponse and Composition.',
+}
+
+export const sections = [
+  { title: 'Overview', id: 'overview' },
+  { title: 'The Submit Callback', id: 'the-submit-callback' },
+  { title: 'Configuring the Redirect', id: 'configuring-the-redirect' },
+  { title: 'Fetch the QuestionnaireResponse', id: 'fetch-the-questionnaireresponse' },
+  { title: 'Fetch the Composition', id: 'fetch-the-composition' },
+  { title: 'Native Applications', id: 'native-applications' },
+]
+
+# Data Export
+
+When a practitioner submits a report, Tiro.health persists it to your [data tenant](/guides/data-tenants) and signals your system to fetch the result. This page covers how that callback works and how to retrieve the structured data. {{ className: 'lead' }}
+
+Data export is the final step of a Capture API integration. It follows [Data Import](/api/data-import) and the [context launch](/api/session-management): the user completes the form, clicks submit, and control returns to your application together with everything it needs to pull the report back.
+
+---
+
+## Overview
+
+The submission flow has three parts:
+
+1. **User clicks submit.** The practitioner completes their work in Tiro.health and submits.
+2. **Data is persisted.** The report is saved to your data tenant as a `completed` [QuestionnaireResponse](/fhir/QuestionnaireResponse), and a human-readable narrative is generated.
+3. **Redirect and retrieval.** The user's browser is redirected to a URL you configured. That redirect is both the return path for the user *and* the trigger for your backend to fetch the data.
+
+<Note>
+  The submit callback is a **browser redirect**, not a server-to-server webhook.
+  Your system learns that a report is ready when the user lands back on your
+  configured redirect URL — there is no push notification.
+</Note>
+
+---
+
+## The Submit Callback
+
+On submit, Tiro.health redirects the browser to your configured URL and appends the references of the resources that were just created as query parameters:
+
+```http
+GET https://your-system.example.com/submit?response=QuestionnaireResponse/11427&task=Task/456
+```
+
+| Parameter  | Description                                                             |
+| ---------- | --------------------------------------------------------------------- |
+| `response` | Reference to the completed [QuestionnaireResponse](/fhir/QuestionnaireResponse) — the report. |
+| `task`     | Reference to the [Task](/fhir/Task) that was fulfilled, when the report was launched from a task. |
+
+Extract the `response` reference from the query string, then call back into the FHIR API to retrieve the data. The redirect only tells you *that* a report is ready and *which* one — you still fetch the content yourself.
+
+---
+
+## Configuring the Redirect
+
+Set `post_submit_redirect` when you create the session with [`POST /session`](/api/session-management#create-a-session). The redirect is configured per session, so the return location can depend on where the launch came from.
+
+A matching `post_cancel_redirect` controls where the user is sent if they cancel instead of submitting.
+
+---
+
+## Fetch the QuestionnaireResponse {{ tag: 'GET', label: '/QuestionnaireResponse' }}
+
+<Row>
+  <Col>
+
+Once you have the `response` id from the redirect, fetch the QuestionnaireResponse. Use `_include` to pull the referenced Patient and Encounter into the same Bundle so you don't need extra round-trips.
+
+The human-readable report is available directly on the response as the generated `text` narrative (XHTML), so most integrations that only need the report text can stop here.
+
+### Common parameters
+
+- `_id` — the QuestionnaireResponse id from the redirect.
+- `_include=QuestionnaireResponse:subject` — include the Patient.
+- `_include=QuestionnaireResponse:encounter` — include the Encounter.
+
+</Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/QuestionnaireResponse">
+
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/QuestionnaireResponse \
+      --data-urlencode "_id=11427" \
+      --data-urlencode "_include=QuestionnaireResponse:subject" \
+      --data-urlencode "_include=QuestionnaireResponse:encounter" \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/fhir+json"
+    ```
+
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+    var searchParams = new SearchParams()
+        .Where("_id=11427")
+        .Include("QuestionnaireResponse:subject")
+        .Include("QuestionnaireResponse:encounter");
+
+    var bundle = client.Search<QuestionnaireResponse>(searchParams);
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response (searchset)' }}
+    {
+      "resourceType": "Bundle",
+      "type": "searchset",
+      "total": 1,
+      "entry": [
+        {
+          "fullUrl": "https://reports.tiro.health/fhir/r5/QuestionnaireResponse/11427",
+          "resource": {
+            "resourceType": "QuestionnaireResponse",
+            "id": "11427",
+            "questionnaire": "http://templates.tiro.health/templates/unreadable-unique-id|1.0.1",
+            "status": "completed",
+            "subject": { "reference": "Patient/123" },
+            "encounter": { "reference": "Encounter/456" },
+            "text": {
+              "status": "generated",
+              "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">...report narrative...</div>"
+            }
+          }
+        }
+      ]
+    }
+    ```
+
+  </Col>
+</Row>
+
+<Note>
+  You can also read the report reference back off the Task. Fetching
+  [`GET /Task/{id}`](/fhir/Task#get-a-task) returns the completed
+  QuestionnaireResponse as a `questionnaire-response` output, which is useful when
+  your system tracked the Task id from the import step.
+</Note>
+
+---
+
+## Fetch the Composition {{ tag: 'GET', label: '/Composition/:id' }}
+
+<Row>
+  <Col>
+
+For a structured, document-style view of the report, request the **Composition**. Tiro.health builds it on the fly from the report's content: one `section` per block, each with a `title`, a generated narrative (`text.div`, XHTML), and a stable `code`.
+
+The Composition shares the same id as the report — use the id from the `response` reference.
+
+### Why sections carry codes
+
+Each section has a **fixed code** (LOINC or SNOMED CT) that is stable per template, unlike the `linkId`s inside a QuestionnaireResponse. This lets you map each section directly onto a field in your own system — for example, mapping `section.code = 59776-5` ("Procedure findings") to your *Findings* field. Because the codes are fixed per template, your integration can rely on them.
+
+### Language
+
+The Composition and its section narratives are generated in the language the clinician selected while completing the report. The other translations are dropped, so you always receive one consistent language version per report — never a mix.
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/Composition/11427">
+
+    ```bash {{ title: 'cURL' }}
+    curl -G https://reports.tiro.health/fhir/r5/Composition/11427 \
+      -H "Authorization: Basic {{apikey}}" \
+      -H "Content-Type: application/fhir+json"
+    ```
+
+    ```cs {{ title: 'C#' }}
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
+    var composition = client.Read<Composition>("11427");
+    ```
+
+    </CodeGroup>
+
+    ```json {{ title: 'Response' }}
+    {
+      "resourceType": "Composition",
+      "id": "11427",
+      "status": "preliminary",
+      "type": {
+        "coding": [{
+          "system": "http://loinc.org",
+          "code": "11506-3",
+          "display": "Report"
+        }],
+        "text": "Report"
+      },
+      "date": "2025-11-20",
+      "title": "CT scan report",
+      "author": [{ "reference": "Practitioner/1" }],
+      "subject": [{ "reference": "Patient/123" }],
+      "section": [
+        {
+          "title": "Findings",
+          "code": {
+            "coding": [{
+              "system": "http://loinc.org",
+              "code": "59776-5",
+              "display": "Procedure findings Narrative"
+            }]
+          },
+          "text": {
+            "status": "generated",
+            "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">...section narrative...</div>"
+          }
+        }
+      ]
+    }
+    ```
+
+  </Col>
+</Row>
+
+### Retrieving the Composition through the Task
+
+If your system tracked the Task from the [import step](/api/data-import), you can fetch the Task and its linked Composition in a single request using `_include`. This is convenient in integration engines (e.g. MIRTH) that key off your own Task identifier:
+
+```bash
+curl -G https://reports.tiro.health/fhir/r5/Task \
+  --data-urlencode "identifier=http://hospital.example.com/tasks|TASK-54321" \
+  --data-urlencode "_include=Task:output:composition" \
+  -H "Authorization: Basic {{apikey}}" \
+  -H "Content-Type: application/fhir+json"
+```
+
+The response is a Bundle containing the Task plus the Composition it references through its `composition` output.
+
+<Note>
+  Tiro.health does not expose a `$document` operation or a server-side PDF/HTML
+  export. The Composition and the QuestionnaireResponse `text` narrative are the
+  rendered outputs available through the API.
+</Note>
+
+---
+
+## Native Applications
+
+For desktop and native integrations, the redirect can use a custom URI scheme instead of an HTTP URL to return the user to your application:
+
+- Windows apps can register [URI activation handlers](https://learn.microsoft.com/en-us/windows/apps/develop/launch/handle-uri-activation).
+- macOS apps can define [custom URL schemes](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app).
+
+When the report runs inside an [embedded browser](/api/embedded-browsers), intercept the redirect navigation to capture the `response` reference programmatically rather than following it as a page load.
