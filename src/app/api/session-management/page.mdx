@@ -79,7 +79,7 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
 
 <Properties>
   <Property name="scope" type="string">
-    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/Observation.write"`). These scopes control what data the user can access during the session.
+    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/QuestionnaireResponse.write"`). These scopes control what data the user can access during the session.
   </Property>
   <Property name="patient" type="integer">
     FHIR server ID of the patient to associate with this session.
@@ -111,7 +111,7 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
       -H "Authorization: Bearer <access_token>" \
       -H "Content-Type: application/json" \
       -d '{
-        "scope": "patient/Patient.read patient/Observation.write",
+        "scope": "patient/Patient.read patient/QuestionnaireResponse.write",
         "patient": 123,
         "deployment_mode": "embedded"
       }'
@@ -123,7 +123,7 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
         new AuthenticationHeaderValue("Bearer", accessToken);
 
     var payload = new {
-      scope = "patient/Patient.read patient/Observation.write",
+      scope = "patient/Patient.read patient/QuestionnaireResponse.write",
       patient = 123,
       deployment_mode = "embedded"
     };
@@ -277,7 +277,7 @@ Retrieves information about the current authenticated session. This endpoint req
       "deployment_mode": "embedded",
       "fhir_server": {
         "address": "https://fhir.hospital.org/R4",
-        "scope": ["patient/Patient.read", "patient/Observation.write"]
+        "scope": ["patient/Patient.read", "patient/QuestionnaireResponse.write"]
       }
     }
     ```
@@ -343,11 +343,14 @@ Scopes follow the FHIR SMART on FHIR format: `<context>/<resourceType>.<action>`
 - `system/<resourceType>.<action>` - System-wide access to specific resource types
 
 **Examples:**
+- `patient/QuestionnaireResponse.write` - Write access to reports (QuestionnaireResponses) in the patient's compartment
+- `patient/QuestionnaireResponse.read` - Read access to reports in the patient's compartment
 - `patient/Patient.read` - Read access to patient resources in the patient's compartment
-- `patient/Observation.write` - Write access to observations in the patient's compartment
 - `patient/Encounter.read` - Read access to encounters in the patient's compartment
-- `system/Patient.read` - System-wide read access to all patient resources
-- `patient/Patient.read patient/Observation.write` - Multiple scopes can be combined
+- `system/QuestionnaireResponse.read` - System-wide read access to all reports
+- `patient/Patient.read patient/QuestionnaireResponse.write` - Multiple scopes can be combined
+
+Reports authored in Tiro.health are stored as FHIR `QuestionnaireResponse` resources, so `QuestionnaireResponse` is the resource type you scope to control read and write access to captured data. `Patient`, `Encounter`, and `Practitioner` are the supporting context resources and are granted read-only.
 
 ### How Scopes Work
 
@@ -365,12 +368,12 @@ When a session is created with scopes:
 curl -X POST https://reports.tiro.health/session \
   -H "Content-Type: application/json" \
   -d '{
-    "scope": "patient/Patient.read patient/Encounter.read patient/Observation.read",
+    "scope": "patient/Patient.read patient/Encounter.read patient/QuestionnaireResponse.read",
     "patient": 123
   }'
 ```
 
-In this session, the user can read patient, encounter, and observation data but cannot modify anything. Any attempt to create or update resources will be denied.
+In this session, the user can read patient, encounter, and report data but cannot modify anything. Any attempt to create or update resources will be denied.
 
 ---
 

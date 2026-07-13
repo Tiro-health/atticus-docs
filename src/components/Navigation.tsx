@@ -281,8 +281,16 @@ export const navigation: Array<NavGroup> = [
         href: '/api/authentication',
       },
       {
+        title: 'Data Import',
+        href: '/api/data-import',
+      },
+      {
         title: 'Session Management',
         href: '/api/session-management',
+      },
+      {
+        title: 'Data Export',
+        href: '/api/data-export',
       },
       {
         title: 'Embedded Browsers',
