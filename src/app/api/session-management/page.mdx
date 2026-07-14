@@ -60,14 +60,14 @@ sequenceDiagram
 
     Backend->>Tiro: POST /session<br/>(scopes, context, post_submit_redirect)
     Tiro-->>Backend: Session Cookie + Token
-    Backend->>Browser: Redirect to handover
+    Backend->>+Browser: Redirect to handover
     Browser->>Tiro: POST /session/$handover<br/>(token + next launch URL)
     Tiro-->>Browser: Session Cookie + Redirect
     Browser->>Tiro: GET /external/v1?task=Task/123<br/>(Scoped Access)
     Tiro-->>Browser: The task's report, ready to complete
     Browser->>Tiro: Submit report
     Tiro-->>Browser: Report submitted
-    Browser->>Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
+    Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
     Backend->>Tiro: DELETE /session
     Tiro-->>Backend: Session Deleted
 ```
