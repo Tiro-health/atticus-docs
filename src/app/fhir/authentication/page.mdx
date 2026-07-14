@@ -1,12 +1,12 @@
 export const metadata = {
   title: 'Authentication',
   description:
-    'In this guide, we’ll look at how authentication works. Atticus offers two ways to authenticate your API requests: Basic authentication and OAuth2 with a token.',
+    'In this guide, we’ll look at how authentication works. Atticus authenticates API requests with an API key over Basic authentication.',
 }
 
 # Authentication
 
-You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus offers two ways to authenticate your API requests: [Basic authentication](#basic-authentication-api-key) and OAuth2 with a token. {{ className: 'lead' }}
+You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus authenticates your API requests with an API key, sent as [Basic authentication](#basic-authentication-api-key). {{ className: 'lead' }}
 If requests must be performed as a specific end-user, an extra header is needed to identify that user. This is the `X-User-Id` header. This header is used to identify the user in the context of the session. This header is only needed when the session is created in the background.
 
 ## Basic authentication (API key)
@@ -56,14 +56,8 @@ The notation used for the `X-User-Id` header is an **identifier token**. An iden
 The identifier used needs to match with an identifier passed as part of a [`POST Practitioner` request](./fhir/Practitioner#create-a-new-practitioner).
 In headers we need a special notation to combine the `system` and the `value` of the identifier in a single string. The convention is to concatenate the `system` and the `value` with a pipe `|`. The `system` is a URI that identifies the system that the identifier comes from. The `value` is the actual identifier value.
 
-## OAuth2 with a token
+## Machine-to-machine access
 
-For machine-to-machine API access, Tiro.health supports OAuth2 client credentials flow. This is the recommended authentication method for server-side integrations such as:
+The same API key authenticates machine-to-machine integrations — creating sessions via the [Session Management API](/api/session-management), background data synchronization with EHR/LIS systems, and automated workflows against the FHIR API.
 
-- Creating sessions programmatically via the Session Management API
-- Background data synchronization with EHR/LIS systems
-- Automated workflows that access FHIR resources
-
-OAuth2 provides token-based authentication where you exchange your client credentials (`client_id` and `client_secret`) for a temporary access token. The access token is then included in API requests using the `Authorization: Bearer` header.
-
-For detailed information on how to authenticate using OAuth2 client credentials, including code examples in multiple languages, see the **[API Authentication](/api/authentication)** guide.
+For code examples in multiple languages, see the **[API Authentication](/api/authentication)** guide.
