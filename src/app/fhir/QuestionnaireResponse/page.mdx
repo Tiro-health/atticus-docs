@@ -201,17 +201,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
 
 ## Special considerations in Response
 
-A QuestionnaireResponse resource has some special headers and response body properties that you should be aware of.
-
-### Link header
-
-When making GET, POST, or PUT requests to QuestionnaireResponse endpoints, the response includes a `Link` header with the URL to open the report form in the browser. The URL is specified with the relation `edit-form`. You can use this URL to redirect users to the web-based form editor.
-
-Example response header for a QuestionnaireResponse with id `123`:
-
-```http
-Link: <https://app.tiro.health/filler/edit?response=QuestionnaireResponse/123>; rel="edit-form"
-```
+A QuestionnaireResponse resource has some special response body properties that you should be aware of.
 
 ### Versioning info
 

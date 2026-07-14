@@ -9,6 +9,7 @@ export const sections = [
   { title: 'Session Lifecycle', id: 'session-lifecycle' },
   { title: 'Create a Session', id: 'create-a-session' },
   { title: 'Session Handover', id: 'session-handover' },
+  { title: 'Launch URL', id: 'launch-url' },
   { title: 'Get Session Information', id: 'get-session-information' },
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
@@ -46,9 +47,9 @@ This API is particularly useful when you need to:
 A typical session follows this lifecycle:
 
 1. **Session Creation**: Your backend calls `POST /session`, optionally including scopes and FHIR context (Patient, Encounter)
-2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST. The session will be activated, a secure cookie is set, and the user is redirected to Tiro.health
-4. **Active Session**: The user operates within Tiro.health with access controlled by the session's scopes
-5. **Session Termination**: The session is deleted via `DELETE /session` (equivalent to logout) or expires automatically
+2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST, together with a `next` [Launch URL](#launch-url). The session will be activated, a secure cookie is set, and the user is redirected to the task in Tiro.health
+3. **Active Session**: The user operates within Tiro.health with access controlled by the session's scopes
+4. **Session Termination**: The session is deleted via `DELETE /session` (equivalent to logout) or expires automatically
 
 ```mermaid
 sequenceDiagram
@@ -59,9 +60,10 @@ sequenceDiagram
     Backend->>Tiro: POST /session
     Tiro-->>Backend: Session Cookie + Token
     Backend->>Browser: Redirect to handover
-    Browser->>Tiro: POST /session/$handover<br/>(token + next URL)
+    Browser->>Tiro: POST /session/$handover<br/>(token + next launch URL)
     Tiro-->>Browser: Session Cookie + Redirect
-    Browser->>Tiro: Access Tiro.health<br/>(Scoped Access)
+    Browser->>Tiro: GET /external/v1?task=Task/123<br/>(Scoped Access)
+    Tiro-->>Browser: Redirect to the task's report
     Backend->>Tiro: DELETE /session
     Tiro-->>Backend: Session Deleted
 ```
@@ -149,7 +151,7 @@ The handover endpoint completes the session activation flow by consuming a one-t
     The session token received from the session creation step. This token is single-use and expires after 5 minutes.
   </Property>
   <Property name="next" type="string">
-    The URL to redirect the user to after successful session activation (typically the Tiro.health application URL).
+    The URL to redirect the user to after successful session activation. Use the [Launch URL](#launch-url) to open a [Task](/fhir/Task) in the Tiro.health application.
   </Property>
 </Properties>
 
@@ -163,7 +165,7 @@ The handover endpoint completes the session activation flow by consuming a one-t
           method="POST">
       <input type="hidden" name="token" value="<session_token>" />
       <input type="hidden" name="next"
-             value="https://app.tiro.health/reports/edit?response=QuestionnaireResponse/example" />
+             value="https://app.tiro.health/external/v1?task=Task/123" />
       <button type="submit">Continue to Tiro.health</button>
     </form>
     ```
@@ -171,7 +173,7 @@ The handover endpoint completes the session activation flow by consuming a one-t
     ```bash {{ title: 'cURL' }}
     curl -X POST https://reports.tiro.health/session/\$handover \
       -d "token=<session_token>" \
-      -d "next=https://app.tiro.health/reports/edit?response=QuestionnaireResponse/example" \
+      -d "next=https://app.tiro.health/external/v1?task=Task/123" \
       -L
     ```
 
@@ -179,9 +181,83 @@ The handover endpoint completes the session activation flow by consuming a one-t
 
     ```json {{ title: 'Response (303 See Other)' }}
     // Redirects to the 'next' URL with session cookie set
-    Location: https://app.tiro.health/reports/edit?response=QuestionnaireResponse/example
+    Location: https://app.tiro.health/external/v1?task=Task/123
     Set-Cookie: auth_session=<session_id>; HttpOnly; Secure; SameSite=Strict
     ```
+
+  </Col>
+</Row>
+
+---
+
+## Launch URL {{ tag: 'GET', label: '/external/v1' }}
+
+<Row>
+  <Col>
+
+`/external/v1` is the entry point for opening the Tiro.health application from an external system. Point the `next` parameter of the [handover](#session-handover) at it, and it resolves the [Task](/fhir/Task) and sends the user to the right page for its current status.
+
+Use this route rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
+
+### Query Parameters
+
+Provide **either** `task` **or** `task:identifier`.
+
+<Properties>
+  <Property name="task" type="string">
+    FHIR reference to the task to open, e.g. `Task/123`. Use this when you store the Tiro.health task id.
+  </Property>
+  <Property name="task:identifier" type="string">
+    External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task.
+  </Property>
+  <Property name="viewMode" type="string">
+    Either `embedded` or `full`. Defaults to the session's `deployment_mode`.
+  </Property>
+  <Property name="readonly" type="string">
+    Set to `yes` to open the report without edit affordances. Ignored for tasks that are still `draft`.
+  </Property>
+</Properties>
+
+### Task Status Handling
+
+The task's status determines the destination:
+
+| Task status | Destination |
+| --- | --- |
+| `draft` | Form selection, so the user can pick a questionnaire for the task |
+| `ready`, `in-progress`, `completed` | The report editor, opened on the task's questionnaire response |
+| `failed` | Error — the task cannot be opened |
+
+Patient and encounter context is read from the task itself, so you do not need to pass them.
+
+### Errors
+
+| Status | Meaning |
+| --- | --- |
+| `400` | Neither `task` nor `task:identifier` was provided, or the value is malformed |
+| `404` | No task matches the given `task:identifier` |
+| `409` | More than one task matches the given `task:identifier` |
+| `422` | The task cannot be opened — it has status `failed`, or a non-draft task has no questionnaire response yet |
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Launch URL">
+
+    ```text {{ title: 'By task reference' }}
+    https://app.tiro.health/external/v1?task=Task/123
+    ```
+
+    ```text {{ title: 'By your own identifier' }}
+    https://app.tiro.health/external/v1?task:identifier=http://hospital.example.com/task-id|abc-123
+    ```
+
+    </CodeGroup>
+
+    <Note>
+      When launching by `task:identifier`, remember to URL-encode the value: the
+      `|` separator becomes `%7C`, and the `:` in the system URL becomes `%3A`.
+    </Note>
 
   </Col>
 </Row>
