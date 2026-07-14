@@ -73,7 +73,7 @@ Here is an example of how to create a session in a .NET application:
    ```csharp
    var launchContextStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(launchContext)));
    var request = webView.CoreWebView2.Environment.CreateWebResourceRequest(
-       "https://auth.tiro.health/session",
+       "https://auth.tiro.health/sessions",
        "POST",
        launchContextStream,
        null);

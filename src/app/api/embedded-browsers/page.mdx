@@ -33,22 +33,31 @@ This guide covers two popular embedded browser solutions:
 
 The embedded browser integration follows the standard [Session Management](/api/session-management) flow:
 
-1. Create a session via the backend API (POST /session)
-2. Inject an HTML form containing the session token into the embedded browser
-3. Submit the form to the handover endpoint (POST /session/$handover)
-4. Intercept the redirect response to capture the redirect URL
-5. Handle the redirect in your application
+1. Create a session from your backend (`POST /sessions`), which returns a `handover_token`
+2. Navigate the embedded browser to the [handover](/api/session-management#session-handover) URL carrying that token
+3. Intercept the redirect response to capture the redirect URL
+4. Handle the redirect in your application
 
-The `next` field carries the [Launch URL](/api/session-management#launch-url) — the task to open once the session is active.
+The `next` parameter carries the [Launch URL](/api/session-management#launch-url) — the task to open once the session is active. Both parameters must be URL-encoded.
 
-The HTML form for session handover:
+```text
+https://auth.tiro.health/sessions/$handover
+  ?token=<handover_token>
+  &next=https%3A%2F%2Fapp.tiro.health%2Fexternal%2Fv1%3Ftask%3DTask%2F123
+```
+
+Because the handover accepts a `GET`, the embedded browser only has to navigate to a URL — there is no HTML to build and no form to auto-submit.
+
+### Using a form instead
+
+The handover also accepts a form `POST`, which is worth knowing if you already have that wired up:
 
 ```html
 <!DOCTYPE html>
 <html>
 <body>
-  <form id="handover" action="https://reports.tiro.health/session/$handover" method="POST">
-    <input type="hidden" name="token" value="YOUR_SESSION_TOKEN" />
+  <form id="handover" action="https://auth.tiro.health/sessions/$handover" method="POST">
+    <input type="hidden" name="token" value="YOUR_HANDOVER_TOKEN" />
     <input type="hidden" name="next" value="https://app.tiro.health/external/v1?task=Task/123" />
   </form>
   <script>document.getElementById('handover').submit();</script>
@@ -73,21 +82,16 @@ WebView2 is Microsoft's recommended embedded browser solution for Windows applic
 await webView.EnsureCoreWebView2Async();
 ```
 
-### Inject HTML Form
+### Navigate to the Handover
 
 ```csharp
 var nextUrl = $"https://app.tiro.health/external/v1?task=Task/{taskId}";
 
-var html = $@"<!DOCTYPE html>
-<html><body>
-  <form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>
-    <input type='hidden' name='token' value='{sessionToken}' />
-    <input type='hidden' name='next' value='{nextUrl}' />
-  </form>
-  <script>document.getElementById('handover').submit();</script>
-</body></html>";
+var handoverUrl = "https://auth.tiro.health/sessions/$handover"
+    + $"?token={Uri.EscapeDataString(handoverToken)}"
+    + $"&next={Uri.EscapeDataString(nextUrl)}";
 
-webView.CoreWebView2.NavigateToString(html);
+webView.CoreWebView2.Navigate(handoverUrl);
 ```
 
 ### Intercept Redirect
@@ -131,20 +135,16 @@ Engine engine = Engine.newInstance(
 Browser browser = engine.newBrowser();
 ```
 
-### Inject HTML Form
+### Navigate to the Handover
 
 ```java
 String nextUrl = "https://app.tiro.health/external/v1?task=Task/" + taskId;
 
-String html = "<!DOCTYPE html><html><body>" +
-    "<form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>" +
-    "<input type='hidden' name='token' value='" + sessionToken + "' />" +
-    "<input type='hidden' name='next' value='" + nextUrl + "' />" +
-    "</form>" +
-    "<script>document.getElementById('handover').submit();</script>" +
-    "</body></html>";
+String handoverUrl = "https://auth.tiro.health/sessions/$handover"
+    + "?token=" + URLEncoder.encode(handoverToken, StandardCharsets.UTF_8)
+    + "&next=" + URLEncoder.encode(nextUrl, StandardCharsets.UTF_8);
 
-browser.navigation().loadHtml(html);
+browser.navigation().loadUrl(handoverUrl);
 ```
 
 ### Intercept Redirect
