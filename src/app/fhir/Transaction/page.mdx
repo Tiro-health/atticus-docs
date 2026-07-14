@@ -184,8 +184,8 @@ specification](https://www.hl7.org/fhir/r5/bundle.html).
 
 ## Response headers in a Bundle
 
-Most endpoints of the FHIR API use HTTP Response Headers to provide urls to the user interface or urls to the exact location of a resource.
-The transaction response Bundle keeps most of these headers in the response object of the entry. The response object contains extrac fields that contain the status code, link headers and the location header.
+Most endpoints of the FHIR API use HTTP response headers to provide the exact location of a resource.
+The transaction response Bundle keeps these headers in the response object of the entry, which contains the status code and the location header.
 
 ```json
 {
@@ -196,20 +196,16 @@ The transaction response Bundle keeps most of these headers in the response obje
       "fullUrl": "https://reports.tiro.health/fhir/r5/QuestionnaireResponse/123",
       "response": {
         "status": "201 Created",
-        "location": "QuestionnaireResponse/123",
-      },
-      "link": [
-        {
-          "rel": "edit-form":
-          "url": "https://app.tiro.health/reports/edit?response=QuestionnaireResponse/123"
-        },
-      ]
+        "location": "QuestionnaireResponse/123"
+      }
     }
   ]
 }
 ```
 
-For an exact overview of the headers send back in the response, refer to the documentation of the specific endpoint.
+For an exact overview of the headers sent back in the response, refer to the documentation of the specific endpoint.
+
+To open a report in the user interface, create a [Task](/fhir/Task) and launch it with the [Launch URL](/api/session-management#launch-url).
 
 ## Error Handling
 

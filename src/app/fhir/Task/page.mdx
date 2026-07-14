@@ -79,6 +79,7 @@ The following table details the available input types for Complete Questionnaire
 | -------------------- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
 | **Questionnaire**    | optional | Specifies which questionnaire form the practitioner should complete             | [Canonical](https://hl7.org/fhir/R5/references.html#canonical) reference to a [Questionnaire](https://hl7.org/fhir/R5/Questionnaire)       | `questionnaire`    |
 | **Initial Response** | optional | Provides a partial QuestionnaireResponse to pre-fill the form with initial data | [Reference](https://hl7.org/fhir/R5/references.html#reference) to a [QuestionnaireResponse](https://hl7.org/fhir/R5/QuestionnaireResponse) | `initial-response` |
+| **Post Submit Redirect** | optional | URL to send the user back to once they submit the report. The resulting response is appended as a `response` query parameter. A session's `post_submit_redirect` takes precedence over this input. | [url](https://hl7.org/fhir/R5/datatypes.html#url) | `post-submit-redirect` |
 
 All codes assume to have system [http://fhir.tiro.health/CodeSystem/task-input](http://fhir.tiro.health/CodeSystem/task-input)
 

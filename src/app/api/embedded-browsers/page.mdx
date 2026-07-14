@@ -39,6 +39,8 @@ The embedded browser integration follows the standard [Session Management](/api/
 4. Intercept the redirect response to capture the redirect URL
 5. Handle the redirect in your application
 
+The `next` field carries the [Launch URL](/api/session-management#launch-url) — the task to open once the session is active.
+
 The HTML form for session handover:
 
 ```html
@@ -47,7 +49,7 @@ The HTML form for session handover:
 <body>
   <form id="handover" action="https://reports.tiro.health/session/$handover" method="POST">
     <input type="hidden" name="token" value="YOUR_SESSION_TOKEN" />
-    <input type="hidden" name="next" value="https://app.tiro.health/reports/edit" />
+    <input type="hidden" name="next" value="https://app.tiro.health/external/v1?task=Task/123" />
   </form>
   <script>document.getElementById('handover').submit();</script>
 </body>
@@ -74,6 +76,8 @@ await webView.EnsureCoreWebView2Async();
 ### Inject HTML Form
 
 ```csharp
+var nextUrl = $"https://app.tiro.health/external/v1?task=Task/{taskId}";
+
 var html = $@"<!DOCTYPE html>
 <html><body>
   <form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>
@@ -130,6 +134,8 @@ Browser browser = engine.newBrowser();
 ### Inject HTML Form
 
 ```java
+String nextUrl = "https://app.tiro.health/external/v1?task=Task/" + taskId;
+
 String html = "<!DOCTYPE html><html><body>" +
     "<form id='handover' action='https://reports.tiro.health/session/$handover' method='POST'>" +
     "<input type='hidden' name='token' value='" + sessionToken + "' />" +
