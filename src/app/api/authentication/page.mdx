@@ -209,16 +209,18 @@ Once you have an access token, include it in the `Authorization` header of your 
 Authorization: Bearer <access_token>
 ```
 
-<Note>
-  This token is only accepted by the deprecated `POST /session` endpoint. It does **not** authenticate the current [Session Management API](/api/session-management) or the [FHIR API](/fhir/authentication) — both use [HTTP Basic](/fhir/authentication#basic-authentication-api-key) with your API key. Unless you are maintaining an existing integration against `/session`, you do not need this flow.
-</Note>
+The token grants you access to all Tiro.health API endpoints based on your client's permissions, including:
+
+- **Session Management API** - Create and manage user sessions
+- **FHIR API** - Access patient data, questionnaires, and responses
+- **Task API** - Create and manage tasks for users
 
 <Row>
   <Col>
 
 ### Example: Using the Token
 
-Include the Bearer token in the Authorization header of your request to the deprecated `POST /session` endpoint.
+Include the Bearer token in the Authorization header of your requests.
 
   </Col>
   <Col sticky>
@@ -249,6 +251,40 @@ Include the Bearer token in the Authorization header of your request to the depr
         "https://reports.tiro.health/session",
         payload
     );
+    ```
+
+    ```javascript {{ title: 'JavaScript' }}
+    const response = await fetch('https://reports.tiro.health/session', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        scope: 'patient/Patient.read',
+        patient: 123,
+      }),
+    });
+    ```
+
+    ```python {{ title: 'Python' }}
+    import requests
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json',
+    }
+
+    payload = {
+        'scope': 'patient/Patient.read',
+        'patient': 123,
+    }
+
+    response = requests.post(
+        'https://reports.tiro.health/session',
+        headers=headers,
+        json=payload
+    )
     ```
 
     </CodeGroup>

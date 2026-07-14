@@ -54,7 +54,7 @@ https://auth.tiro.health
 The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
 
 <Note>
-  If you are currently calling the singular `/session` endpoints on `reports.tiro.health` with an OAuth2 bearer token, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
+  If you are currently calling the singular `/session` endpoints on `reports.tiro.health`, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
 </Note>
 
 ---
@@ -593,11 +593,10 @@ The singular `/session` endpoints are **deprecated**. They still work, but new i
 | Handover | `POST /session/$handover` | `GET` or `POST /sessions/$handover` |
 | Read | `GET /session` (cookie) | `GET /sessions/{id}` (API key) or `GET /sessions/current` (cookie) |
 | Delete | `DELETE /session` (cookie) | `DELETE /sessions/{id}` (API key) |
-| Auth | OAuth2 bearer token | [HTTP Basic](/fhir/authentication#basic-authentication-api-key) API key |
 
-Three things change beyond the path:
+**Authentication does not change.** You keep authenticating with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key), exactly as before.
 
-**The OAuth2 step disappears.** The old flow exchanged your credentials at `POST /oauth/token` for a bearer token, then passed that to `POST /session`. That token was really a session token in disguise. Now you authenticate `POST /sessions` with your API key directly — there is no token exchange.
+Two things change beyond the path:
 
 **The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON. You no longer read it off a cookie.
 
