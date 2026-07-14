@@ -14,6 +14,7 @@ export const sections = [
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
   { title: 'FHIR Context', id: 'fhir-context' },
+  { title: 'Migrating from /session', id: 'migrating-from-session' },
   { title: 'Security Considerations', id: 'security-considerations' },
 ]
 
@@ -38,7 +39,23 @@ This API is particularly useful when you need to:
 - Integrate Tiro.health into your application's authentication flow
 - Provide seamless user experience with session continuity
 
-**Authentication Required**: All Session Management API endpoints require OAuth2 authentication using client credentials. See the [Authentication](/api/authentication) guide for details on obtaining and using access tokens.
+### Base URL
+
+The Session Management API is served by the Tiro.health Auth Service:
+
+```text
+https://auth.tiro.health
+```
+
+### Authentication
+
+`POST /sessions`, `GET /sessions/{id}` and `DELETE /sessions/{id}` authenticate with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key) — the base64 encoding of `client_id:client_secret`. The two handover endpoints are unauthenticated by design: they are opened by the end-user's browser and carry a single-use token instead.
+
+The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
+
+<Note>
+  If you are currently calling the singular `/session` endpoints on `reports.tiro.health` with an OAuth2 bearer token, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
+</Note>
 
 ---
 
@@ -46,11 +63,13 @@ This API is particularly useful when you need to:
 
 A typical session follows this lifecycle:
 
-1. **Session Creation**: Your backend calls `POST /session`, optionally including scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`
-2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST, together with a `next` [Launch URL](#launch-url). The session will be activated, a secure cookie is set, and the user is redirected to the task in Tiro.health
+1. **Session Creation**: Your backend calls `POST /sessions`, optionally including scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`. The session is created **inactive** and comes back with a single-use `handover_token`
+2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#launch-url). The session is activated, a secure cookie is set in the browser, and the user lands on the task
 3. **Completing the Report**: The user fills in and submits the report, with access controlled by the session's scopes
 4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` appended as a query parameter
-5. **Session Termination**: Your backend deletes the session via `DELETE /session` (equivalent to logout), or it expires automatically
+5. **Session Termination**: Your backend deletes the session via `DELETE /sessions/{id}` (equivalent to logout), or it expires automatically
+
+The session only becomes usable at step 2 — the handover is what activates it and binds it to the end-user's browser. Your backend never holds the session cookie.
 
 ```mermaid
 sequenceDiagram
@@ -58,34 +77,34 @@ sequenceDiagram
     participant Browser as End-User Browser
     participant Tiro as Tiro.health
 
-    Backend->>Tiro: POST /session<br/>(scopes, context, post_submit_redirect)
-    Tiro-->>Backend: Session Cookie + Token
+    Backend->>Tiro: POST /sessions<br/>(scopes, context, post_submit_redirect)
+    Tiro-->>Backend: 201 Created<br/>(id + handover_token, inactive)
     Backend->>+Browser: Redirect to handover
-    Browser->>Tiro: POST /session/$handover<br/>(token + next launch URL)
+    Browser->>Tiro: GET /sessions/$handover<br/>(token + next launch URL)
     Tiro-->>Browser: Session Cookie + Redirect
     Browser->>Tiro: GET /external/v1?task=Task/123<br/>(Scoped Access)
     Tiro-->>Browser: The task's report, ready to complete
     Browser->>Tiro: Submit report
     Tiro-->>Browser: Report submitted
     Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
-    Backend->>Tiro: DELETE /session
+    Backend->>Tiro: DELETE /sessions/{id}
     Tiro-->>Backend: Session Deleted
 ```
 
 ---
 
-## Create a Session {{ tag: 'POST', label: '/session' }}
+## Create a Session {{ tag: 'POST', label: '/sessions' }}
 
 <Row>
   <Col>
 
-Creates a new authenticated session for an end-user. This endpoint can optionally include FHIR context and scope restrictions.
+Creates a session for an end-user, optionally with FHIR context and scope restrictions. The session is created **inactive**: it does nothing until the [handover](#session-handover) activates it in the user's browser.
 
 ### Request Body
 
 <Properties>
   <Property name="scope" type="string">
-    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/QuestionnaireResponse.write"`). These scopes control what data the user can access during the session.
+    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/QuestionnaireResponse.write"`). These scopes control what data the user can access during the session. A list of strings is also accepted.
   </Property>
   <Property name="patient" type="integer">
     FHIR server ID of the patient to associate with this session.
@@ -93,14 +112,40 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
   <Property name="encounter" type="integer">
     FHIR server ID of the encounter to associate with this session.
   </Property>
+  <Property name="user" type="integer">
+    FHIR server ID of the user the session belongs to.
+  </Property>
   <Property name="fhirContext" type="array">
-    Array of FHIR context items using **external identifiers** to specify Patient and Encounter resources. Use this when integrating with systems that use different identifier namespaces. Each item should include `role: "launch"` to indicate the primary launch context. See [FHIR Context](#fhir-context) for details.
+    Array of FHIR context items using **external identifiers** to specify Patient and Encounter resources. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
   </Property>
   <Property name="deployment_mode" type="string">
     Either `"embedded"` or `"standalone"`. Defaults to `"embedded"`.
   </Property>
   <Property name="post_submit_redirect" type="string">
     URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response as a `response` query parameter, e.g. `?response=QuestionnaireResponse/456`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
+  </Property>
+</Properties>
+
+### Response Fields
+
+<Properties>
+  <Property name="id" type="integer">
+    Identifier of the session. Pass it to [`DELETE /sessions/{id}`](#delete-a-session) to end the session.
+  </Property>
+  <Property name="handover_token" type="string">
+    Single-use token that activates the session. Hand it to the end-user's browser via the [handover](#session-handover) endpoint. It expires after 5 minutes.
+  </Property>
+  <Property name="active" type="boolean">
+    `false` on creation. The session only becomes active once the handover completes.
+  </Property>
+  <Property name="patient" type="object">
+    Patient launch context resolved for this session, if any.
+  </Property>
+  <Property name="encounter" type="object">
+    Encounter launch context resolved for this session, if any.
+  </Property>
+  <Property name="expired_timestamp" type="datetime">
+    When the session expires.
   </Property>
 </Properties>
 
@@ -114,8 +159,8 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
     <CodeGroup title="Create Session Request">
 
     ```bash {{ title: 'cURL' }}
-    curl -X POST https://reports.tiro.health/session \
-      -H "Authorization: Bearer <access_token>" \
+    curl -X POST https://auth.tiro.health/sessions \
+      -u "<client_id>:<client_secret>" \
       -H "Content-Type: application/json" \
       -d '{
         "scope": "patient/Patient.read patient/QuestionnaireResponse.write",
@@ -127,8 +172,11 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
 
     ```csharp {{ title: 'C#' }}
     var client = new HttpClient();
+    var apiKey = Convert.ToBase64String(
+        Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")
+    );
     client.DefaultRequestHeaders.Authorization =
-        new AuthenticationHeaderValue("Bearer", accessToken);
+        new AuthenticationHeaderValue("Basic", apiKey);
 
     var payload = new {
       scope = "patient/Patient.read patient/QuestionnaireResponse.write",
@@ -138,56 +186,79 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
     };
 
     var response = await client.PostAsJsonAsync(
-      "https://reports.tiro.health/session",
+      "https://auth.tiro.health/sessions",
       payload
     );
     ```
 
     </CodeGroup>
 
+    ```json {{ title: 'Response (201 Created)' }}
+    {
+      "id": 789,
+      "handover_token": "hDk3n...T9wQ",
+      "active": false,
+      "patient": { "reference": "Patient/123" },
+      "encounter": null,
+      "deployment_mode": "embedded",
+      "post_submit_redirect": "https://ehr.example.com/reports/done",
+      "expired_timestamp": "2026-07-14T18:00:00Z"
+    }
+    ```
+
   </Col>
 </Row>
 
 ---
 
-## Session Handover {{ tag: 'POST', label: '/session/$handover' }}
+## Session Handover {{ tag: 'GET', label: '/sessions/$handover' }}
 
 <Row>
   <Col>
 
-The handover endpoint completes the session activation flow by consuming a one-time session token and setting the authentication cookie in the end-user's browser. This is typically called automatically when the user is redirected from your system to Tiro.health.
+The handover endpoint activates the session: it consumes the single-use `handover_token`, sets the authentication cookie in the end-user's browser, and redirects to `next`. It must be reached by the **end-user's browser** — this is the step that binds the session to that browser. Calling it from your backend would set the cookie on your server, not on the user.
 
-### Form Parameters
+The endpoint accepts the same two parameters either way:
+
+- **`GET /sessions/$handover?token=…&next=…`** — query parameters. Simplest: just send the browser to the URL.
+- **`POST /sessions/$handover`** — form-encoded body. Use when you prefer a form submission, or already have one.
+
+Both return `303 See Other` with the session cookie set.
+
+### Parameters
 
 <Properties>
   <Property name="token" type="string">
-    The session token received from the session creation step. This token is single-use and expires after 5 minutes.
+    The `handover_token` from the session creation step. Single-use, and expires after 5 minutes.
   </Property>
   <Property name="next" type="string">
-    The URL to redirect the user to after successful session activation. Use the [Launch URL](#launch-url) to open a [Task](/fhir/Task) in the Tiro.health application.
+    Where to send the user after activation. Use the [Launch URL](#launch-url) to open a [Task](/fhir/Task).
   </Property>
 </Properties>
+
+<Note>
+  A session can only be handed over once, while it is still inactive. Replaying a consumed or expired token returns `401`.
+</Note>
 
   </Col>
   <Col sticky>
 
     <CodeGroup title="Session Handover">
 
-    ```html {{ title: 'HTML Form' }}
-    <form action="https://reports.tiro.health/session/$handover"
+    ```text {{ title: 'Redirect (GET)' }}
+    https://auth.tiro.health/sessions/$handover
+      ?token=<handover_token>
+      &next=https%3A%2F%2Fapp.tiro.health%2Fexternal%2Fv1%3Ftask%3DTask%2F123
+    ```
+
+    ```html {{ title: 'HTML Form (POST)' }}
+    <form action="https://auth.tiro.health/sessions/$handover"
           method="POST">
-      <input type="hidden" name="token" value="<session_token>" />
+      <input type="hidden" name="token" value="<handover_token>" />
       <input type="hidden" name="next"
              value="https://app.tiro.health/external/v1?task=Task/123" />
       <button type="submit">Continue to Tiro.health</button>
     </form>
-    ```
-
-    ```bash {{ title: 'cURL' }}
-    curl -X POST https://reports.tiro.health/session/\$handover \
-      -d "token=<session_token>" \
-      -d "next=https://app.tiro.health/external/v1?task=Task/123" \
-      -L
     ```
 
     </CodeGroup>
@@ -271,12 +342,15 @@ Patient and encounter context is read from the task itself, so you do not need t
 
 ---
 
-## Get Session Information {{ tag: 'GET', label: '/session' }}
+## Get Session Information {{ tag: 'GET', label: '/sessions/{id}' }}
 
 <Row>
   <Col>
 
-Retrieves information about the current authenticated session. This endpoint requires a valid session cookie.
+Retrieves a session. There are two ways in:
+
+- **`GET /sessions/{id}`** — from your backend, authenticated with your API key. Returns `404` if the session belongs to another data tenant.
+- **`GET /sessions/current`** — from the end-user's browser, authenticated with the session cookie. Useful for a client to check its own session after handover.
 
 ### Response Fields
 
@@ -315,22 +389,14 @@ Retrieves information about the current authenticated session. This endpoint req
 
     <CodeGroup title="Get Session Request">
 
-    ```bash {{ title: 'cURL' }}
-    curl https://reports.tiro.health/session \
-      -H "Cookie: auth_session=<session_id>"
+    ```bash {{ title: 'By id (API key)' }}
+    curl https://auth.tiro.health/sessions/789 \
+      -u "<client_id>:<client_secret>"
     ```
 
-    ```csharp {{ title: 'C#' }}
-    var handler = new HttpClientHandler();
-    handler.CookieContainer.Add(
-      new Uri("https://reports.tiro.health"),
-      new Cookie("auth_session", "<session_id>")
-    );
-    var client = new HttpClient(handler);
-
-    var response = await client.GetAsync(
-      "https://reports.tiro.health/session"
-    );
+    ```bash {{ title: 'Current (cookie)' }}
+    curl https://auth.tiro.health/sessions/current \
+      -H "Cookie: auth_session=<session_id>"
     ```
 
     </CodeGroup>
@@ -364,14 +430,14 @@ Retrieves information about the current authenticated session. This endpoint req
 
 ---
 
-## Delete a Session {{ tag: 'DELETE', label: '/session' }}
+## Delete a Session {{ tag: 'DELETE', label: '/sessions/{id}' }}
 
 <Row>
   <Col>
 
-Terminates the current session, marking it as inactive and removing the authentication cookie. This is equivalent to logging the user out.
+Terminates a session by marking it inactive. This is equivalent to logging the user out: the session cookie in their browser stops working immediately.
 
-After deletion, the session can no longer be used and any subsequent requests with the session cookie will be rejected.
+Call this from your backend with your API key, using the `id` returned when you created the session. Deleting a session that belongs to another data tenant returns `404`.
 
   </Col>
   <Col sticky>
@@ -379,20 +445,20 @@ After deletion, the session can no longer be used and any subsequent requests wi
     <CodeGroup title="Delete Session Request">
 
     ```bash {{ title: 'cURL' }}
-    curl -X DELETE https://reports.tiro.health/session \
-      -H "Cookie: auth_session=<session_id>"
+    curl -X DELETE https://auth.tiro.health/sessions/789 \
+      -u "<client_id>:<client_secret>"
     ```
 
     ```csharp {{ title: 'C#' }}
-    var handler = new HttpClientHandler();
-    handler.CookieContainer.Add(
-      new Uri("https://reports.tiro.health"),
-      new Cookie("auth_session", "<session_id>")
+    var client = new HttpClient();
+    var apiKey = Convert.ToBase64String(
+        Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}")
     );
-    var client = new HttpClient(handler);
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue("Basic", apiKey);
 
     var response = await client.DeleteAsync(
-      "https://reports.tiro.health/session"
+      $"https://auth.tiro.health/sessions/{sessionId}"
     );
     ```
 
@@ -442,7 +508,8 @@ When a session is created with scopes:
 
 ```bash
 # Create a read-only session for patient data
-curl -X POST https://reports.tiro.health/session \
+curl -X POST https://auth.tiro.health/sessions \
+  -u "<client_id>:<client_secret>" \
   -H "Content-Type: application/json" \
   -d '{
     "scope": "patient/Patient.read patient/Encounter.read patient/QuestionnaireResponse.read",
@@ -512,6 +579,29 @@ When using external identifiers, Tiro.health will:
 3. Associate the session with the resolved or created resources
 
 This enables seamless cross-system integration without requiring ID mapping or pre-registration of resources.
+
+---
+
+## Migrating from /session
+
+The singular `/session` endpoints are **deprecated**. They still work, but new integrations should use `/sessions`, and existing ones should move over.
+
+| | Deprecated | Current |
+| --- | --- | --- |
+| Host | `reports.tiro.health` | `auth.tiro.health` |
+| Create | `POST /session` | `POST /sessions` |
+| Handover | `POST /session/$handover` | `GET` or `POST /sessions/$handover` |
+| Read | `GET /session` (cookie) | `GET /sessions/{id}` (API key) or `GET /sessions/current` (cookie) |
+| Delete | `DELETE /session` (cookie) | `DELETE /sessions/{id}` (API key) |
+| Auth | OAuth2 bearer token | [HTTP Basic](/fhir/authentication#basic-authentication-api-key) API key |
+
+Three things change beyond the path:
+
+**The OAuth2 step disappears.** The old flow exchanged your credentials at `POST /oauth/token` for a bearer token, then passed that to `POST /session`. That token was really a session token in disguise. Now you authenticate `POST /sessions` with your API key directly — there is no token exchange.
+
+**The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON. You no longer read it off a cookie.
+
+**Deleting a session needs its id.** `DELETE /sessions/{id}` is called by your backend with your API key, rather than by the browser with a cookie. Keep the `id` from the create response.
 
 ---
 
