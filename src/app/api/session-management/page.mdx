@@ -46,10 +46,11 @@ This API is particularly useful when you need to:
 
 A typical session follows this lifecycle:
 
-1. **Session Creation**: Your backend calls `POST /session`, optionally including scopes and FHIR context (Patient, Encounter)
+1. **Session Creation**: Your backend calls `POST /session`, optionally including scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`
 2. **Browser Handover**: The end-user's browser submits the session token to `POST /session/$handover` via form POST, together with a `next` [Launch URL](#launch-url). The session will be activated, a secure cookie is set, and the user is redirected to the task in Tiro.health
-3. **Active Session**: The user operates within Tiro.health with access controlled by the session's scopes
-4. **Session Termination**: The session is deleted via `DELETE /session` (equivalent to logout) or expires automatically
+3. **Completing the Report**: The user fills in and submits the report, with access controlled by the session's scopes
+4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` appended as a query parameter
+5. **Session Termination**: Your backend deletes the session via `DELETE /session` (equivalent to logout), or it expires automatically
 
 ```mermaid
 sequenceDiagram
@@ -57,13 +58,16 @@ sequenceDiagram
     participant Browser as End-User Browser
     participant Tiro as Tiro.health
 
-    Backend->>Tiro: POST /session
+    Backend->>Tiro: POST /session<br/>(scopes, context, post_submit_redirect)
     Tiro-->>Backend: Session Cookie + Token
     Backend->>Browser: Redirect to handover
     Browser->>Tiro: POST /session/$handover<br/>(token + next launch URL)
     Tiro-->>Browser: Session Cookie + Redirect
     Browser->>Tiro: GET /external/v1?task=Task/123<br/>(Scoped Access)
-    Tiro-->>Browser: Redirect to the task's report
+    Tiro-->>Browser: The task's report, ready to complete
+    Browser->>Tiro: Submit report
+    Tiro-->>Browser: Report submitted
+    Browser->>Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
     Backend->>Tiro: DELETE /session
     Tiro-->>Backend: Session Deleted
 ```
@@ -95,7 +99,14 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
   <Property name="deployment_mode" type="string">
     Either `"embedded"` or `"standalone"`. Defaults to `"embedded"`.
   </Property>
+  <Property name="post_submit_redirect" type="string">
+    URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response as a `response` query parameter, e.g. `?response=QuestionnaireResponse/456`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
+  </Property>
 </Properties>
+
+<Note>
+  There is no equivalent redirect when the user abandons the report — only submitting sends the user back. Delete the session when you are done with it, rather than relying on a return trip.
+</Note>
 
   </Col>
   <Col sticky>
@@ -109,7 +120,8 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
       -d '{
         "scope": "patient/Patient.read patient/QuestionnaireResponse.write",
         "patient": 123,
-        "deployment_mode": "embedded"
+        "deployment_mode": "embedded",
+        "post_submit_redirect": "https://ehr.example.com/reports/done"
       }'
     ```
 
@@ -121,7 +133,8 @@ Creates a new authenticated session for an end-user. This endpoint can optionall
     var payload = new {
       scope = "patient/Patient.read patient/QuestionnaireResponse.write",
       patient = 123,
-      deployment_mode = "embedded"
+      deployment_mode = "embedded",
+      post_submit_redirect = "https://ehr.example.com/reports/done"
     };
 
     var response = await client.PostAsJsonAsync(
