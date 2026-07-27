@@ -51,8 +51,6 @@ https://auth.tiro.health
 
 `POST /sessions`, `GET /sessions/{id}` and `DELETE /sessions/{id}` authenticate with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key) — the base64 encoding of `client_id:client_secret`. The two handover endpoints are unauthenticated by design: they are opened by the end-user's browser and carry a single-use token instead.
 
-The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
-
 ---
 
 ## Session Lifecycle
@@ -117,7 +115,7 @@ The **session user is required**: identify who the session acts as via the `user
     Array of FHIR context items using **external identifiers** to specify the Patient, Encounter, and Practitioner. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
   </Property>
   <Property name="deployment_mode" type="string">
-    Either `"embedded"` or `"standalone"`. Defaults to `"embedded"`.
+    How Tiro.health renders for this session. `"embedded"` (the default) strips the surrounding application chrome — navigation, top bar — for use inside an iframe, WebView, or [embedded browser](/api/embedded-browsers) of your system. `"standalone"` keeps the full application UI, for users working in a regular browser tab. This sets the session default; the [Launch URL's `viewMode`](#launch-url) parameter can override it per launch.
   </Property>
   <Property name="post_submit_redirect" type="string">
     URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response and the task as query parameters, e.g. `?response=QuestionnaireResponse/456&task=Task/123`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
@@ -163,7 +161,7 @@ The **session user is required**: identify who the session acts as via the `user
 </Properties>
 
 <Note>
-  Only submitting or cancelling sends the user back — saving a draft has no return trip. Delete the session when you are done with it, rather than relying on a redirect.
+  Submitting or cancelling sends the user back to `post_submit_redirect`; saving a draft or closing the tab does not. Don't treat the redirect as your only end-of-session signal — delete the session from your backend when you are done with it.
 </Note>
 
   </Col>
