@@ -138,17 +138,11 @@ The API key belongs to a [data tenant](/guides/data-tenants), which determines w
 
 ## End-user Identification
 
-An API key authenticates your *system*, not a person. Some requests need to be attributed to a specific end-user — the practitioner filling in a report, for example.
+An API key authenticates your *system*, not a person: every request made with it acts as the service account tied to the key.
 
-Add the `X-User-Id` header to act as that user. Its value is an **identifier token**: the practitioner's identifier `system` and `value` joined with a pipe (`|`), matching an identifier on a [Practitioner](/fhir/Practitioner#create-a-new-practitioner) you created.
+When work must be attributed to a specific end-user — the practitioner filling in a report — do not call the FHIR API with the key directly. Instead, create a **session** for that user via the [Session Management API](/api/session-management): the session user is identified in the request body (the `user` field, or a `fhirContext` entry of type `Practitioner` matched by FHIR identifier), and the browser session then carries the user's identity and scopes.
 
-```bash
-curl https://reports.tiro.health/fhir/r5/Patient \
-  -u "client_id:client_secret" \
-  -H "X-User-Id: http://myhospital.org/clinical-staff/user-ids|123"
-```
-
-Without the header, the request acts as the service account tied to your API key. See [FHIR API Authentication](/fhir/authentication#end-user-identification-in-machine-to-machine-communication) for details.
+The identifier must match one on a [Practitioner](/fhir/Practitioner#create-a-new-practitioner) in your tenant, or the session can create the user on the fly with the `https://tiro.health/fhir/role/new` context role — see [FHIR Context](/api/session-management#fhir-context).
 
 ---
 

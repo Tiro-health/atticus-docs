@@ -7,7 +7,6 @@ export const metadata = {
 # Authentication
 
 You'll need to authenticate your requests to access any of the endpoints in the Atticus API. In this guide, we'll look at how authentication works. Atticus authenticates your API requests with an API key, sent as [Basic authentication](#basic-authentication-api-key). {{ className: 'lead' }}
-If requests must be performed as a specific end-user, an extra header is needed to identify that user. This is the `X-User-Id` header. This header is used to identify the user in the context of the session. This header is only needed when the session is created in the background.
 
 ## Basic authentication (API key)
 
@@ -32,29 +31,11 @@ var response = await client.GetAsync("https://reports.tiro.health/fhir/r5/Patien
 
 ## End-user identification in machine-to-machine communication
 
-Some endpoints need a user to be identified. This is done by adding the `X-User-Id` header to the request. This header is used to identify the user (a Practitioner FHIR terms) in the context of the session.
+An API key authenticates your *system*: requests made with it act as the service account tied to the key, not as a person.
 
-<CodeGroup title="Example request with user identification">
-```bash {{ title: 'cURL' }}
-curl https://reports.tiro.health/fhir/r5/Patient \
-  -u client_id:client_secret \
-  --basic \
-  -H "X-User-Id: http://myhospital.org/clincal-staff/user-ids|123"
-```
+When work must happen *as* a specific end-user (writing a report, completing a task), do not call the FHIR API with the key directly. Instead, create a **session** for that user via the [Session Management API](/api/session-management). The session user is identified in the request body — the `user` field, or a `fhirContext` entry of type `Practitioner` matched by FHIR [identifier](https://www.hl7.org/fhir/resource.html#identifiers) — and the browser session then carries the user's identity and scopes.
 
-```csharp {{ title: 'C#' }}
-HttpClient client = new HttpClient();
-string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes("client_id:client_secret"));
-client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
-client.DefaultRequestHeaders.Add("X-User-Id", "http://myhospital.org/clincal-staff/user-ids|123");
-var response = await client.GetAsync("https://reports.tiro.health/fhir/r5/Patient");
-```
-
-</CodeGroup>
-
-The notation used for the `X-User-Id` header is an **identifier token**. An identifier is a common used [concept in FHIR to identify practitioners, patients and other entities](https://www.hl7.org/fhir/resource.html#identifiers). More information about identifiers in the Atticus FHIR API can be found in the [FHIR tips](./fhir/tips#store-your-internal-identifiers-in-fhir-resources).
-The identifier used needs to match with an identifier passed as part of a [`POST Practitioner` request](./fhir/Practitioner#create-a-new-practitioner).
-In headers we need a special notation to combine the `system` and the `value` of the identifier in a single string. The convention is to concatenate the `system` and the `value` with a pipe `|`. The `system` is a URI that identifies the system that the identifier comes from. The `value` is the actual identifier value.
+The identifier must match one passed as part of a [`POST Practitioner` request](./fhir/Practitioner#create-a-new-practitioner), or the session can create the user on the fly with the `https://tiro.health/fhir/role/new` context role — see [FHIR Context](/api/session-management#fhir-context). More information about identifiers in the Atticus FHIR API can be found in the [FHIR tips](./fhir/tips#store-your-internal-identifiers-in-fhir-resources).
 
 ## Machine-to-machine access
 

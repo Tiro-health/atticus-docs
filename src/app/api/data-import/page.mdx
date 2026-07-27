@@ -28,6 +28,10 @@ The goal of the import step is to represent one instruction: *"this practitioner
 
 **Authentication required.** All import requests are authenticated. See [Authentication](/api/authentication) for how to obtain credentials.
 
+<Note>
+In **EHR-managed data tenants**, direct writes to `Patient`, `Encounter`, `Practitioner`, and `DocumentReference` are blocked (`403 Forbidden`). These resources are created automatically when you create a session with `fhirContext` items using the role `https://tiro.health/fhir/role/new` — see [FHIR Context](/api/session-management#fhir-context). The `Task` import works in every tenant.
+</Note>
+
 ---
 
 ## Minimum Resources
