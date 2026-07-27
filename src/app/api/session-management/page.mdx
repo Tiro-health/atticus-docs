@@ -13,6 +13,7 @@ export const sections = [
   { title: 'Get Session Information', id: 'get-session-information' },
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
+  { title: 'Template Access and Filtering', id: 'template-access-and-filtering' },
   { title: 'FHIR Context', id: 'fhir-context' },
   { title: 'Security Considerations', id: 'security-considerations' },
 ]
@@ -110,7 +111,7 @@ The **session user is required**: identify who the session acts as via the `user
     FHIR server ID of the encounter to associate with this session.
   </Property>
   <Property name="user" type="integer">
-    FHIR server ID of the user the session belongs to. Alternatively, identify the user with a `fhirContext` entry of type `Practitioner` — one of the two is required.
+    FHIR server ID of the user the session belongs to. Alternatively, identify the user with a `fhirContext` entry of type `Practitioner` — one of the two is required. When both are provided, the `user` field wins.
   </Property>
   <Property name="fhirContext" type="array">
     Array of FHIR context items using **external identifiers** to specify the Patient, Encounter, and Practitioner. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
@@ -149,6 +150,9 @@ The **session user is required**: identify who the session acts as via the `user
   </Property>
   <Property name="data_tenant" type="object">
     The data tenant this session belongs to.
+  </Property>
+  <Property name="deployment_mode" type="string">
+    The deployment mode the session was created with.
   </Property>
   <Property name="fhir_server" type="object">
     The effective `scope` list granted to the session, after [downscoping](#scope-based-access-control). The `address` field is `null` for API-created sessions.
@@ -588,24 +592,6 @@ In data tenants managed by an EHR integration, sessions are automatically downsc
 
 This downscoping applies to **user sessions only**. Machine-to-machine calls with your API key are governed by the key's own scopes, so background [data imports](/api/data-import) keep working in EHR-managed tenants. Context resources can also be created at session creation via [`fhirContext` `role/new`](#fhir-context).
 
-### Template Access and Filtering
-
-The `Questionnaire` scope controls which report templates the session user can pick. Template access is **delegated from your API key**: at session creation the scope is automatically constrained to the projects your integration's service account belongs to, so the session user needs no project membership of their own — including users created on the fly via [`fhirContext` `role/new`](#fhir-context).
-
-You can narrow the delegation with filters on the scope:
-
-```text
-patient/Questionnaire.read?project=53
-patient/Questionnaire.read?url=https://templates.example.org/ct-scan|2.0.0
-patient/Questionnaire.read?specialty=urology
-```
-
-- `project` — one of your service account's projects; other projects are ignored
-- `url` — a single template by canonical URL (optionally with `|version`)
-- `identifier`, `version`, `specialty` — further narrowing, combined with the project filter
-
-Without filters, the user can choose from all templates in your service account's projects. If your account belongs to no projects, the session gets no template access — contact Tiro.health to link your API key to the right project.
-
 ### Example: Restricted Session
 
 ```bash
@@ -621,6 +607,26 @@ curl -X POST https://auth.tiro.health/sessions \
 ```
 
 In this session, the user can read patient, encounter, and report data but cannot modify anything. Any attempt to create or update resources will be denied.
+
+---
+
+## Template Access and Filtering
+
+The `Questionnaire` scope controls which report templates the session user can pick. Template access is **delegated from your API key**: at session creation the scope is automatically constrained to the projects your integration's service account belongs to, so the session user needs no project membership of their own — including users created on the fly via [`fhirContext` `role/new`](#fhir-context).
+
+You can narrow the delegation with filters on the scope (a Tiro.health extension to SMART on FHIR scopes):
+
+```text
+patient/Questionnaire.read?project=53
+patient/Questionnaire.read?url=https://templates.example.org/ct-scan|2.0.0
+patient/Questionnaire.read?specialty=urology
+```
+
+- `project` — one of your service account's projects; other projects are ignored
+- `url` — a single template by canonical URL (optionally with `|version`)
+- `identifier`, `version`, `specialty` — further narrowing, combined with the project filter
+
+Without filters, the user can choose from all templates in your service account's projects. If your account belongs to no projects, the session gets no template access — contact Tiro.health to link your API key to the right project.
 
 ---
 
