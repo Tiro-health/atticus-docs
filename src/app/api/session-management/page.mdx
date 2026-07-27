@@ -515,7 +515,9 @@ Scopes define what actions and resources a user can access during their session.
 
 ### Scope Format
 
-Scopes follow the FHIR SMART on FHIR format: `<context>/<resourceType>.<action>`
+Scopes follow the FHIR SMART on FHIR format, with an optional filter suffix: `<context>/<resourceType>.<action>[?filters]`
+
+Filters are currently honored for `Questionnaire` scopes only, where they narrow which report templates the session can access — see [Template Access and Filtering](#scope-based-access-control) below.
 
 **Contexts:**
 - `patient/<resourceType>.<action>` — access limited to the session's **launched patient**. Only meaningful when the session is created with a `patient` (or a Patient `fhirContext` item); without one, `patient/` scopes grant nothing.
