@@ -41,8 +41,8 @@ At minimum you import three resources. Only the Patient is strictly required to 
 | Resource                                       | Required | Purpose                                                                                                                                             |
 | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**Patient**](/fhir/Patient)                   | Yes      | The subject of the report. A single `identifier` (system + value) is enough; `name` and other demographics are optional but improve the UI.        |
-| [**Practitioner**](/fhir/Practitioner)         | Yes      | The clinician who will author the report. Importing them ensures they exist as a user in the tenant. A single `identifier` is enough.              |
-| [**Task**](/fhir/Task)                         | Yes      | The `complete-questionnaire` order that appears in the practitioner's worklist. References the Patient via `for`.                                   |
+| [**Practitioner**](/fhir/Practitioner)         | Recommended | The clinician who will author the report. Importing them ensures they exist as a user in the tenant. A single `identifier` is enough.              |
+| [**Task**](/fhir/Task)                         | Recommended | The `complete-questionnaire` order that appears in the worklist. References the Patient via `for`.                                   |
 | [**Encounter**](/fhir/Encounter)               | Optional | Links the report to a specific visit. Referenced from the Task via `encounter` and carried onto the resulting QuestionnaireResponse.               |
 
 <Note>

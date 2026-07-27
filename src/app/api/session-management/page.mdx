@@ -138,14 +138,23 @@ The **session user is required**: identify who the session acts as via the `user
   <Property name="active" type="boolean">
     `false` on creation. The session only becomes active once the handover completes.
   </Property>
+  <Property name="user" type="object">
+    Reference to the Practitioner the session acts as, e.g. `{"type": "Practitioner", "reference": "Practitioner/456"}`.
+  </Property>
   <Property name="patient" type="object">
     Patient launch context resolved for this session, if any.
   </Property>
   <Property name="encounter" type="object">
     Encounter launch context resolved for this session, if any.
   </Property>
+  <Property name="data_tenant" type="object">
+    The data tenant this session belongs to.
+  </Property>
+  <Property name="fhir_server" type="object">
+    The effective `scope` list granted to the session, after [downscoping](#scope-based-access-control). The `address` field is `null` for API-created sessions.
+  </Property>
   <Property name="expired_timestamp" type="datetime">
-    When the session expires.
+    When the session expires (7.5 days after creation).
   </Property>
 </Properties>
 
@@ -335,6 +344,12 @@ Provide **either** `task` **or** `task:identifier`.
   </Property>
   <Property name="task:identifier" type="string">
     External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task.
+  </Property>
+  <Property name="viewMode" type="string">
+    Optional. `embedded` renders the report without the surrounding application chrome (navigation, top bar) — use this inside iframes and [embedded browsers](/api/embedded-browsers). Defaults to the session's `deployment_mode`.
+  </Property>
+  <Property name="readonly" type="string">
+    Optional. `readonly=yes` opens the report read-only. The value must be the literal `yes`. Only applies when the task opens in the report editor (non-`draft` statuses).
   </Property>
 </Properties>
 
