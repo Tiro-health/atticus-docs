@@ -19,7 +19,9 @@ async function initializeBrowser() {
     })
     page = await browser.newPage()
     
-    // Set up mermaid in the page
+    // Set up mermaid in the page. Wait for the CDN script to load before
+    // touching `mermaid`, otherwise diagrams randomly fail to render
+    // ("mermaid is not defined") depending on network timing.
     await page.setContent(`
       <!DOCTYPE html>
       <html>
@@ -30,8 +32,12 @@ async function initializeBrowser() {
           <div id="mermaid-container"></div>
         </body>
       </html>
-    `)
-    
+    `, { waitUntil: 'networkidle0' })
+
+    await page.waitForFunction('typeof window.mermaid !== "undefined"', {
+      timeout: 30000,
+    })
+
     await page.evaluate(() => {
       mermaid.initialize({ 
         startOnLoad: false,
@@ -94,37 +100,45 @@ export function rehypeMermaidToSvg() {
     
     // Process each mermaid diagram
     for (const { node, index, parent } of mermaidNodes) {
+      const codeNode = node.children[0]
+      const mermaidCode = codeNode.children[0].value
+
+      // The filename is a hash of the diagram source, so a committed SVG is
+      // guaranteed to match its diagram. Reuse it instead of re-rendering:
+      // rendering needs puppeteer + the mermaid CDN, which are not reliably
+      // available on CI/Vercel build machines. Only new or edited diagrams
+      // are rendered (locally), and their SVGs get committed.
+      const hash = generateHash(mermaidCode)
+      const filename = `mermaid-${hash}.svg`
+      const existingPath = path.resolve(__dirname, '../../public/diagrams', filename)
+
+      let publicPath = `/diagrams/${filename}`
       try {
-        const codeNode = node.children[0]
-        const mermaidCode = codeNode.children[0].value
-        
-        // Generate unique filename based on content hash
-        const hash = generateHash(mermaidCode)
-        const filename = `mermaid-${hash}.svg`
-        
-        // Generate SVG
-        const svg = await generateSVG(mermaidCode)
-        
-        // Save SVG file
-        const publicPath = await saveSVGFile(svg, filename)
-        
-        // Replace the code block with an img element
-        const imgNode = {
-          type: 'element',
-          tagName: 'img',
-          properties: {
-            src: publicPath,
-            alt: 'Mermaid diagram',
-            className: ['mermaid-diagram']
-          },
-          children: []
+        await fs.access(existingPath)
+      } catch {
+        try {
+          const svg = await generateSVG(mermaidCode)
+          publicPath = await saveSVGFile(svg, filename)
+        } catch (error) {
+          console.error('Failed to process mermaid diagram:', error)
+          // Keep the original code block if SVG generation fails
+          continue
         }
-        
-        parent.children[index] = imgNode
-      } catch (error) {
-        console.error('Failed to process mermaid diagram:', error)
-        // Keep the original code block if SVG generation fails
       }
+
+      // Replace the code block with an img element
+      const imgNode = {
+        type: 'element',
+        tagName: 'img',
+        properties: {
+          src: publicPath,
+          alt: 'Mermaid diagram',
+          className: ['mermaid-diagram']
+        },
+        children: []
+      }
+
+      parent.children[index] = imgNode
     }
   }
 }

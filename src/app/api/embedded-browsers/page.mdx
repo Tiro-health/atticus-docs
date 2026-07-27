@@ -5,10 +5,9 @@ export const metadata = {
 }
 
 export const sections = [
-  { title: 'Overview', id: 'overview' },
   { title: 'Session Handover Pattern', id: 'session-handover-pattern' },
-  { title: 'WebView2', id: 'webview2' },
-  { title: 'JxBrowser', id: 'jxbrowser' },
+  { title: 'WebView2', id: 'web-view2' },
+  { title: 'JxBrowser', id: 'jx-browser' },
 ]
 
 # Embedded Browsers
@@ -38,7 +37,7 @@ The embedded browser integration follows the standard [Session Management](/api/
 3. Intercept the redirect response to capture the redirect URL
 4. Handle the redirect in your application
 
-The `next` parameter carries the [Launch URL](/api/session-management#launch-url) — the task to open once the session is active. Both parameters must be URL-encoded.
+The `next` parameter carries the [Launch URL](/api/session-management#session-handover) — the task to open once the session is active. Both parameters must be URL-encoded.
 
 ```text
 https://auth.tiro.health/sessions/$handover

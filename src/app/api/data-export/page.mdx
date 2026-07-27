@@ -8,7 +8,7 @@ export const sections = [
   { title: 'Overview', id: 'overview' },
   { title: 'The Submit Callback', id: 'the-submit-callback' },
   { title: 'Configuring the Redirect', id: 'configuring-the-redirect' },
-  { title: 'Fetch the QuestionnaireResponse', id: 'fetch-the-questionnaireresponse' },
+  { title: 'Fetch the QuestionnaireResponse', id: 'fetch-the-questionnaire-response' },
   { title: 'Fetch the Composition', id: 'fetch-the-composition' },
   { title: 'Native Applications', id: 'native-applications' },
 ]
@@ -221,7 +221,7 @@ If your system tracked the Task from the [import step](/api/data-import), you ca
 ```bash
 curl -G https://reports.tiro.health/fhir/r5/Task \
   --data-urlencode "identifier=http://hospital.example.com/tasks|TASK-54321" \
-  --data-urlencode "_include=Task:output:composition" \
+  --data-urlencode "_include=Task:output:Composition" \
   -H "Authorization: Basic {{apikey}}" \
   -H "Content-Type: application/fhir+json"
 ```

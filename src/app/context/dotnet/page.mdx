@@ -53,61 +53,51 @@ To get started with integrating Atticus in your .NET application, follow these s
 
 ## Create an authenticated session
 
-Using the WebView2 control, you can create an authenticated session with Atticus. The idea is to create a session in the background using a POST request with authentication headers. The Atticus Authorization Server will set a cookie that holds the session information. Once the session is created, you can navigate to the Atticus Filler UI.
-To create an authenticated requeset, you need to include both client credentials in an `Authorization` header and the user identifier in the `X-User-Id` header and send a POST request along with session-specific data. More info about this can be found on the [authentication page](/fhir/authentication#end-user-identification-in-machine-to-machine-communication).
+The integration follows the [Session Management](/api/session-management) flow: your application creates a session in the background with a POST request authenticated by your API key, then hands the returned one-time `handover_token` to the WebView2 control, which activates the session and receives the session cookie. The end-user is identified in the request body — via the `user` field or a `fhirContext` entry of type `Practitioner`.
 
 Here is an example of how to create a session in a .NET application:
 
-1. Create a dictionary with the required session data:
+1. Create the session from your application code (not inside the WebView) using `HttpClient`:
 
    ```csharp
-   var launchContext = new Dictionary<string, string>
-   {
-       { "patient", patientId }, // FHIR Patient.id
-       { "encounter", encounterId } // FHIR Encounter.id (optional)
-   };
-   ```
-
-2. Build a POST request with the necessary headers:
-
-   ```csharp
-   var launchContextStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(launchContext)));
-   var request = webView.CoreWebView2.Environment.CreateWebResourceRequest(
-       "https://auth.tiro.health/sessions",
-       "POST",
-       launchContextStream,
-       null);
-
-   // Add authentication header
    string clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
    string clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
-   var authToken = Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}");
-   var authHeader = $"Basic {Convert.ToBase64String(authToken)}";
-   request.Headers.SetHeader("Authorization", authHeader);
 
-   // Add content-type header
-   request.Headers.SetHeader("Content-Type", "application/fhir+json");
+   var client = new HttpClient();
+   var credentials = Convert.ToBase64String(
+       Encoding.ASCII.GetBytes($"{clientId}:{clientSecret}"));
+   client.DefaultRequestHeaders.Authorization =
+       new AuthenticationHeaderValue("Basic", credentials);
 
-   // Add user identification header
-   request.Headers.SetHeader("x-user-id", userIdentifier);
-   ```
-
-3. Send the request and handle the response:
-   ```csharp
-   webView.CoreWebView2.NavigateWithWebResourceRequest(request);
-   webView.CoreWebView2.NavigationCompleted += (sender, args) =>
+   var payload = new
    {
-       if (args.IsSuccess)
+       scope = "patient/QuestionnaireResponse.write patient/Patient.read patient/Encounter.read",
+       patient = patientId,   // FHIR Patient.id
+       encounter = encounterId, // FHIR Encounter.id (optional)
+       fhirContext = new object[]
        {
-           // Navigate to the Atticus Filler UI
-           webView.CoreWebView2.Navigate("https://app.tiro.health/external/v1?task=Task/123");
+           new
+           {
+               identifier = new { system = "http://myhospital.org/user-ids", value = userIdentifier },
+               type = "Practitioner",
+               role = "https://tiro.health/fhir/role/new"
+           }
        }
    };
+
+   var response = await client.PostAsJsonAsync("https://auth.tiro.health/sessions", payload);
+   var session = await response.Content.ReadFromJsonAsync<JsonElement>();
+   string handoverToken = session.GetProperty("handover_token").GetString();
    ```
 
+2. Hand the token over to the WebView2 control by navigating it to the handover URL. The `next` value is the [Launch URL](/api/session-management#launch-url) the user should land on:
+
+   ```csharp
+   string nextUrl = Uri.EscapeDataString("https://app.tiro.health/external/v1?task=Task/123");
+   webView.CoreWebView2.Navigate(
+       $"https://auth.tiro.health/sessions/$handover?token={handoverToken}&next={nextUrl}");
+   ```
+
+   The handover endpoint activates the session, sets the session cookie in the WebView, and redirects to the `next` URL.
+
 After completing these steps, you should have a working WebView2 control that can be used to display the Atticus Filler UI in your .NET application.
-
-### Demo repository
-
-A demo repository with a working example can be found [here](https://github.com/Tiro-health/SessionLaunch).
-The code that creates the session can be found [here](https://github.com/Tiro-health/SessionLaunch/blob/master/SessionLaunch/Session.cs#L197)

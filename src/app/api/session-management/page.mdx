@@ -9,12 +9,10 @@ export const sections = [
   { title: 'Session Lifecycle', id: 'session-lifecycle' },
   { title: 'Create a Session', id: 'create-a-session' },
   { title: 'Session Handover', id: 'session-handover' },
-  { title: 'Launch URL', id: 'launch-url' },
   { title: 'Get Session Information', id: 'get-session-information' },
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
   { title: 'FHIR Context', id: 'fhir-context' },
-  { title: 'Migrating from /session', id: 'migrating-from-session' },
   { title: 'Security Considerations', id: 'security-considerations' },
 ]
 
@@ -51,22 +49,16 @@ https://auth.tiro.health
 
 `POST /sessions`, `GET /sessions/{id}` and `DELETE /sessions/{id}` authenticate with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key) — the base64 encoding of `client_id:client_secret`. The two handover endpoints are unauthenticated by design: they are opened by the end-user's browser and carry a single-use token instead.
 
-The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
-
-<Note>
-  If you are currently calling the singular `/session` endpoints on `reports.tiro.health`, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
-</Note>
-
 ---
 
 ## Session Lifecycle
 
 A typical session follows this lifecycle:
 
-1. **Session Creation**: Your backend calls `POST /sessions`, optionally including scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`. The session is created **inactive** and comes back with a single-use `handover_token`
-2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#launch-url). The session is activated, a secure cookie is set in the browser, and the user lands on the task
+1. **Session Creation**: Your backend calls `POST /sessions` with the session **user** (the clinician the session acts as), plus scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`. The session is created **inactive** and comes back with a single-use `handover_token`
+2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#session-handover). The session is activated, a secure cookie is set in the browser, and the user lands on the task
 3. **Completing the Report**: The user fills in and submits the report, with access controlled by the session's scopes
-4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` appended as a query parameter
+4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` and the `Task` appended as query parameters
 5. **Session Termination**: Your backend deletes the session via `DELETE /sessions/{id}` (equivalent to logout), or it expires automatically
 
 The session only becomes usable at step 2 — the handover is what activates it and binds it to the end-user's browser. Your backend never holds the session cookie.
@@ -86,7 +78,7 @@ sequenceDiagram
     Tiro-->>Browser: The task's report, ready to complete
     Browser->>Tiro: Submit report
     Tiro-->>Browser: Report submitted
-    Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
+    Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456&task=Task/123
     Backend->>Tiro: DELETE /sessions/{id}
     Tiro-->>Backend: Session Deleted
 ```
@@ -100,11 +92,13 @@ sequenceDiagram
 
 Creates a session for an end-user, optionally with FHIR context and scope restrictions. The session is created **inactive**: it does nothing until the [handover](#session-handover) activates it in the user's browser.
 
+The **session user is required**: identify who the session acts as via the `user` field or a `fhirContext` entry with `type: "Practitioner"`. Requests without a resolvable user fail with `422`.
+
 ### Request Body
 
 <Properties>
   <Property name="scope" type="string">
-    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/QuestionnaireResponse.write"`). These scopes control what data the user can access during the session. A list of strings is also accepted.
+    Space-separated list of requested scopes (e.g., `"patient/Patient.read patient/QuestionnaireResponse.*"`). These scopes control what data the user can access during the session. A list of strings is also accepted. See [Scope-based Access Control](#scope-based-access-control).
   </Property>
   <Property name="patient" type="integer">
     FHIR server ID of the patient to associate with this session.
@@ -113,16 +107,19 @@ Creates a session for an end-user, optionally with FHIR context and scope restri
     FHIR server ID of the encounter to associate with this session.
   </Property>
   <Property name="user" type="integer">
-    FHIR server ID of the user the session belongs to.
+    FHIR server ID of the user the session belongs to. Alternatively, identify the user with a `fhirContext` entry of type `Practitioner` — one of the two is required. When both are provided, the `user` field wins.
   </Property>
   <Property name="fhirContext" type="array">
-    Array of FHIR context items using **external identifiers** to specify Patient and Encounter resources. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
+    Array of FHIR context items using **external identifiers** to specify the Patient, Encounter, and Practitioner. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
   </Property>
   <Property name="deployment_mode" type="string">
-    Either `"embedded"` or `"standalone"`. Defaults to `"embedded"`.
+    How Tiro.health renders for this session. `"embedded"` (the default) strips the surrounding application chrome — navigation, top bar — for use inside an iframe, WebView, or [embedded browser](/api/embedded-browsers) of your system. `"standalone"` keeps the full application UI, for users working in a regular browser tab. This sets the session default; the [Launch URL's `viewMode`](#session-handover) parameter can override it per launch.
   </Property>
   <Property name="post_submit_redirect" type="string">
-    URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response as a `response` query parameter, e.g. `?response=QuestionnaireResponse/456`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
+    URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response and the task as query parameters, e.g. `?response=QuestionnaireResponse/456&task=Task/123`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
+  </Property>
+  <Property name="post_cancel_redirect" type="string">
+    URL in your own system to send the user back to when they cancel out of the report instead of submitting it.
   </Property>
 </Properties>
 
@@ -138,19 +135,31 @@ Creates a session for an end-user, optionally with FHIR context and scope restri
   <Property name="active" type="boolean">
     `false` on creation. The session only becomes active once the handover completes.
   </Property>
+  <Property name="user" type="object">
+    Reference to the Practitioner the session acts as, e.g. `{"type": "Practitioner", "reference": "Practitioner/456"}`.
+  </Property>
   <Property name="patient" type="object">
     Patient launch context resolved for this session, if any.
   </Property>
   <Property name="encounter" type="object">
     Encounter launch context resolved for this session, if any.
   </Property>
+  <Property name="data_tenant" type="object">
+    The data tenant this session belongs to.
+  </Property>
+  <Property name="deployment_mode" type="string">
+    The deployment mode the session was created with.
+  </Property>
+  <Property name="fhir_server" type="object">
+    The effective `scope` list granted to the session, after [downscoping](#scope-based-access-control). The `address` field is `null` for API-created sessions.
+  </Property>
   <Property name="expired_timestamp" type="datetime">
-    When the session expires.
+    When the session expires (7.5 days after creation).
   </Property>
 </Properties>
 
 <Note>
-  There is no equivalent redirect when the user abandons the report — only submitting sends the user back. Delete the session when you are done with it, rather than relying on a return trip.
+  Submitting or cancelling sends the user back to `post_submit_redirect`; saving a draft or closing the tab does not. Don't treat the redirect as your only end-of-session signal — delete the session from your backend when you are done with it.
 </Note>
 
   </Col>
@@ -163,8 +172,40 @@ Creates a session for an end-user, optionally with FHIR context and scope restri
       -u "<client_id>:<client_secret>" \
       -H "Content-Type: application/json" \
       -d '{
-        "scope": "patient/Patient.read patient/QuestionnaireResponse.write",
+        "scope": "patient/Patient.read patient/QuestionnaireResponse.* patient/Questionnaire.read",
+        "user": 456,
         "patient": 123,
+        "deployment_mode": "embedded",
+        "post_submit_redirect": "https://ehr.example.com/reports/done"
+      }'
+    ```
+
+    ```bash {{ title: 'cURL (external identifiers)' }}
+    # Identify the patient and clinician by your own identifiers instead of
+    # Tiro.health IDs — role/new creates them when they do not exist yet.
+    curl -X POST https://auth.tiro.health/sessions \
+      -u "<client_id>:<client_secret>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "scope": "patient/Patient.read patient/QuestionnaireResponse.* patient/Questionnaire.read",
+        "fhirContext": [
+          {
+            "identifier": {
+              "system": "http://hospital.example.com/patients",
+              "value": "PAT-12345"
+            },
+            "type": "Patient",
+            "role": "https://tiro.health/fhir/role/new"
+          },
+          {
+            "identifier": {
+              "system": "http://hospital.example.com/practitioners",
+              "value": "PRAC-67890"
+            },
+            "type": "Practitioner",
+            "role": "https://tiro.health/fhir/role/new"
+          }
+        ],
         "deployment_mode": "embedded",
         "post_submit_redirect": "https://ehr.example.com/reports/done"
       }'
@@ -179,7 +220,8 @@ Creates a session for an end-user, optionally with FHIR context and scope restri
         new AuthenticationHeaderValue("Basic", apiKey);
 
     var payload = new {
-      scope = "patient/Patient.read patient/QuestionnaireResponse.write",
+      scope = "patient/Patient.read patient/QuestionnaireResponse.* patient/Questionnaire.read",
+      user = 456,
       patient = 123,
       deployment_mode = "embedded",
       post_submit_redirect = "https://ehr.example.com/reports/done"
@@ -198,9 +240,18 @@ Creates a session for an end-user, optionally with FHIR context and scope restri
       "id": 789,
       "handover_token": "hDk3n...T9wQ",
       "active": false,
-      "patient": { "reference": "Patient/123" },
+      "user": { "type": "Practitioner", "reference": "Practitioner/456" },
+      "patient": { "type": "Patient", "reference": "Patient/123" },
       "encounter": null,
       "deployment_mode": "embedded",
+      "fhir_server": {
+        "address": null,
+        "scope": [
+          "patient/Patient.rs",
+          "patient/QuestionnaireResponse.cruds",
+          "patient/Questionnaire.rs"
+        ]
+      },
       "post_submit_redirect": "https://ehr.example.com/reports/done",
       "expired_timestamp": "2026-07-14T18:00:00Z"
     }
@@ -232,13 +283,46 @@ Both return `303 See Other` with the session cookie set.
     The `handover_token` from the session creation step. Single-use, and expires after 5 minutes.
   </Property>
   <Property name="next" type="string">
-    Where to send the user after activation. Use the [Launch URL](#launch-url) to open a [Task](/fhir/Task).
+    Where to send the user after activation. Use the [Launch URL](#session-handover) below to open a [Task](/fhir/Task).
   </Property>
 </Properties>
 
 <Note>
   A session can only be handed over once, while it is still inactive. Replaying a consumed or expired token returns `401`.
 </Note>
+
+### The `next` Launch URL
+
+Point `next` at `https://app.tiro.health/external/v1` — the entry point for opening the Tiro.health application from an external system. Note the host: this is a page on the **application** (`app.tiro.health`), not an endpoint on the auth server. It resolves the [Task](/fhir/Task) and sends the user to the right page for its current status. Use it rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
+
+Provide **either** `task` **or** `task:identifier`:
+
+<Properties>
+  <Property name="task" type="string">
+    FHIR reference to the task to open, e.g. `Task/123`. Use this when you store the Tiro.health task id.
+  </Property>
+  <Property name="task:identifier" type="string">
+    External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task. Remember to URL-encode the value: the `|` separator becomes `%7C`, and the `:` in the system URL becomes `%3A`.
+  </Property>
+  <Property name="viewMode" type="string">
+    Optional. `embedded` renders the report without the surrounding application chrome (navigation, top bar) — use this inside iframes and [embedded browsers](/api/embedded-browsers). Defaults to the session's `deployment_mode`.
+  </Property>
+  <Property name="readonly" type="string">
+    Optional. `readonly=yes` opens the report read-only. The value must be the literal `yes`. Only applies when the task opens in the report editor (non-`draft` statuses).
+  </Property>
+</Properties>
+
+The task's status determines the destination:
+
+| Task status | Destination |
+| --- | --- |
+| `draft` | Form selection, so the user can pick a questionnaire for the task |
+| `ready`, `in-progress`, `completed` | The report editor, opened on the task's questionnaire response |
+| `failed` | Error — the task cannot be opened |
+
+Patient and encounter context is read from the task itself, so you do not need to pass them.
+
+The launch page itself can fail: `400` when neither `task` nor `task:identifier` is provided (or the value is malformed), `404` when no task matches the identifier, `409` when more than one matches, and `422` when the task cannot be opened (status `failed`, or a non-`draft` task without a questionnaire response yet).
 
   </Col>
   <Col sticky>
@@ -263,64 +347,7 @@ Both return `303 See Other` with the session cookie set.
 
     </CodeGroup>
 
-    ```json {{ title: 'Response (303 See Other)' }}
-    // Redirects to the 'next' URL with session cookie set
-    Location: https://app.tiro.health/external/v1?task=Task/123
-    Set-Cookie: auth_session=<session_id>; HttpOnly; Secure; SameSite=Strict
-    ```
-
-  </Col>
-</Row>
-
----
-
-## Launch URL {{ tag: 'GET', label: '/external/v1' }}
-
-<Row>
-  <Col>
-
-`/external/v1` is the entry point for opening the Tiro.health application from an external system. Point the `next` parameter of the [handover](#session-handover) at it, and it resolves the [Task](/fhir/Task) and sends the user to the right page for its current status.
-
-Use this route rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
-
-### Query Parameters
-
-Provide **either** `task` **or** `task:identifier`.
-
-<Properties>
-  <Property name="task" type="string">
-    FHIR reference to the task to open, e.g. `Task/123`. Use this when you store the Tiro.health task id.
-  </Property>
-  <Property name="task:identifier" type="string">
-    External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task.
-  </Property>
-</Properties>
-
-### Task Status Handling
-
-The task's status determines the destination:
-
-| Task status | Destination |
-| --- | --- |
-| `draft` | Form selection, so the user can pick a questionnaire for the task |
-| `ready`, `in-progress`, `completed` | The report editor, opened on the task's questionnaire response |
-| `failed` | Error — the task cannot be opened |
-
-Patient and encounter context is read from the task itself, so you do not need to pass them.
-
-### Errors
-
-| Status | Meaning |
-| --- | --- |
-| `400` | Neither `task` nor `task:identifier` was provided, or the value is malformed |
-| `404` | No task matches the given `task:identifier` |
-| `409` | More than one task matches the given `task:identifier` |
-| `422` | The task cannot be opened — it has status `failed`, or a non-draft task has no questionnaire response yet |
-
-  </Col>
-  <Col sticky>
-
-    <CodeGroup title="Launch URL">
+    <CodeGroup title="Launch URLs for next">
 
     ```text {{ title: 'By task reference' }}
     https://app.tiro.health/external/v1?task=Task/123
@@ -332,10 +359,11 @@ Patient and encounter context is read from the task itself, so you do not need t
 
     </CodeGroup>
 
-    <Note>
-      When launching by `task:identifier`, remember to URL-encode the value: the
-      `|` separator becomes `%7C`, and the `:` in the system URL becomes `%3A`.
-    </Note>
+    ```json {{ title: 'Response (303 See Other)' }}
+    // Redirects to the 'next' URL with session cookie set
+    Location: https://app.tiro.health/external/v1?task=Task/123
+    Set-Cookie: auth_session=<session_id>; HttpOnly; Secure; SameSite=Strict
+    ```
 
   </Col>
 </Row>
@@ -359,10 +387,16 @@ Retrieves a session. There are two ways in:
     Unique identifier for the session.
   </Property>
   <Property name="user" type="object">
-    User information including practitioner details.
+    Reference to the Practitioner the session acts as, e.g. `{"type": "Practitioner", "reference": "Practitioner/456"}`.
   </Property>
   <Property name="data_tenant" type="object">
     Data tenant associated with this session.
+  </Property>
+  <Property name="patient" type="object">
+    Reference to the Patient launch context, or `null`.
+  </Property>
+  <Property name="encounter" type="object">
+    Reference to the Encounter launch context, or `null`.
   </Property>
   <Property name="active" type="boolean">
     Whether the session is currently active.
@@ -380,7 +414,7 @@ Retrieves a session. There are two ways in:
     Either `"embedded"` or `"standalone"`.
   </Property>
   <Property name="fhir_server" type="object">
-    FHIR server address and granted scopes for this session.
+    The effective `scope` list granted to this session. The `address` field is `null` for API-created sessions; the FHIR API base URL is `https://reports.tiro.health/fhir/r5`.
   </Property>
 </Properties>
 
@@ -403,24 +437,26 @@ Retrieves a session. There are two ways in:
 
     ```json {{ title: 'Response (200 OK)' }}
     {
-      "id": 12345,
-      "user": {
-        "id": 67890,
-        "email": "doctor@hospital.org",
-        "name": "Dr. Smith"
-      },
+      "id": 789,
+      "user": { "type": "Practitioner", "reference": "Practitioner/456" },
       "data_tenant": {
         "id": 1,
         "name": "Hospital Name"
       },
+      "patient": { "type": "Patient", "reference": "Patient/123" },
+      "encounter": null,
       "active": true,
-      "expired_timestamp": "2025-11-20T18:00:00Z",
-      "created_timestamp": "2025-11-20T10:00:00Z",
-      "last_modified_timestamp": "2025-11-20T10:00:00Z",
+      "expired_timestamp": "2026-07-14T18:00:00Z",
+      "created_timestamp": "2026-07-07T10:00:00Z",
+      "last_modified_timestamp": "2026-07-07T10:00:00Z",
       "deployment_mode": "embedded",
       "fhir_server": {
-        "address": "https://fhir.hospital.org/R4",
-        "scope": ["patient/Patient.read", "patient/QuestionnaireResponse.write"]
+        "address": null,
+        "scope": [
+          "patient/Patient.rs",
+          "patient/QuestionnaireResponse.cruds",
+          "patient/Questionnaire.rs"
+        ]
       }
     }
     ```
@@ -479,30 +515,51 @@ Scopes define what actions and resources a user can access during their session.
 
 ### Scope Format
 
-Scopes follow the FHIR SMART on FHIR format: `<context>/<resourceType>.<action>`
+Scopes follow the FHIR SMART on FHIR format, with an optional filter suffix: `<context>/<resourceType>.<action>[?filters]`
 
-**Supported formats:**
-- `patient/<resourceType>.<action>` - Patient-scoped access to specific resource types
-- `system/<resourceType>.<action>` - System-wide access to specific resource types
+Filters are currently honored for `Questionnaire` scopes only, where they narrow which report templates the session can access — see [Template Access and Filtering](#scope-based-access-control) below.
 
-**Examples:**
-- `patient/QuestionnaireResponse.write` - Write access to reports (QuestionnaireResponses) in the patient's compartment
-- `patient/QuestionnaireResponse.read` - Read access to reports in the patient's compartment
-- `patient/Patient.read` - Read access to patient resources in the patient's compartment
-- `patient/Encounter.read` - Read access to encounters in the patient's compartment
-- `system/QuestionnaireResponse.read` - System-wide read access to all reports
-- `patient/Patient.read patient/QuestionnaireResponse.write` - Multiple scopes can be combined
+**Contexts:**
+- `patient/<resourceType>.<action>` — access limited to the session's **launched patient**. Only meaningful when the session is created with a `patient` (or a Patient `fhirContext` item); without one, `patient/` scopes grant nothing.
+- `user/<resourceType>.<action>` — access to resources the session user owns or authored. Use this when the session has no patient context.
+- `system/<resourceType>.<action>` — tenant-wide access. Only kept for sessions in EHR-managed tenants; in regular tenants it is downgraded to `user/` at session creation.
 
-Reports authored in Tiro.health are stored as FHIR `QuestionnaireResponse` resources, so `QuestionnaireResponse` is the resource type you scope to control read and write access to captured data. `Patient`, `Encounter`, and `Practitioner` are the supporting context resources and are granted read-only.
+**Actions:** `read`, `write`, or `*`. Note that **`write` does not include read** — a session that saves reports must also be able to read them back, so pair `.read` and `.write`, or use `.*`.
+
+**Recommended scopes for a patient-launched session:**
+
+```text
+patient/Patient.read patient/Encounter.read patient/QuestionnaireResponse.* patient/Questionnaire.read
+```
+
+- `patient/QuestionnaireResponse.*` — create, read, and update the patient's reports
+- `patient/Patient.read` / `patient/Encounter.read` — read the launch context
+- `patient/Questionnaire.read` — read the report templates the form needs
+
+Reports authored in Tiro.health are stored as FHIR `QuestionnaireResponse` resources, so `QuestionnaireResponse` is the resource type you scope to control read and write access to captured data.
+
+[SMART v2 permission syntax](https://hl7.org/fhir/smart-app-launch/scopes-and-launch-context.html) is also accepted: any combination of `c` (create), `r` (read), `u` (update), `d` (delete), `s` (search), e.g. `patient/QuestionnaireResponse.cruds`. The v1 forms are converted automatically (`.read` ⇒ `.rs`, `.write` ⇒ `.cud`, `.*` ⇒ `.cruds`), and the session's stored scopes (`fhir_server.scope`) are always in v2 form.
 
 ### How Scopes Work
 
 When a session is created with scopes:
 
-1. The scopes are stored with the session
+1. The requested scopes are **downscoped** to what your data tenant allows (see below), then stored with the session
 2. All FHIR API requests during the session are checked against these scopes
 3. Requests for resources or actions not covered by the scopes are denied
 4. Scopes remain active until the session is deleted or expires
+
+The effective scopes are returned in the create-session response under `fhir_server.scope` — check that field if a session gets unexpected `403`s.
+
+### EHR-managed Data Tenants
+
+In data tenants managed by an EHR integration, sessions are automatically downscoped at creation:
+
+- **`Patient`, `Encounter`, `Practitioner`, and `DocumentReference`** are capped to **read-only by ID**: no create, update, delete, or search — regardless of what was requested. End-users open these resources from the launch context; they never edit them in Tiro.health, since the EHR owns that data.
+- A `*` wildcard is expanded to the EHR-relevant set: full `QuestionnaireResponse` access, read+search `Questionnaire`, and read-only context resources.
+- Other resource scopes (e.g. `QuestionnaireResponse`) pass through with the requested permissions.
+
+This downscoping applies to **user sessions only**. Machine-to-machine calls with your API key are governed by the key's own scopes, so background [data imports](/api/data-import) keep working in EHR-managed tenants. Context resources can also be created at session creation via [`fhirContext` `role/new`](#fhir-context).
 
 ### Example: Restricted Session
 
@@ -513,11 +570,30 @@ curl -X POST https://auth.tiro.health/sessions \
   -H "Content-Type: application/json" \
   -d '{
     "scope": "patient/Patient.read patient/Encounter.read patient/QuestionnaireResponse.read",
+    "user": 456,
     "patient": 123
   }'
 ```
 
 In this session, the user can read patient, encounter, and report data but cannot modify anything. Any attempt to create or update resources will be denied.
+
+### Template Access and Filtering
+
+The `Questionnaire` scope controls which report templates the session user can pick. Template access is **delegated from your API key**: at session creation the scope is automatically constrained to the projects your integration's service account belongs to, so the session user needs no project membership of their own — including users created on the fly via [`fhirContext` `role/new`](#fhir-context).
+
+You can narrow the delegation with filters on the scope (a Tiro.health extension to SMART on FHIR scopes):
+
+```text
+patient/Questionnaire.read?project=53
+patient/Questionnaire.read?url=https://templates.example.org/ct-scan|2.0.0
+patient/Questionnaire.read?specialty=urology
+```
+
+- `project` — one of your service account's projects; other projects are ignored
+- `url` — a single template by canonical URL (optionally with `|version`)
+- `identifier`, `version`, `specialty` — further narrowing, combined with the project filter
+
+Without filters, the user can choose from all templates in your service account's projects. If your account belongs to no projects, the session gets no template access — contact Tiro.health to link your API key to the right project.
 
 ---
 
@@ -551,7 +627,7 @@ When integrating with external systems that use their own identifier namespaces,
         "value": "P-12345"
       },
       "type": "Patient",
-      "role": "launch"
+      "role": "https://tiro.health/fhir/role/new"
     },
     {
       "identifier": {
@@ -559,7 +635,15 @@ When integrating with external systems that use their own identifier namespaces,
         "value": "E-67890"
       },
       "type": "Encounter",
-      "role": "launch"
+      "role": "https://tiro.health/fhir/role/new"
+    },
+    {
+      "identifier": {
+        "system": "http://hospital.org/user-ids",
+        "value": "dr-smith"
+      },
+      "type": "Practitioner",
+      "role": "https://tiro.health/fhir/role/new"
     }
   ]
 }
@@ -567,40 +651,21 @@ When integrating with external systems that use their own identifier namespaces,
 
 **Key features:**
 - **`identifier`**: Specifies the external system identifier (system + value)
-- **`type`**: Resource type (Patient or Encounter)
-- **`role: "launch"`**: Indicates this is the primary launch context for the session
+- **`type`**: Resource type — `Patient`, `Encounter`, or `Practitioner`
+- **`role`**: Controls how the identifier is resolved (see below)
 
 ### Identifier Resolution
 
-When using external identifiers, Tiro.health will:
+The `role` of each context item determines what happens when no resource matches the identifier:
 
-1. Look up existing resources with matching identifiers
-2. Create new resources if no match is found
-3. Associate the session with the resolved or created resources
+- **`https://tiro.health/fhir/role/new`** — create if missing. When no resource matches, a new one is created from the identifier. This is how patient, encounter, and user records are materialised in your data tenant: **you do not need to import them through the FHIR API first**.
+- **`https://tiro.health/fhir/role/find`** — look up only. When no resource matches, session creation fails with `404` (e.g. `"No patient found with identifier …"`).
 
-This enables seamless cross-system integration without requiring ID mapping or pre-registration of resources.
+If `role` is omitted it defaults to `"launch"`, which behaves like `find` — it does **not** create missing resources.
 
----
-
-## Migrating from /session
-
-The singular `/session` endpoints are **deprecated**. They still work, but new integrations should use `/sessions`, and existing ones should move over.
-
-| | Deprecated | Current |
-| --- | --- | --- |
-| Host | `reports.tiro.health` | `auth.tiro.health` |
-| Create | `POST /session` | `POST /sessions` |
-| Handover | `POST /session/$handover` | `GET` or `POST /sessions/$handover` |
-| Read | `GET /session` (cookie) | `GET /sessions/{id}` (API key) or `GET /sessions/current` (cookie) |
-| Delete | `DELETE /session` (cookie) | `DELETE /sessions/{id}` (API key) |
-
-**Authentication does not change.** You keep authenticating with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key), exactly as before.
-
-Two things change beyond the path:
-
-**The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON. You no longer read it off a cookie.
-
-**Deleting a session needs its id.** `DELETE /sessions/{id}` is called by your backend with your API key, rather than by the browser with a cookie. Keep the `id` from the create response.
+<Note>
+  A Practitioner created via `role/new` starts with no project memberships — but they don't need any to pick a template: sessions carry your API key's template access on the `Questionnaire` scope (see [Template Access and Filtering](#scope-based-access-control)). Just make sure the session's scopes include `Questionnaire.read`.
+</Note>
 
 ---
 
@@ -609,7 +674,7 @@ Two things change beyond the path:
 ### Token Expiration
 
 - **Session tokens** expire after 5 minutes and are single-use only
-- **Active sessions** have configurable expiration times
+- **Sessions** expire 7.5 days after creation
 - Expired tokens cannot be used for handover and will return a 401 error
 
 ### Token Security

@@ -28,6 +28,10 @@ The goal of the import step is to represent one instruction: *"this practitioner
 
 **Authentication required.** All import requests are authenticated. See [Authentication](/api/authentication) for how to obtain credentials.
 
+<Note>
+In **EHR-managed data tenants**, *end-user sessions* cannot write `Patient`, `Encounter`, `Practitioner`, or `DocumentReference` — the EHR owns that data. Machine-to-machine imports with your API key are not affected: what the key can write is determined by its own scopes. Alternatively, context resources can be created at session creation via `fhirContext` items with role `https://tiro.health/fhir/role/new` — see [FHIR Context](/api/session-management#fhir-context).
+</Note>
+
 ---
 
 ## Minimum Resources
@@ -37,16 +41,17 @@ At minimum you import three resources. Only the Patient is strictly required to 
 | Resource                                       | Required | Purpose                                                                                                                                             |
 | ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**Patient**](/fhir/Patient)                   | Yes      | The subject of the report. A single `identifier` (system + value) is enough; `name` and other demographics are optional but improve the UI.        |
-| [**Practitioner**](/fhir/Practitioner)         | Yes      | The clinician who will author the report. Importing them ensures they exist as a user in the tenant. A single `identifier` is enough.              |
-| [**Task**](/fhir/Task)                         | Yes      | The `complete-questionnaire` order that appears in the practitioner's worklist. References the Patient via `for`.                                   |
+| [**Practitioner**](/fhir/Practitioner)         | Recommended | The clinician who will author the report. Importing them ensures they exist as a user in the tenant. A single `identifier` is enough.              |
+| [**Task**](/fhir/Task)                         | Recommended | The `complete-questionnaire` order that appears in the worklist. References the Patient via `for`.                                   |
 | [**Encounter**](/fhir/Encounter)               | Optional | Links the report to a specific visit. Referenced from the Task via `encounter` and carried onto the resulting QuestionnaireResponse.               |
 
 <Note>
-  The reporting clinician is imported as a Practitioner so that they exist as a
-  user in your data tenant. The Task itself is not linked to the Practitioner —
-  the acting practitioner is the authenticated user of the session that opens the
-  report. See the [Task](/fhir/Task) reference for the full set of supported
-  fields.
+  Tiro.health Tasks carry no practitioner reference — fields like `Task.owner`
+  or `Task.requester` are ignored. Import the Practitioner so the clinician
+  exists as a user in your tenant: when you
+  [create the session](/api/session-management#fhir-context), identify them with
+  the same identifier (a `fhirContext` item of type `Practitioner`), and the
+  report they submit is attributed to them as `QuestionnaireResponse.author`.
 </Note>
 
 ---
@@ -58,7 +63,7 @@ Post a `transaction` Bundle to the FHIR API root. Resources reference each other
 <Row>
   <Col>
 
-The Bundle below imports a Patient, a Practitioner, and a draft `complete-questionnaire` Task in one atomic operation. If any entry fails, the whole transaction is rolled back.
+The Bundle below imports a Patient, a Practitioner, and a draft `complete-questionnaire` Task in one atomic operation, using the conditional forms so the import can safely run more than once (see [Idempotent Imports](#idempotent-imports)). If any entry fails, the whole transaction is rolled back.
 
 Because the Task's `code.text` becomes the title shown in the worklist, set it to something the practitioner will recognise (e.g. *"CT scan report"*).
 
@@ -85,7 +90,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               }],
               "name": [{"family": "Smith", "given": ["John"]}]
             },
-            "request": { "method": "POST", "url": "Patient" }
+            "request": {
+              "method": "PUT",
+              "url": "Patient?identifier=http://hospital.example.com/patients|PAT-12345"
+            }
           },
           {
             "fullUrl": "urn:uuid:practitioner-001",
@@ -97,7 +105,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               }],
               "name": [{"family": "Jones", "given": ["Sarah"]}]
             },
-            "request": { "method": "POST", "url": "Practitioner" }
+            "request": {
+              "method": "PUT",
+              "url": "Practitioner?identifier=http://hospital.example.com/practitioners|PRAC-67890"
+            }
           },
           {
             "fullUrl": "urn:uuid:task-001",
@@ -119,7 +130,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               },
               "for": { "reference": "urn:uuid:patient-001" }
             },
-            "request": { "method": "POST", "url": "Task" }
+            "request": {
+              "method": "POST",
+              "url": "Task?identifier=http://hospital.example.com/tasks|TASK-54321"
+            }
           }
         ]
       }'
@@ -132,9 +146,9 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
       "resourceType": "Bundle",
       "type": "transaction-response",
       "entry": [
-        { "response": { "status": "201 Created", "location": "Patient/1" } },
-        { "response": { "status": "201 Created", "location": "Practitioner/1" } },
-        { "response": { "status": "201 Created", "location": "Task/1" } }
+        { "response": { "status": "200", "location": "Patient/1" }, "resource": { "...": "..." } },
+        { "response": { "status": "200", "location": "Practitioner/1" }, "resource": { "...": "..." } },
+        { "response": { "status": "201" }, "resource": { "resourceType": "Task", "id": "1", "...": "..." } }
       ]
     }
     ```
@@ -142,33 +156,24 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
   </Col>
 </Row>
 
-Each response entry carries a `location` with the assigned ID. Store the Task location (`Task/1`) if you want to track the report's progress or [fetch the result](/api/data-export) later.
+Each response entry carries the full created or updated resource in `entry.resource` — read the assigned ID from `entry.resource.id` (the conditional updates also carry a `location`, but a plain create does not always set one). Store the Task's id if you want to track the report's progress or [fetch the result](/api/data-export) later.
+
+<Note>
+  Response entries come back in **processing order** (resolved by reference dependencies), which is not necessarily the order of your request entries. Match entries by `resource.resourceType`/`resource.id`, not by position.
+</Note>
 
 ---
 
 ## Idempotent Imports
 
-Because imports usually run in the background — and may run more than once for the same patient — use **conditional create** so repeated imports don't create duplicates. Add an `ifNoneExist` query on the entry: if a resource already matches, Tiro.health reuses it instead of creating a new one.
+Because imports usually run in the background — and may run more than once for the same patient — use the conditional forms so repeated imports don't create duplicates or fail:
 
-```json {{ title: 'Conditional create entry' }}
-{
-  "fullUrl": "urn:uuid:patient-001",
-  "resource": {
-    "resourceType": "Patient",
-    "identifier": [{
-      "system": "http://hospital.example.com/patients",
-      "value": "PAT-12345"
-    }]
-  },
-  "request": {
-    "method": "POST",
-    "url": "Patient",
-    "ifNoneExist": "identifier=http://hospital.example.com/patients|PAT-12345"
-  }
-}
-```
+- **Patient, Encounter, Practitioner** — use a **conditional update** (`PUT <Resource>?identifier={system}|{value}`), as the example above does. It creates the resource when no identifier matches, and updates the existing one in place on re-import — returning `200` in both cases. A plain `POST` is not idempotent: re-importing a Patient whose identifier already exists fails with `409 Conflict`, which rolls back the whole transaction.
+- **Task** — use a **conditional create** (`POST Task?identifier={system}|{value}`). When a task with that identifier already exists, it is returned unchanged (`200`) — deliberately *not* updated, so a re-import never resets a task the practitioner is already working on. When there is no match, the task is created (`201`).
 
-Alternatively, use a conditional update (`PUT Patient?identifier=...`) to upsert a resource — creating it if it does not exist, or updating the matching resource in place. The same pattern applies to Encounter and Practitioner. Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Linking resources to your internal identifiers](/fhir/tips#linking-resources-to-your-internal-identifiers).
+The FHIR `ifNoneExist` conditional-create syntax is **not supported** — it is silently ignored, so an entry relying on it behaves like a plain create.
+
+Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Store your internal identifiers in FHIR resources](/fhir/tips#store-your-internal-identifiers-in-fhir-resources).
 
 ---
 
