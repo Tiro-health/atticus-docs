@@ -14,7 +14,6 @@ export const sections = [
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
   { title: 'FHIR Context', id: 'fhir-context' },
-  { title: 'Migrating from /session', id: 'migrating-from-session' },
   { title: 'Security Considerations', id: 'security-considerations' },
 ]
 
@@ -52,10 +51,6 @@ https://auth.tiro.health
 `POST /sessions`, `GET /sessions/{id}` and `DELETE /sessions/{id}` authenticate with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key) — the base64 encoding of `client_id:client_secret`. The two handover endpoints are unauthenticated by design: they are opened by the end-user's browser and carry a single-use token instead.
 
 The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
-
-<Note>
-  If you are currently calling the singular `/session` endpoints, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
-</Note>
 
 ---
 
@@ -609,29 +604,6 @@ If `role` is omitted it defaults to `"launch"`, which behaves like `find` — it
 <Note>
   A Practitioner created via `role/new` gets a personal workspace but does not belong to any shared project yet, so they cannot pick report templates themselves. Assign users to a project up front, or create tasks with a pre-selected questionnaire on their behalf.
 </Note>
-
----
-
-## Migrating from /session
-
-The singular `/session` endpoints are **deprecated**. They still work, but new integrations should use `/sessions`, and existing ones should move over. Both live on the same host, `auth.tiro.health` — only the paths and semantics change. (Older versions of these docs listed `reports.tiro.health` as the session host; that was never correct, it returns `404`.)
-
-| | Deprecated | Current |
-| --- | --- | --- |
-| Create | `POST /session` | `POST /sessions` |
-| Handover | `POST /session/$handover` | `GET` or `POST /sessions/$handover` |
-| Read | `GET /session` (cookie) | `GET /sessions/{id}` (API key) or `GET /sessions/current` (cookie) |
-| Delete | `DELETE /session` (cookie) | `DELETE /sessions/{id}` (API key) |
-
-**Authentication does not change.** You keep authenticating with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key), exactly as before.
-
-Three things change beyond the path:
-
-**The end-user moves into the request body.** `POST /session` identified the user with the `X-User-Id` header; `POST /sessions` takes a `user` field or a `fhirContext` entry of type `Practitioner` instead, and rejects requests without one (`422`).
-
-**The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON, and the cookie is only set at handover. You no longer read a cookie off the create response.
-
-**Deleting a session needs its id.** `DELETE /sessions/{id}` is called by your backend with your API key, rather than by the browser with a cookie. Keep the `id` from the create response.
 
 ---
 
