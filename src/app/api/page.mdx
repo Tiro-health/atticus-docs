@@ -58,8 +58,8 @@ curl -X POST https://reports.tiro.health/fhir/r5 \
           "name": [{"family": "Smith", "given": ["John"]}]
         },
         "request": {
-          "method": "POST",
-          "url": "Patient"
+          "method": "PUT",
+          "url": "Patient?identifier=http://hospital.example.com/patients|PAT-12345"
         }
       },
       {
@@ -100,7 +100,7 @@ curl -X POST https://reports.tiro.health/fhir/r5 \
         },
         "request": {
           "method": "POST",
-          "url": "Task"
+          "url": "Task?identifier=http://hospital.example.com/tasks|TASK-54321"
         }
       }
     ]

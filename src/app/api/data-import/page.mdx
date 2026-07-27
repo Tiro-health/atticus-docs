@@ -63,7 +63,7 @@ Post a `transaction` Bundle to the FHIR API root. Resources reference each other
 <Row>
   <Col>
 
-The Bundle below imports a Patient, a Practitioner, and a draft `complete-questionnaire` Task in one atomic operation. If any entry fails, the whole transaction is rolled back.
+The Bundle below imports a Patient, a Practitioner, and a draft `complete-questionnaire` Task in one atomic operation, using the conditional forms so the import can safely run more than once (see [Idempotent Imports](#idempotent-imports)). If any entry fails, the whole transaction is rolled back.
 
 Because the Task's `code.text` becomes the title shown in the worklist, set it to something the practitioner will recognise (e.g. *"CT scan report"*).
 
@@ -90,7 +90,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               }],
               "name": [{"family": "Smith", "given": ["John"]}]
             },
-            "request": { "method": "POST", "url": "Patient" }
+            "request": {
+              "method": "PUT",
+              "url": "Patient?identifier=http://hospital.example.com/patients|PAT-12345"
+            }
           },
           {
             "fullUrl": "urn:uuid:practitioner-001",
@@ -127,7 +130,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               },
               "for": { "reference": "urn:uuid:patient-001" }
             },
-            "request": { "method": "POST", "url": "Task" }
+            "request": {
+              "method": "POST",
+              "url": "Task?identifier=http://hospital.example.com/tasks|TASK-54321"
+            }
           }
         ]
       }'
@@ -140,7 +146,7 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
       "resourceType": "Bundle",
       "type": "transaction-response",
       "entry": [
-        { "response": { "status": "201 Created", "location": "Patient/1" } },
+        { "response": { "status": "200 OK", "location": "Patient/1" } },
         { "response": { "status": "200 OK", "location": "Practitioner/1" } },
         { "response": { "status": "201 Created", "location": "Task/1" } }
       ]
@@ -156,29 +162,12 @@ Each response entry carries a `location` with the assigned ID. Store the Task lo
 
 ## Idempotent Imports
 
-Because imports usually run in the background — and may run more than once for the same patient — use **conditional create** so repeated imports don't create duplicates. For `Patient` and `Encounter` entries, add an `ifNoneExist` query on the entry: if a resource already matches, Tiro.health reuses it instead of creating a new one.
+Because imports usually run in the background — and may run more than once for the same patient — use the conditional forms so repeated imports don't create duplicates or fail:
 
-```json {{ title: 'Conditional create entry' }}
-{
-  "fullUrl": "urn:uuid:patient-001",
-  "resource": {
-    "resourceType": "Patient",
-    "identifier": [{
-      "system": "http://hospital.example.com/patients",
-      "value": "PAT-12345"
-    }]
-  },
-  "request": {
-    "method": "POST",
-    "url": "Patient",
-    "ifNoneExist": "identifier=http://hospital.example.com/patients|PAT-12345"
-  }
-}
-```
+- **Patient, Encounter, Practitioner** — use a **conditional update** (`PUT <Resource>?identifier={system}|{value}`), as the example above does. It creates the resource when no identifier matches, and updates the existing one in place on re-import — returning `200` in both cases. A plain `POST` is not idempotent: re-importing a Patient whose identifier already exists fails with `409 Conflict`, which rolls back the whole transaction.
+- **Task** — use a **conditional create** (`POST Task?identifier={system}|{value}`). When a task with that identifier already exists, it is returned unchanged (`200`) — deliberately *not* updated, so a re-import never resets a task the practitioner is already working on. When there is no match, the task is created (`201`).
 
-Alternatively, use a conditional update (`PUT Patient?identifier=...`) to upsert a resource — creating it if it does not exist, or updating the matching resource in place. The same pattern applies to Encounter and Practitioner.
-
-For **Practitioner** entries, the conditional `PUT` is not just an alternative but the recommended form: `ifNoneExist` is not honored on Practitioner creates, so a plain `POST Practitioner` makes a duplicate user on every re-import. Use `PUT Practitioner?identifier=...` (as in the example above) to create the user on first import and match them afterwards.
+The FHIR `ifNoneExist` conditional-create syntax is **not supported** — it is silently ignored, so an entry relying on it behaves like a plain create.
 
 Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Linking resources to your internal identifiers](/fhir/tips#linking-resources-to-your-internal-identifiers).
 
