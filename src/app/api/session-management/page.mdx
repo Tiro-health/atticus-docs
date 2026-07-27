@@ -61,7 +61,7 @@ A typical session follows this lifecycle:
 1. **Session Creation**: Your backend calls `POST /sessions` with the session **user** (the clinician the session acts as), plus scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`. The session is created **inactive** and comes back with a single-use `handover_token`
 2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#launch-url). The session is activated, a secure cookie is set in the browser, and the user lands on the task
 3. **Completing the Report**: The user fills in and submits the report, with access controlled by the session's scopes
-4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` appended as a query parameter
+4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` and the `Task` appended as query parameters
 5. **Session Termination**: Your backend deletes the session via `DELETE /sessions/{id}` (equivalent to logout), or it expires automatically
 
 The session only becomes usable at step 2 — the handover is what activates it and binds it to the end-user's browser. Your backend never holds the session cookie.
@@ -81,7 +81,7 @@ sequenceDiagram
     Tiro-->>Browser: The task's report, ready to complete
     Browser->>Tiro: Submit report
     Tiro-->>Browser: Report submitted
-    Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456
+    Browser->>-Backend: GET post_submit_redirect<br/>?response=QuestionnaireResponse/456&task=Task/123
     Backend->>Tiro: DELETE /sessions/{id}
     Tiro-->>Backend: Session Deleted
 ```
@@ -119,7 +119,7 @@ The **session user is required**: identify who the session acts as via the `user
     Either `"embedded"` or `"standalone"`. Defaults to `"embedded"`.
   </Property>
   <Property name="post_submit_redirect" type="string">
-    URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response as a `response` query parameter, e.g. `?response=QuestionnaireResponse/456`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
+    URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response and the task as query parameters, e.g. `?response=QuestionnaireResponse/456&task=Task/123`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
   </Property>
   <Property name="post_cancel_redirect" type="string">
     URL in your own system to send the user back to when they cancel out of the report instead of submitting it.
@@ -668,7 +668,7 @@ If `role` is omitted it defaults to `"launch"`, which behaves like `find` — it
 ### Token Expiration
 
 - **Session tokens** expire after 5 minutes and are single-use only
-- **Active sessions** have configurable expiration times
+- **Sessions** expire 7.5 days after creation
 - Expired tokens cannot be used for handover and will return a 401 error
 
 ### Token Security
