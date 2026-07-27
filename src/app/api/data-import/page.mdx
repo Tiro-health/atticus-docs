@@ -101,7 +101,10 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
               }],
               "name": [{"family": "Jones", "given": ["Sarah"]}]
             },
-            "request": { "method": "POST", "url": "Practitioner" }
+            "request": {
+              "method": "PUT",
+              "url": "Practitioner?identifier=http://hospital.example.com/practitioners|PRAC-67890"
+            }
           },
           {
             "fullUrl": "urn:uuid:task-001",
@@ -137,7 +140,7 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
       "type": "transaction-response",
       "entry": [
         { "response": { "status": "201 Created", "location": "Patient/1" } },
-        { "response": { "status": "201 Created", "location": "Practitioner/1" } },
+        { "response": { "status": "200 OK", "location": "Practitioner/1" } },
         { "response": { "status": "201 Created", "location": "Task/1" } }
       ]
     }
@@ -152,7 +155,7 @@ Each response entry carries a `location` with the assigned ID. Store the Task lo
 
 ## Idempotent Imports
 
-Because imports usually run in the background — and may run more than once for the same patient — use **conditional create** so repeated imports don't create duplicates. Add an `ifNoneExist` query on the entry: if a resource already matches, Tiro.health reuses it instead of creating a new one.
+Because imports usually run in the background — and may run more than once for the same patient — use **conditional create** so repeated imports don't create duplicates. For `Patient` and `Encounter` entries, add an `ifNoneExist` query on the entry: if a resource already matches, Tiro.health reuses it instead of creating a new one.
 
 ```json {{ title: 'Conditional create entry' }}
 {
@@ -172,7 +175,11 @@ Because imports usually run in the background — and may run more than once for
 }
 ```
 
-Alternatively, use a conditional update (`PUT Patient?identifier=...`) to upsert a resource — creating it if it does not exist, or updating the matching resource in place. The same pattern applies to Encounter and Practitioner. Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Linking resources to your internal identifiers](/fhir/tips#linking-resources-to-your-internal-identifiers).
+Alternatively, use a conditional update (`PUT Patient?identifier=...`) to upsert a resource — creating it if it does not exist, or updating the matching resource in place. The same pattern applies to Encounter and Practitioner.
+
+For **Practitioner** entries, the conditional `PUT` is not just an alternative but the recommended form: `ifNoneExist` is not honored on Practitioner creates, so a plain `POST Practitioner` makes a duplicate user on every re-import. Use `PUT Practitioner?identifier=...` (as in the example above) to create the user on first import and match them afterwards.
+
+Matching is always done on the external `identifier` you provided, so make sure every resource carries a stable identifier from your system. See [Linking resources to your internal identifiers](/fhir/tips#linking-resources-to-your-internal-identifiers).
 
 ---
 

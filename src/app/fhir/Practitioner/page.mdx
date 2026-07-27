@@ -47,6 +47,8 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
 <Row>
   <Col>
     This endpoint allows you to create a new Practitioner.
+
+    Note that this endpoint **always creates** — it does not deduplicate on identifier, and `If-None-Exist` is not honored for Practitioners. For imports that may run more than once, use the [conditional update](#conditionally-update-a-practitioner) (`PUT /Practitioner?identifier=...`) instead, which creates the Practitioner when no match exists.
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/Practitioner">
@@ -106,7 +108,7 @@ The Practitioner model conforms to the FHIR Practitioner resource. The following
 <Row>
   <Col>
     This endpoint allows you to update a Practitioner by matching on specific criteria. The search criteria are provided as query parameters, and the updated Practitioner data is provided in the request body.
-    When no Practitioner is found that matches the search criteria, a **new Practitioner is created**. Currently only identifiers with system 'http://tiro.health/Practitioner' are allowed for matching.
+    When no Practitioner is found that matches the search criteria, a **new Practitioner is created**. Match on the identifier as `{system}|{value}`, using the same stable identifier your system sets on the Practitioner resource. This is the recommended way to import practitioners: repeated imports match the existing user instead of creating duplicates.
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="PUT" label="/Practitioner?identifier=http://tiro.health/Practitioner|12345">

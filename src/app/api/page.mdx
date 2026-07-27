@@ -73,8 +73,8 @@ curl -X POST https://reports.tiro.health/fhir/r5 \
           "name": [{"family": "Jones", "given": ["Sarah"]}]
         },
         "request": {
-          "method": "POST",
-          "url": "Practitioner"
+          "method": "PUT",
+          "url": "Practitioner?identifier=http://hospital.example.com/practitioners|PRAC-67890"
         }
       },
       {
