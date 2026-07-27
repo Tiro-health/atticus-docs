@@ -171,6 +171,37 @@ The **session user is required**: identify who the session acts as via the `user
       }'
     ```
 
+    ```bash {{ title: 'cURL (external identifiers)' }}
+    # Identify the patient and clinician by your own identifiers instead of
+    # Tiro.health IDs — role/new creates them when they do not exist yet.
+    curl -X POST https://auth.tiro.health/sessions \
+      -u "<client_id>:<client_secret>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "scope": "patient/Patient.read patient/QuestionnaireResponse.* patient/Questionnaire.read",
+        "fhirContext": [
+          {
+            "identifier": {
+              "system": "http://hospital.example.com/patients",
+              "value": "PAT-12345"
+            },
+            "type": "Patient",
+            "role": "https://tiro.health/fhir/role/new"
+          },
+          {
+            "identifier": {
+              "system": "http://hospital.example.com/practitioners",
+              "value": "PRAC-67890"
+            },
+            "type": "Practitioner",
+            "role": "https://tiro.health/fhir/role/new"
+          }
+        ],
+        "deployment_mode": "embedded",
+        "post_submit_redirect": "https://ehr.example.com/reports/done"
+      }'
+    ```
+
     ```csharp {{ title: 'C#' }}
     var client = new HttpClient();
     var apiKey = Convert.ToBase64String(
