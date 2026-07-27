@@ -585,13 +585,20 @@ You can narrow the delegation with filters on the scope (a Tiro.health extension
 
 ```text
 patient/Questionnaire.read?project=53
-patient/Questionnaire.read?url=https://templates.example.org/ct-scan|2.0.0
+patient/Questionnaire.read?url=https://templates.example.org/ct-scan
 patient/Questionnaire.read?specialty=urology
 ```
 
 - `project` — one of your service account's projects; other projects are ignored
-- `url` — a single template by canonical URL (optionally with `|version`)
+- `url` — a single template by canonical URL, **without** a `|version` suffix
 - `identifier`, `version`, `specialty` — further narrowing, combined with the project filter
+
+<Note>
+  Don't pin a version in the `url` filter (`url=https://templates.example.org/ct-scan|2.0.0`).
+  The template picker offers the latest active version of each template, so a session whose
+  scope pins any other version sees an **empty template list** rather than an error. Use the
+  bare canonical URL to restrict a session to a single template.
+</Note>
 
 Without filters, the user can choose from all templates in your service account's projects. If your account belongs to no projects, the session gets no template access — contact Tiro.health to link your API key to the right project.
 
