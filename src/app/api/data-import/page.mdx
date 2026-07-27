@@ -46,11 +46,12 @@ At minimum you import three resources. Only the Patient is strictly required to 
 | [**Encounter**](/fhir/Encounter)               | Optional | Links the report to a specific visit. Referenced from the Task via `encounter` and carried onto the resulting QuestionnaireResponse.               |
 
 <Note>
-  The reporting clinician is imported as a Practitioner so that they exist as a
-  user in your data tenant. The Task itself is not linked to the Practitioner —
-  the acting practitioner is the authenticated user of the session that opens the
-  report. See the [Task](/fhir/Task) reference for the full set of supported
-  fields.
+  Tiro.health Tasks carry no practitioner reference — fields like `Task.owner`
+  or `Task.requester` are ignored. Import the Practitioner so the clinician
+  exists as a user in your tenant: when you
+  [create the session](/api/session-management#fhir-context), identify them with
+  the same identifier (a `fhirContext` item of type `Practitioner`), and the
+  report they submit is attributed to them as `QuestionnaireResponse.author`.
 </Note>
 
 ---
