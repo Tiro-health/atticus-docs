@@ -512,11 +512,11 @@ The effective scopes are returned in the create-session response under `fhir_ser
 
 In data tenants managed by an EHR integration, sessions are automatically downscoped at creation:
 
-- **`Patient`, `Encounter`, `Practitioner`, and `DocumentReference`** are capped to **read-only by ID**: no create, update, delete, or search — regardless of what was requested. These resources are opened from the launch context and are materialised via [`fhirContext` `role/new`](#fhir-context), not via FHIR writes.
+- **`Patient`, `Encounter`, `Practitioner`, and `DocumentReference`** are capped to **read-only by ID**: no create, update, delete, or search — regardless of what was requested. End-users open these resources from the launch context; they never edit them in Tiro.health, since the EHR owns that data.
 - A `*` wildcard is expanded to the EHR-relevant set: full `QuestionnaireResponse` access, read+search `Questionnaire`, and read-only context resources.
 - Other resource scopes (e.g. `QuestionnaireResponse`) pass through with the requested permissions.
 
-The same restriction applies to your API key's own FHIR calls in an EHR-managed tenant: `POST /fhir/r5/Patient` returns `403` — patients enter the tenant through session context resolution instead.
+This downscoping applies to **user sessions only**. Machine-to-machine calls with your API key are governed by the key's own scopes, so background [data imports](/api/data-import) keep working in EHR-managed tenants. Context resources can also be created at session creation via [`fhirContext` `role/new`](#fhir-context).
 
 ### Example: Restricted Session
 

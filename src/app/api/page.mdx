@@ -33,7 +33,7 @@ Tiro.health requires minimal patient data to associate with the QuestionnaireRes
 See the [Data Import](./api/data-import) guide for the step-by-step flow, or learn more about available APIs in the [FHIR API](./fhir) section.
 
 <Note>
-In **EHR-managed data tenants**, direct writes to `Patient`, `Encounter`, `Practitioner`, and `DocumentReference` via the FHIR API are blocked (`403 Forbidden`). Instead, these resources are created automatically when you create a session with `fhirContext` items using the role `https://tiro.health/fhir/role/new` — see [FHIR Context](./api/session-management#fhir-context).
+In **EHR-managed data tenants**, *end-user sessions* cannot write `Patient`, `Encounter`, `Practitioner`, or `DocumentReference` — the EHR owns that data. Machine-to-machine imports with your API key are not affected. Context resources can also be created at session creation via `fhirContext` items with role `https://tiro.health/fhir/role/new` — see [FHIR Context](./api/session-management#fhir-context).
 </Note>
 
 <details>
