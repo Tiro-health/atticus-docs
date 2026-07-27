@@ -9,11 +9,9 @@ export const sections = [
   { title: 'Session Lifecycle', id: 'session-lifecycle' },
   { title: 'Create a Session', id: 'create-a-session' },
   { title: 'Session Handover', id: 'session-handover' },
-  { title: 'Launch URL', id: 'launch-url' },
   { title: 'Get Session Information', id: 'get-session-information' },
   { title: 'Delete a Session', id: 'delete-a-session' },
   { title: 'Scope-based Access Control', id: 'scope-based-access-control' },
-  { title: 'Template Access and Filtering', id: 'template-access-and-filtering' },
   { title: 'FHIR Context', id: 'fhir-context' },
   { title: 'Security Considerations', id: 'security-considerations' },
 ]
@@ -58,7 +56,7 @@ https://auth.tiro.health
 A typical session follows this lifecycle:
 
 1. **Session Creation**: Your backend calls `POST /sessions` with the session **user** (the clinician the session acts as), plus scopes, FHIR context (Patient, Encounter) and a `post_submit_redirect`. The session is created **inactive** and comes back with a single-use `handover_token`
-2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#launch-url). The session is activated, a secure cookie is set in the browser, and the user lands on the task
+2. **Browser Handover**: The end-user's browser is sent to `/sessions/$handover` with that token and a `next` [Launch URL](#session-handover). The session is activated, a secure cookie is set in the browser, and the user lands on the task
 3. **Completing the Report**: The user fills in and submits the report, with access controlled by the session's scopes
 4. **Return to Your System**: On submit, Tiro.health sends the browser back to your `post_submit_redirect`, with the resulting `QuestionnaireResponse` and the `Task` appended as query parameters
 5. **Session Termination**: Your backend deletes the session via `DELETE /sessions/{id}` (equivalent to logout), or it expires automatically
@@ -115,7 +113,7 @@ The **session user is required**: identify who the session acts as via the `user
     Array of FHIR context items using **external identifiers** to specify the Patient, Encounter, and Practitioner. Use this when integrating with systems that use different identifier namespaces. See [FHIR Context](#fhir-context) for details.
   </Property>
   <Property name="deployment_mode" type="string">
-    How Tiro.health renders for this session. `"embedded"` (the default) strips the surrounding application chrome — navigation, top bar — for use inside an iframe, WebView, or [embedded browser](/api/embedded-browsers) of your system. `"standalone"` keeps the full application UI, for users working in a regular browser tab. This sets the session default; the [Launch URL's `viewMode`](#launch-url) parameter can override it per launch.
+    How Tiro.health renders for this session. `"embedded"` (the default) strips the surrounding application chrome — navigation, top bar — for use inside an iframe, WebView, or [embedded browser](/api/embedded-browsers) of your system. `"standalone"` keeps the full application UI, for users working in a regular browser tab. This sets the session default; the [Launch URL's `viewMode`](#session-handover) parameter can override it per launch.
   </Property>
   <Property name="post_submit_redirect" type="string">
     URL in your own system to send the user back to once they submit the report. Tiro.health appends the resulting response and the task as query parameters, e.g. `?response=QuestionnaireResponse/456&task=Task/123`, so you know what was submitted. A [Task](/fhir/Task) can also carry its own `post-submit-redirect` input; the session value takes precedence over it.
@@ -285,13 +283,46 @@ Both return `303 See Other` with the session cookie set.
     The `handover_token` from the session creation step. Single-use, and expires after 5 minutes.
   </Property>
   <Property name="next" type="string">
-    Where to send the user after activation. Use the [Launch URL](#launch-url) to open a [Task](/fhir/Task).
+    Where to send the user after activation. Use the [Launch URL](#session-handover) below to open a [Task](/fhir/Task).
   </Property>
 </Properties>
 
 <Note>
   A session can only be handed over once, while it is still inactive. Replaying a consumed or expired token returns `401`.
 </Note>
+
+### The `next` Launch URL
+
+Point `next` at `https://app.tiro.health/external/v1` — the entry point for opening the Tiro.health application from an external system. Note the host: this is a page on the **application** (`app.tiro.health`), not an endpoint on the auth server. It resolves the [Task](/fhir/Task) and sends the user to the right page for its current status. Use it rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
+
+Provide **either** `task` **or** `task:identifier`:
+
+<Properties>
+  <Property name="task" type="string">
+    FHIR reference to the task to open, e.g. `Task/123`. Use this when you store the Tiro.health task id.
+  </Property>
+  <Property name="task:identifier" type="string">
+    External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task. Remember to URL-encode the value: the `|` separator becomes `%7C`, and the `:` in the system URL becomes `%3A`.
+  </Property>
+  <Property name="viewMode" type="string">
+    Optional. `embedded` renders the report without the surrounding application chrome (navigation, top bar) — use this inside iframes and [embedded browsers](/api/embedded-browsers). Defaults to the session's `deployment_mode`.
+  </Property>
+  <Property name="readonly" type="string">
+    Optional. `readonly=yes` opens the report read-only. The value must be the literal `yes`. Only applies when the task opens in the report editor (non-`draft` statuses).
+  </Property>
+</Properties>
+
+The task's status determines the destination:
+
+| Task status | Destination |
+| --- | --- |
+| `draft` | Form selection, so the user can pick a questionnaire for the task |
+| `ready`, `in-progress`, `completed` | The report editor, opened on the task's questionnaire response |
+| `failed` | Error — the task cannot be opened |
+
+Patient and encounter context is read from the task itself, so you do not need to pass them.
+
+The launch page itself can fail: `400` when neither `task` nor `task:identifier` is provided (or the value is malformed), `404` when no task matches the identifier, `409` when more than one matches, and `422` when the task cannot be opened (status `failed`, or a non-`draft` task without a questionnaire response yet).
 
   </Col>
   <Col sticky>
@@ -316,70 +347,7 @@ Both return `303 See Other` with the session cookie set.
 
     </CodeGroup>
 
-    ```json {{ title: 'Response (303 See Other)' }}
-    // Redirects to the 'next' URL with session cookie set
-    Location: https://app.tiro.health/external/v1?task=Task/123
-    Set-Cookie: auth_session=<session_id>; HttpOnly; Secure; SameSite=Strict
-    ```
-
-  </Col>
-</Row>
-
----
-
-## Launch URL
-
-<Row>
-  <Col>
-
-`https://app.tiro.health/external/v1` is the entry point for opening the Tiro.health application from an external system. Note the host: this is a page on the **application** (`app.tiro.health`), not an endpoint on the auth server — the [Base URL](#overview) above does not apply here. Point the `next` parameter of the [handover](#session-handover) at it, and it resolves the [Task](/fhir/Task) and sends the user to the right page for its current status.
-
-Use this route rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
-
-### Query Parameters
-
-Provide **either** `task` **or** `task:identifier`.
-
-<Properties>
-  <Property name="task" type="string">
-    FHIR reference to the task to open, e.g. `Task/123`. Use this when you store the Tiro.health task id.
-  </Property>
-  <Property name="task:identifier" type="string">
-    External identifier of the task, in `{system}|{value}` format. Use this when you only keep your own identifier — the same one you set on `Task.identifier` when creating the task. The identifier must match exactly one task.
-  </Property>
-  <Property name="viewMode" type="string">
-    Optional. `embedded` renders the report without the surrounding application chrome (navigation, top bar) — use this inside iframes and [embedded browsers](/api/embedded-browsers). Defaults to the session's `deployment_mode`.
-  </Property>
-  <Property name="readonly" type="string">
-    Optional. `readonly=yes` opens the report read-only. The value must be the literal `yes`. Only applies when the task opens in the report editor (non-`draft` statuses).
-  </Property>
-</Properties>
-
-### Task Status Handling
-
-The task's status determines the destination:
-
-| Task status | Destination |
-| --- | --- |
-| `draft` | Form selection, so the user can pick a questionnaire for the task |
-| `ready`, `in-progress`, `completed` | The report editor, opened on the task's questionnaire response |
-| `failed` | Error — the task cannot be opened |
-
-Patient and encounter context is read from the task itself, so you do not need to pass them.
-
-### Errors
-
-| Status | Meaning |
-| --- | --- |
-| `400` | Neither `task` nor `task:identifier` was provided, or the value is malformed |
-| `404` | No task matches the given `task:identifier` |
-| `409` | More than one task matches the given `task:identifier` |
-| `422` | The task cannot be opened — it has status `failed`, or a non-draft task has no questionnaire response yet |
-
-  </Col>
-  <Col sticky>
-
-    <CodeGroup title="Launch URL">
+    <CodeGroup title="Launch URLs for next">
 
     ```text {{ title: 'By task reference' }}
     https://app.tiro.health/external/v1?task=Task/123
@@ -391,10 +359,11 @@ Patient and encounter context is read from the task itself, so you do not need t
 
     </CodeGroup>
 
-    <Note>
-      When launching by `task:identifier`, remember to URL-encode the value: the
-      `|` separator becomes `%7C`, and the `:` in the system URL becomes `%3A`.
-    </Note>
+    ```json {{ title: 'Response (303 See Other)' }}
+    // Redirects to the 'next' URL with session cookie set
+    Location: https://app.tiro.health/external/v1?task=Task/123
+    Set-Cookie: auth_session=<session_id>; HttpOnly; Secure; SameSite=Strict
+    ```
 
   </Col>
 </Row>
@@ -606,9 +575,7 @@ curl -X POST https://auth.tiro.health/sessions \
 
 In this session, the user can read patient, encounter, and report data but cannot modify anything. Any attempt to create or update resources will be denied.
 
----
-
-## Template Access and Filtering
+### Template Access and Filtering
 
 The `Questionnaire` scope controls which report templates the session user can pick. Template access is **delegated from your API key**: at session creation the scope is automatically constrained to the projects your integration's service account belongs to, so the session user needs no project membership of their own — including users created on the fly via [`fhirContext` `role/new`](#fhir-context).
 
@@ -695,7 +662,7 @@ The `role` of each context item determines what happens when no resource matches
 If `role` is omitted it defaults to `"launch"`, which behaves like `find` — it does **not** create missing resources.
 
 <Note>
-  A Practitioner created via `role/new` starts with no project memberships — but they don't need any to pick a template: sessions carry your API key's template access on the `Questionnaire` scope (see [Template Access and Filtering](#template-access-and-filtering)). Just make sure the session's scopes include `Questionnaire.read`.
+  A Practitioner created via `role/new` starts with no project memberships — but they don't need any to pick a template: sessions carry your API key's template access on the `Questionnaire` scope (see [Template Access and Filtering](#scope-based-access-control)). Just make sure the session's scopes include `Questionnaire.read`.
 </Note>
 
 ---
