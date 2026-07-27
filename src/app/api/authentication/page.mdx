@@ -74,7 +74,8 @@ The API key belongs to a [data tenant](/guides/data-tenants), which determines w
       -u "client_id:client_secret" \
       -H "Content-Type: application/json" \
       -d '{
-        "scope": "patient/Patient.read",
+        "scope": "patient/Patient.read patient/QuestionnaireResponse.*",
+        "user": 456,
         "patient": 123
       }'
     ```
@@ -88,7 +89,8 @@ The API key belongs to a [data tenant](/guides/data-tenants), which determines w
         new AuthenticationHeaderValue("Basic", credentials);
 
     var payload = new {
-        scope = "patient/Patient.read",
+        scope = "patient/Patient.read patient/QuestionnaireResponse.*",
+        user = 456,
         patient = 123
     };
 
@@ -110,7 +112,8 @@ The API key belongs to a [data tenant](/guides/data-tenants), which determines w
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        scope: 'patient/Patient.read',
+        scope: 'patient/Patient.read patient/QuestionnaireResponse.*',
+        user: 456,
         patient: 123,
       }),
     });
@@ -123,7 +126,8 @@ The API key belongs to a [data tenant](/guides/data-tenants), which determines w
         'https://auth.tiro.health/sessions',
         auth=(client_id, client_secret),
         json={
-            'scope': 'patient/Patient.read',
+            'scope': 'patient/Patient.read patient/QuestionnaireResponse.*',
+            'user': 456,
             'patient': 123,
         },
     )
