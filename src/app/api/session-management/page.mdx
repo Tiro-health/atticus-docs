@@ -327,12 +327,12 @@ Both return `303 See Other` with the session cookie set.
 
 ---
 
-## Launch URL {{ tag: 'GET', label: '/external/v1' }}
+## Launch URL {{ tag: 'GET', label: 'app.tiro.health/external/v1' }}
 
 <Row>
   <Col>
 
-`/external/v1` is the entry point for opening the Tiro.health application from an external system. Point the `next` parameter of the [handover](#session-handover) at it, and it resolves the [Task](/fhir/Task) and sends the user to the right page for its current status.
+`https://app.tiro.health/external/v1` is the entry point for opening the Tiro.health application from an external system. Note the host: this is a page on the **application** (`app.tiro.health`), not an endpoint on the auth server — the [Base URL](#overview) above does not apply here. Point the `next` parameter of the [handover](#session-handover) at it, and it resolves the [Task](/fhir/Task) and sends the user to the right page for its current status.
 
 Use this route rather than linking to an application page directly: the internal page URLs are an implementation detail and may change without notice.
 
