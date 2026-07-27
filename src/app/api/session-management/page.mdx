@@ -54,7 +54,7 @@ https://auth.tiro.health
 The API key must belong to a [data tenant](/guides/data-tenants), otherwise session creation fails with `403`.
 
 <Note>
-  If you are currently calling the singular `/session` endpoints on `reports.tiro.health`, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
+  If you are currently calling the singular `/session` endpoints, see [Migrating from /session](#migrating-from-session). Those endpoints are deprecated.
 </Note>
 
 ---
@@ -614,11 +614,10 @@ If `role` is omitted it defaults to `"launch"`, which behaves like `find` — it
 
 ## Migrating from /session
 
-The singular `/session` endpoints are **deprecated**. They still work, but new integrations should use `/sessions`, and existing ones should move over.
+The singular `/session` endpoints are **deprecated**. They still work, but new integrations should use `/sessions`, and existing ones should move over. Both live on the same host, `auth.tiro.health` — only the paths and semantics change. (Older versions of these docs listed `reports.tiro.health` as the session host; that was never correct, it returns `404`.)
 
 | | Deprecated | Current |
 | --- | --- | --- |
-| Host | `reports.tiro.health` | `auth.tiro.health` |
 | Create | `POST /session` | `POST /sessions` |
 | Handover | `POST /session/$handover` | `GET` or `POST /sessions/$handover` |
 | Read | `GET /session` (cookie) | `GET /sessions/{id}` (API key) or `GET /sessions/current` (cookie) |
@@ -626,9 +625,11 @@ The singular `/session` endpoints are **deprecated**. They still work, but new i
 
 **Authentication does not change.** You keep authenticating with your API key over [HTTP Basic](/fhir/authentication#basic-authentication-api-key), exactly as before.
 
-Two things change beyond the path:
+Three things change beyond the path:
 
-**The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON. You no longer read it off a cookie.
+**The end-user moves into the request body.** `POST /session` identified the user with the `X-User-Id` header; `POST /sessions` takes a `user` field or a `fhirContext` entry of type `Practitioner` instead, and rejects requests without one (`422`).
+
+**The handover token is returned in the response body.** `POST /sessions` responds `201` with `handover_token` in the JSON, and the cookie is only set at handover. You no longer read a cookie off the create response.
 
 **Deleting a session needs its id.** `DELETE /sessions/{id}` is called by your backend with your API key, rather than by the browser with a cookie. Keep the `id` from the create response.
 
