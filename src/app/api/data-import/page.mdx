@@ -146,9 +146,9 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
       "resourceType": "Bundle",
       "type": "transaction-response",
       "entry": [
-        { "response": { "status": "200 OK", "location": "Patient/1" } },
-        { "response": { "status": "200 OK", "location": "Practitioner/1" } },
-        { "response": { "status": "201 Created", "location": "Task/1" } }
+        { "response": { "status": "200", "location": "Patient/1" }, "resource": { "...": "..." } },
+        { "response": { "status": "200", "location": "Practitioner/1" }, "resource": { "...": "..." } },
+        { "response": { "status": "201" }, "resource": { "resourceType": "Task", "id": "1", "...": "..." } }
       ]
     }
     ```
@@ -156,7 +156,11 @@ Because the Task's `code.text` becomes the title shown in the worklist, set it t
   </Col>
 </Row>
 
-Each response entry carries a `location` with the assigned ID. Store the Task location (`Task/1`) if you want to track the report's progress or [fetch the result](/api/data-export) later.
+Each response entry carries the full created or updated resource in `entry.resource` — read the assigned ID from `entry.resource.id` (the conditional updates also carry a `location`, but a plain create does not always set one). Store the Task's id if you want to track the report's progress or [fetch the result](/api/data-export) later.
+
+<Note>
+  Response entries come back in **processing order** (resolved by reference dependencies), which is not necessarily the order of your request entries. Match entries by `resource.resourceType`/`resource.id`, not by position.
+</Note>
 
 ---
 
