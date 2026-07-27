@@ -221,7 +221,7 @@ If your system tracked the Task from the [import step](/api/data-import), you ca
 ```bash
 curl -G https://reports.tiro.health/fhir/r5/Task \
   --data-urlencode "identifier=http://hospital.example.com/tasks|TASK-54321" \
-  --data-urlencode "_include=Task:output:composition" \
+  --data-urlencode "_include=Task:output:Composition" \
   -H "Authorization: Basic {{apikey}}" \
   -H "Content-Type: application/fhir+json"
 ```
