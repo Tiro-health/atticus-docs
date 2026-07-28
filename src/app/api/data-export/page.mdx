@@ -8,7 +8,10 @@ export const sections = [
   { title: 'Overview', id: 'overview' },
   { title: 'The Submit Callback', id: 'the-submit-callback' },
   { title: 'Configuring the Redirect', id: 'configuring-the-redirect' },
-  { title: 'Fetch the QuestionnaireResponse', id: 'fetch-the-questionnaire-response' },
+  {
+    title: 'Fetch the QuestionnaireResponse',
+    id: 'fetch-the-questionnaire-response',
+  },
   { title: 'Fetch the Composition', id: 'fetch-the-composition' },
   { title: 'Native Applications', id: 'native-applications' },
 ]
@@ -26,8 +29,8 @@ Data export is the final step of a Capture API integration. It follows [Data Imp
 The submission flow has three parts:
 
 1. **User clicks submit.** The practitioner completes their work in Tiro.health and submits.
-2. **Data is persisted.** The report is saved to your data tenant as a `completed` [QuestionnaireResponse](/fhir/QuestionnaireResponse), and a human-readable narrative is generated.
-3. **Redirect and retrieval.** The user's browser is redirected to a URL you configured. That redirect is both the return path for the user *and* the trigger for your backend to fetch the data.
+2. **Data is persisted.** The report is saved to your data tenant as a `completed` [QuestionnaireResponse](/fhir/QuestionnaireResponse) with a human-readable narrative, and its structured artifacts — a [Composition](#fetch-the-composition) and any resources the template extracts — are persisted and attached to the [Task](/fhir/Task) as outputs.
+3. **Redirect and retrieval.** The user's browser is redirected to a URL you configured. That redirect is both the return path for the user _and_ the trigger for your backend to fetch the data.
 
 <Note>
   The submit callback is a **browser redirect**, not a server-to-server webhook.
@@ -45,12 +48,12 @@ On submit, Tiro.health redirects the browser to your configured URL and appends 
 GET https://your-system.example.com/submit?response=QuestionnaireResponse/11427&task=Task/456
 ```
 
-| Parameter  | Description                                                             |
-| ---------- | --------------------------------------------------------------------- |
-| `response` | Reference to the completed [QuestionnaireResponse](/fhir/QuestionnaireResponse) — the report. |
+| Parameter  | Description                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `response` | Reference to the completed [QuestionnaireResponse](/fhir/QuestionnaireResponse) — the report.     |
 | `task`     | Reference to the [Task](/fhir/Task) that was fulfilled, when the report was launched from a task. |
 
-Extract the `response` reference from the query string, then call back into the FHIR API to retrieve the data. The redirect only tells you *that* a report is ready and *which* one — you still fetch the content yourself.
+Extract the `response` reference from the query string, then call back into the FHIR API to retrieve the data. The redirect only tells you _that_ a report is ready and _which_ one — you still fetch the content yourself.
 
 ---
 
@@ -132,79 +135,143 @@ The human-readable report is available directly on the response as the generated
 </Row>
 
 <Note>
-  You can also read the report reference back off the Task. Fetching
-  [`GET /Task/{id}`](/fhir/Task#get-a-task) returns the completed
-  QuestionnaireResponse as a `questionnaire-response` output, which is useful when
-  your system tracked the Task id from the import step.
+  You can also read the report reference back off the Task. Fetching [`GET
+  /Task/{id}`](/fhir/Task#get-a-task) returns the completed
+  QuestionnaireResponse as a `questionnaire-response` output, which is useful
+  when your system tracked the Task id from the import step.
 </Note>
 
 ---
 
-## Fetch the Composition {{ tag: 'GET', label: '/Composition/:id' }}
+## Fetch the Composition {{ tag: 'GET', label: '/Task' }}
 
 <Row>
   <Col>
 
-For a structured, document-style view of the report, request the **Composition**. Tiro.health builds it on the fly from the report's content: one `section` per block, each with a `title`, a generated narrative (`text.div`, XHTML), and a stable `code`.
+For a structured, document-style view of the report, request the **Composition**. It is produced by structured-data extraction when the report is submitted, stored as its own resource, and linked to the [Task](/fhir/Task) as a `composition` output — so you retrieve it _through the Task_, using `_include`.
 
-The Composition shares the same id as the report — use the id from the `response` reference.
+### How the Composition comes into existence
 
-### Why sections carry codes
+On submit, three things happen server-side:
 
-Each section has a **fixed code** (LOINC or SNOMED CT) that is stable per template, unlike the `linkId`s inside a QuestionnaireResponse. This lets you map each section directly onto a field in your own system — for example, mapping `section.code = 59776-5` ("Procedure findings") to your *Findings* field. Because the codes are fixed per template, your integration can rely on them.
+1. The [QuestionnaireResponse](/fhir/QuestionnaireResponse) is set to `completed`.
+2. Extraction runs against the template's blueprints and **persists** the resulting resources — a Composition, plus any `Observation`s or other resources the template declares — together with a `Provenance` record pointing back at the QuestionnaireResponse.
+3. Those persisted resources are attached to the Task as `composition` outputs.
+
+The Composition therefore carries **its own id**, assigned at extraction time. It is _not_ the QuestionnaireResponse id, and a report re-submitted (re-extracted) gets a new Composition id.
+
+### Retrieving it
+
+Search the Task and pull the outputs into the same Bundle:
+
+- `_include=Task:output:Composition` — the extracted Composition(s) only.
+- `_include=Task:output` — every extracted resource _and_ the QuestionnaireResponse.
+
+Filter with `_id` using the Task id from the redirect, or with your own `identifier` if you tracked the Task from the [import step](/api/data-import) — convenient in integration engines (e.g. MIRTH) that key off their own identifier. `_include` cannot be combined with `_graph`.
+
+<Note>
+  **Deprecated:** `GET /Composition/{id}` does not serve extracted Compositions.
+  It reads the legacy report tables and interprets the id as a report id, so for
+  reports created through the Capture API it returns an empty or unrelated
+  document. Use the Task `_include` path above.
+</Note>
+
+### What the Composition contains
+
+- `status` — `final`.
+- `type` — the template's own coding, or LOINC `11506-3` (_Progress note_) when the template declares none.
+- `title` — the report title, rendered from the template.
+- `section[]` — one entry per template block, each with a `title` and a generated narrative (`text.div`, XHTML). Sections nest where the template nests groups.
+
+Sections are identified by `title` and position, in template order. The generated blueprint does not emit `section.code`, so don't key your mapping on codes unless your template's blueprint pins them explicitly — talk to us if you need that.
 
 ### Language
 
-The Composition and its section narratives are generated in the language the clinician selected while completing the report. The other translations are dropped, so you always receive one consistent language version per report — never a mix.
+The Composition and its section narratives are generated in the language the clinician selected while completing the report. Sections without content in that language are dropped rather than falling back, so you always receive one consistent language version per report — never a mix.
 
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/Composition/11427">
+    <CodeGroup title="Request" tag="GET" label="/Task">
 
     ```bash {{ title: 'cURL' }}
-    curl -G https://reports.tiro.health/fhir/r5/Composition/11427 \
+    curl -G https://reports.tiro.health/fhir/r5/Task \
+      --data-urlencode "_id=456" \
+      --data-urlencode "_include=Task:output:Composition" \
       -H "Authorization: Basic {{apikey}}" \
       -H "Content-Type: application/fhir+json"
     ```
 
     ```cs {{ title: 'C#' }}
     var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
-    var composition = client.Read<Composition>("11427");
+    var searchParams = new SearchParams()
+        .Where("_id=456")
+        .Include("Task:output:Composition");
+
+    var bundle = client.Search<Task>(searchParams);
     ```
 
     </CodeGroup>
 
-    ```json {{ title: 'Response' }}
+    ```json {{ title: 'Response (searchset)' }}
     {
-      "resourceType": "Composition",
-      "id": "11427",
-      "status": "preliminary",
-      "type": {
-        "coding": [{
-          "system": "http://loinc.org",
-          "code": "11506-3",
-          "display": "Report"
-        }],
-        "text": "Report"
-      },
-      "date": "2025-11-20",
-      "title": "CT scan report",
-      "author": [{ "reference": "Practitioner/1" }],
-      "subject": [{ "reference": "Patient/123" }],
-      "section": [
+      "resourceType": "Bundle",
+      "type": "searchset",
+      "total": 1,
+      "entry": [
         {
-          "title": "Findings",
-          "code": {
-            "coding": [{
-              "system": "http://loinc.org",
-              "code": "59776-5",
-              "display": "Procedure findings Narrative"
-            }]
-          },
-          "text": {
-            "status": "generated",
-            "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">...section narrative...</div>"
+          "fullUrl": "https://reports.tiro.health/fhir/r5/Task/456",
+          "search": { "mode": "match" },
+          "resource": {
+            "resourceType": "Task",
+            "id": "456",
+            "status": "completed",
+            "output": [
+              {
+                "type": {
+                  "coding": [{
+                    "system": "http://fhir.tiro.health/CodeSystem/task-output",
+                    "code": "questionnaire-response"
+                  }]
+                },
+                "valueReference": { "reference": "QuestionnaireResponse/11427" }
+              },
+              {
+                "type": {
+                  "coding": [{
+                    "system": "http://fhir.tiro.health/CodeSystem/task-output",
+                    "code": "composition"
+                  }]
+                },
+                "valueReference": { "reference": "Composition/8842" }
+              }
+            ]
+          }
+        },
+        {
+          "fullUrl": "https://reports.tiro.health/fhir/r5/Composition/8842",
+          "search": { "mode": "include" },
+          "resource": {
+            "resourceType": "Composition",
+            "id": "8842",
+            "status": "final",
+            "type": {
+              "coding": [{
+                "system": "http://loinc.org",
+                "code": "11506-3",
+                "display": "Progress note"
+              }]
+            },
+            "title": "CT scan report",
+            "section": [
+              {
+                "title": "Findings",
+                "text": {
+                  "status": "generated",
+                  "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">...section narrative...</div>"
+                }
+              }
+            ]
           }
         }
       ]
@@ -214,24 +281,11 @@ The Composition and its section narratives are generated in the language the cli
   </Col>
 </Row>
 
-### Retrieving the Composition through the Task
-
-If your system tracked the Task from the [import step](/api/data-import), you can fetch the Task and its linked Composition in a single request using `_include`. This is convenient in integration engines (e.g. MIRTH) that key off your own Task identifier:
-
-```bash
-curl -G https://reports.tiro.health/fhir/r5/Task \
-  --data-urlencode "identifier=http://hospital.example.com/tasks|TASK-54321" \
-  --data-urlencode "_include=Task:output:Composition" \
-  -H "Authorization: Basic {{apikey}}" \
-  -H "Content-Type: application/fhir+json"
-```
-
-The response is a Bundle containing the Task plus the Composition it references through its `composition` output.
-
 <Note>
-  Tiro.health does not expose a `$document` operation or a server-side PDF/HTML
-  export. The Composition and the QuestionnaireResponse `text` narrative are the
-  rendered outputs available through the API.
+  Tiro.health does not expose a `$document` operation. The Composition and the
+  QuestionnaireResponse `text` narrative are the rendered outputs available
+  through this API; PDF rendering is a separate operation that is not part of
+  the data-export contract.
 </Note>
 
 ---
