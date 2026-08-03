@@ -6,7 +6,10 @@ export const metadata = {
 
 export const sections = [
   { title: 'Status codes', id: 'status-codes' },
-  { title: 'The OperationOutcome resource', id: 'the-operation-outcome-resource' },
+  {
+    title: 'The OperationOutcome resource',
+    id: 'the-operation-outcome-resource',
+  },
   { title: 'Issue codes', id: 'issue-codes' },
   { title: 'Common errors', id: 'common-errors' },
   { title: 'Handling errors in code', id: 'handling-errors-in-code' },
@@ -16,7 +19,7 @@ export const sections = [
 
 When something goes wrong while you work with the Atticus FHIR API, the response tells you what happened in two ways: the **HTTP status code** and a machine-readable **FHIR `OperationOutcome`** resource in the body. Together they let you detect, classify, and debug a failure programmatically before reaching out to support. {{ className: 'lead' }}
 
-You can tell whether a request succeeded from the HTTP status code. When a request fails, the `OperationOutcome` body carries one or more *issues* — each with a `severity`, a machine-readable `code`, and a human-readable `details.text` you can surface to your users or log.
+You can tell whether a request succeeded from the HTTP status code. When a request fails, the `OperationOutcome` body carries one or more _issues_ — each with a `severity`, a machine-readable `code`, and a human-readable `details.text` you can surface to your users or log.
 
 <Note>
   Surface `details.text` to your users (or at least your logs) rather than a
@@ -41,6 +44,11 @@ The API uses conventional HTTP status codes to indicate the outcome of a request
     (a malformed body, a missing resource, insufficient permissions, or a
     configuration problem). The `OperationOutcome` body explains what to fix.
   </Property>
+  <Property name="401 Unauthorized">
+    Authentication failed or is missing. Unlike other errors, the body is a
+    plain JSON object (`{"detail": "..."}`), not an `OperationOutcome` — handle
+    it before attempting to parse an `OperationOutcome`.
+  </Property>
   <Property name="5xx">
     A server error on our side. These are reported to our monitoring
     automatically; retry with backoff and contact support if they persist.
@@ -51,7 +59,7 @@ The API uses conventional HTTP status codes to indicate the outcome of a request
 
 ## The OperationOutcome resource
 
-Every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutcome`](https://hl7.org/fhir/R5/operationoutcome.html) resource. Its `issue` array always contains at least one entry.
+Nearly every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutcome`](https://hl7.org/fhir/R5/operationoutcome.html) resource; its `issue` array always contains at least one entry. The exceptions are authentication failures (`401`) and some search-parameter validation errors, which return a plain JSON body of the shape `{"detail": "..."}` instead.
 
 <Row>
   <Col>
@@ -82,7 +90,8 @@ Every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutc
       </Property>
       <Property name="issue[].expression" type="string[]">
         Optional FHIRPath expression(s) pointing at the element(s) at fault —
-        present on validation (`422`) errors.
+        present on validation errors (for example a `400` content-validation
+        failure on a submitted `QuestionnaireResponse`).
       </Property>
     </Properties>
 
@@ -113,19 +122,21 @@ Every error response on the FHIR API (`/fhir/r5`) returns a FHIR [`OperationOutc
 
 The `issue[].code` value classifies the failure and maps to the HTTP status below. Always branch on `code` rather than parsing `details.text`.
 
-| `code`         | HTTP status | Meaning |
-| -------------- | ----------- | ------- |
-| `invalid`       | `400 Bad Request` | The request is syntactically valid but references something that cannot be used — e.g. a questionnaire canonical that does not resolve to an active template. |
-| `multiple-matches` | `400 Bad Request` | A search expected to match a single resource matched several. Narrow your search parameters. |
-| `not-supported` | `400 Bad Request` | The requested operation or combination of parameters is not supported. |
-| `forbidden`     | `403 Forbidden` | You are authenticated but not allowed to access this resource (includes row-level access denials). |
-| `not-found`     | `404 Not Found` | The referenced resource does not exist or is not visible to you. |
-| `conflict`      | `409 Conflict` | The request conflicts with the current state of the resource. |
-| `duplicate`     | `409 Conflict` | A resource with the same unique identity already exists. The `Location` header points at the existing resource. |
-| `conflict`      | `412 Precondition Failed` | A conditional request failed because the resource changed since you last read it (`If-Match`/ETag). |
-| `required` / `business-rule` | `422 Unprocessable Content` | The resource failed validation. `expression` points at the offending element(s); for questionnaire responses this is a FHIRPath into the submitted resource. |
-| `not-supported` | `501 Not Implemented` | The operation is recognised but not yet implemented. |
-| `exception`     | `500 Internal Server Error` | An unexpected error on our side. Reported to monitoring automatically. |
+| `code`                       | HTTP status                 | Meaning                                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `invalid`                    | `400 Bad Request`           | The request is syntactically valid but references something that cannot be used — e.g. a questionnaire canonical that does not resolve to an active template.                                                                                                                                                  |
+| `multiple-matches`           | `400 Bad Request`           | A search expected to match a single resource matched several. Narrow your search parameters.                                                                                                                                                                                                                   |
+| `not-supported`              | `400 Bad Request`           | The requested operation or combination of parameters is not supported.                                                                                                                                                                                                                                         |
+| `required` / `value`         | `400 Bad Request`           | A submitted resource failed content validation — e.g. a `QuestionnaireResponse` missing a required answer. `expression` points at the offending element(s) with a FHIRPath into the submitted resource.                                                                                                        |
+| `forbidden`                  | `403 Forbidden`             | You are authenticated but not allowed to access this resource (includes row-level access denials).                                                                                                                                                                                                             |
+| `not-found`                  | `404 Not Found`             | The referenced resource does not exist or is not visible to you.                                                                                                                                                                                                                                               |
+| `conflict`                   | `409 Conflict`              | The request conflicts with the current state of the resource.                                                                                                                                                                                                                                                  |
+| `duplicate`                  | `409 Conflict`              | A resource with the same unique identity already exists. For `Patient`, `Encounter`, and `Task` creates the `Location` header points at the existing resource; a duplicate-identifier `QuestionnaireResponse` create instead returns `conflict` with no `Location` header — don't branch on `duplicate` alone. |
+| `conflict`                   | `412 Precondition Failed`   | A conditional request failed because the resource changed since you last read it (`If-Match`/ETag).                                                                                                                                                                                                            |
+| `required` / `business-rule` | `422 Unprocessable Content` | The request body does not match the expected schema (shape) of the resource.                                                                                                                                                                                                                                   |
+| `not-supported`              | `501 Not Implemented`       | The operation is recognised but not yet implemented.                                                                                                                                                                                                                                                           |
+| `unknown`                    | `500 Internal Server Error` | An unexpected error on our side. Reported to monitoring automatically.                                                                                                                                                                                                                                         |
+| `exception`                  | `500 Internal Server Error` | Appears only on entry responses inside a [transaction/batch bundle](https://hl7.org/fhir/R5/http.html#transaction), accompanying a `500` or `422` entry status.                                                                                                                                                |
 
 ---
 
@@ -133,11 +144,11 @@ The `issue[].code` value classifies the failure and maps to the HTTP status belo
 
 ### Questionnaire (template) is not active or doesn't exist
 
-When you create or `$initialize` a **Complete Questionnaire** [Task](./Task), you reference the template through a *questionnaire canonical* — the template URL, optionally pinned to a version with a `|<version>` suffix (for example `…/0123456789abcdef0123456789abcdef|1.1.0`).
+When you create or `$initialize` a **Complete Questionnaire** [Task](./Task), you reference the template through a _questionnaire canonical_ — the template URL, optionally pinned to a version with a `|<version>` suffix (for example `…/0123456789abcdef0123456789abcdef|1.1.0`).
 
 If that **exact version** is no longer `active` — because it was retired or superseded by a newer publication — the canonical resolves to nothing and the API returns a `400` with `code: invalid` and a `details.text` naming the URL and version at fault (see the example above).
 
-**Why it happens.** A *version-pinned* canonical only resolves while that precise version is active. Publishing a new version of the template retires the old one, so any integration still configured with the old pinned version starts failing — typically surfacing to the end user as "the application can't be opened".
+**Why it happens.** A _version-pinned_ canonical only resolves while that precise version is active. Publishing a new version of the template retires the old one, so any integration still configured with the old pinned version starts failing — typically surfacing to the end user as "the application can't be opened".
 
 **How to fix it.** Configure a **version-independent** canonical by dropping the `|<version>` suffix; it always resolves to the latest active version of the template:
 
@@ -148,11 +159,11 @@ If that **exact version** is no longer `active` — because it was retired or su
 
 Pin a version only when you deliberately need a fixed historical template and you keep that version published.
 
-### Validation failures (422)
+### Validation failures (400)
 
-When a submitted resource (for example a `QuestionnaireResponse`) fails validation, the API returns `422 Unprocessable Content`. Each `issue` carries an `expression` with the FHIRPath to the offending element, so you can map the error back to the exact field:
+When a submitted resource (for example a `QuestionnaireResponse`) fails content validation on create or update, the API returns `400 Bad Request` with issue codes such as `required` and `value`. Each `issue` carries an `expression` with the FHIRPath to the offending element, so you can map the error back to the exact field. (`422 Unprocessable Content` is reserved for schema-level errors, where the request body itself does not match the expected resource shape.)
 
-```json {{ title: "Example validation error (422)" }}
+```json {{ title: "Example validation error (400)" }}
 {
   "resourceType": "OperationOutcome",
   "issue": [
@@ -160,7 +171,9 @@ When a submitted resource (for example a `QuestionnaireResponse`) fails validati
       "severity": "error",
       "code": "required",
       "details": { "text": "Field required" },
-      "expression": ["QuestionnaireResponse.item[0].answer[0].valueCoding.system"]
+      "expression": [
+        "QuestionnaireResponse.item[0].answer[0].valueCoding.system"
+      ]
     }
   ]
 }

@@ -28,7 +28,9 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
     <Properties>
       <Property name="fullUrl" type="uri">
         A temporary UUID that can be used to reference the resource in other
-        entries.
+        entries. The value must literally match the format
+        `urn:uuid:<uuid>`. Using a FHIR-legal absolute URL as `fullUrl`
+        causes the whole Bundle to fail with a `422` error.
       </Property>
       <Property name="resource" type="Resource">
         The resource to be created, updated. Not required for DELETE operations.
@@ -37,8 +39,8 @@ A FHIR Bundle is a container for a collection of resources. When used for transa
         The request object contains the HTTP method and URL for the operation.
         <Properties>
           <Property name="method" type="code" required>
-            The HTTP method for the operation. Must be one of `POST`, `PUT`, or
-            `DELETE`.
+            The HTTP method for the operation. Must be one of `GET`, `POST`,
+            `PUT`, or `DELETE`.
           </Property>
           <Property name="url" type="string" required>
             The relative URL for the resource. For example, `Patient` or
@@ -100,7 +102,7 @@ specification](https://www.hl7.org/fhir/r5/bundle.html).
     ```
 
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
 
     var bundle = new Bundle
     {
@@ -149,15 +151,43 @@ specification](https://www.hl7.org/fhir/r5/bundle.html).
       "type": "transaction-response",
       "entry": [
         {
+          "resource": {
+            "resourceType": "Patient",
+            "id": "1",
+            "name": [{
+              "given": ["John"],
+              "family": "Smith"
+            }]
+          },
+          "link": [
+            {
+              "relation": "self",
+              "url": "Patient/1"
+            }
+          ],
           "response": {
-            "status": "201 Created",
-            "location": "Patient/1",
+            "status": "201",
+            "location": "Patient/1"
           }
         },
         {
+          "resource": {
+            "resourceType": "Encounter",
+            "id": "1",
+            "status": "in-progress",
+            "subject": {
+              "reference": "Patient/1"
+            }
+          },
+          "link": [
+            {
+              "relation": "self",
+              "url": "Encounter/1"
+            }
+          ],
           "response": {
-            "status": "201 Created",
-            "location": "Encounter/1",
+            "status": "201",
+            "location": "Encounter/1"
           }
         }
       ]
@@ -174,6 +204,15 @@ specification](https://www.hl7.org/fhir/r5/bundle.html).
 - The server processes the transaction atomically - either all operations succeed or none do
 - If any operation fails, the entire transaction is rolled back and an OperationOutcome is returned
 - References between resources in the transaction can use the temporary UUIDs specified in `fullUrl`
+- Only resources whose endpoints are transaction-enabled can appear in a bundle entry. Supported resources include `Patient`, `Encounter`, `Practitioner`, `Task`, `Questionnaire`, `QuestionnaireResponse`, `Binary` and `DocumentReference`, among others. An entry targeting an unsupported path (e.g. `PractitionerRole`, `Composition`) aborts the whole bundle with a "No matching route found" error.
+- `request.ifNoneExist` is accepted in the bundle but is not honored by any endpoint - conditional create silently degrades to a plain create (which may then return a `409` error on duplicate identifiers).
+
+<Note>
+  Response entries are returned in **execution order** - the server
+  topologically sorts entries by their `urn:uuid` dependencies - not in request
+  order. Do not correlate request entry N with response entry N positionally;
+  match on the returned `resource` or `response.location` instead.
+</Note>
 
 ## Common Use Cases
 
@@ -185,7 +224,7 @@ specification](https://www.hl7.org/fhir/r5/bundle.html).
 ## Response headers in a Bundle
 
 Most endpoints of the FHIR API use HTTP response headers to provide the exact location of a resource.
-The transaction response Bundle keeps these headers in the response object of the entry, which contains the status code and the location header.
+The transaction response Bundle keeps these headers in the entry: the `response` object contains the status code and the location header, and the `Link` headers are mapped to the entry's `link` array. Each successful entry also contains the full created or updated resource in `resource`. Response entries have no `fullUrl`.
 
 ```json
 {
@@ -193,9 +232,19 @@ The transaction response Bundle keeps these headers in the response object of th
   "type": "transaction-response",
   "entry": [
     {
-      "fullUrl": "https://reports.tiro.health/fhir/r5/QuestionnaireResponse/123",
+      "resource": {
+        "resourceType": "QuestionnaireResponse",
+        "id": "123",
+        "status": "in-progress"
+      },
+      "link": [
+        {
+          "relation": "self",
+          "url": "QuestionnaireResponse/123"
+        }
+      ],
       "response": {
-        "status": "201 Created",
+        "status": "201",
         "location": "QuestionnaireResponse/123"
       }
     }
@@ -217,7 +266,7 @@ If any operation in the transaction fails, the server will return an OperationOu
   "issue": [
     {
       "severity": "error",
-      "code": "processing",
+      "code": "exception",
       "diagnostics": "Transaction failed: Invalid resource in entry[0]"
     }
   ]

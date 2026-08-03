@@ -28,8 +28,10 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     An array of
     [`Identifier`](https://hl7.org/fhir/R5/datatypes.html#identifier) objects
     for this patient (e.g. MRN, SSN). This is the place to store EHR identifiers
-    or hospital identifiers for the patient. More information about identifiers
-    in Atticus can be found
+    or hospital identifiers for the patient. The API only accepts the `system`
+    and `value` fields (both required) on each identifier. Any other Identifier
+    field (`use`, `type`, `period`, `assigner`) is rejected with a `422`
+    validation error. More information about identifiers in Atticus can be found
     [here](./tips#store-your-internal-identifiers-in-fhir-resources).
   </Property>
   <Property
@@ -40,6 +42,10 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
     The name of the patient. This includes given names and family name. Name
     contains an array of FHIR
     [`HumanName`](https://hl7.org/fhir/R5/datatypes.html#humanname) objects.
+    Only the first entry in the array is stored; additional entries are
+    discarded. Within a name, only `prefix`, `given`, `family`, and `text` are
+    used; other HumanName fields (`use`, `suffix`, `period`) are silently
+    ignored.
   </Property>
   <Property
     name="birthDate"
@@ -65,6 +71,13 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 <Row>
   <Col>
     This endpoint allows you to create a new Patient.
+
+    <Note>
+      Creating a patient whose `identifier` already exists in the tenant
+      returns `409 Conflict` with issue code `duplicate` and a `Location`
+      header pointing at the existing Patient.
+    </Note>
+
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/Patient">
@@ -87,7 +100,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Name = new List<HumanName>
@@ -134,7 +147,14 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 <Row>
   <Col>
     This endpoint allows you to update a Patient by matching on specific criteria. The search criteria are provided as query parameters, and the updated Patient data is provided in the request body.
-    When no Patient is found that matches the search criteria, a **new Patient is created**.
+    The `?identifier=` query parameter is **required**: a bare `PUT /Patient` without it returns a `422`.
+    When no Patient is found that matches the search criteria, a **new Patient is created**; the response status is still `200 OK` (not `201`).
+
+    <Note>
+      Conditional PUT **merges** the submitted identifiers with the existing
+      ones, whereas `PUT /Patient/{id}` **replaces** the identifier list.
+    </Note>
+
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="PUT" label="/Patient?identifier=http://hospital.example.org/identifiers/mrn|12345">
@@ -157,7 +177,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Name = new List<HumanName>
@@ -202,7 +222,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 
 <Row>
   <Col>
-    This endpoint allows you to update an existing Patient by providing both the Patient id and the updated Patient data. The entire Patient resource must be included in the request.
+    This endpoint allows you to update an existing Patient by providing both the Patient id and the updated Patient data. This is a partial update: omitted fields are left unchanged. The `identifier` list, when provided, replaces the existing list.
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="PUT" label="/Patient/1">
@@ -226,7 +246,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var patient = new Patient
     {
       Id = "1",
@@ -282,7 +302,7 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var patient = client.Read<Patient>("1");
     ```
     </CodeGroup>
@@ -295,7 +315,10 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
 
 <Row>
   <Col>
-    This endpoint allows you to delete an existing Patient by providing the Patient id. Once a Patient is deleted, it cannot be recovered.
+    This endpoint allows you to delete an existing Patient by providing the
+    Patient id. Once a Patient is deleted, it cannot be recovered. A successful
+    delete returns `204 No Content` with an empty body. If the patient is still
+    referenced by other resources, the request returns `409 Conflict`.
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="DELETE" label="/Patient/1">
@@ -305,21 +328,12 @@ The Patient model conforms to the FHIR Patient resource. The following propertie
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     client.Delete("Patient", "1");
     ```
     </CodeGroup>
-    ```json {{ title: 'Response' }}
-    {
-      "resourceType": "OperationOutcome",
-      "issue": [
-        {
-          "severity": "information",
-          "code": "informational",
-          "diagnostics": "Successfully deleted Patient/1"
-        }
-      ]
-    }
+    ```http {{ title: 'Response' }}
+    HTTP/1.1 204 No Content
     ```
   </Col>
 </Row>

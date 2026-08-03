@@ -34,7 +34,9 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
   <Property name="status" type="enum" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.status'>
         The status of the response. Possible values are:
         - `in-progress` (most common)
-        - `completed` (makes report read-only and triggers processing.) **Currently not allowed for external systems.**
+        - `completed`
+        - `amended`
+        - `entered-in-error`
   </Property>
   <Property name="subject" type="Reference" required href='https://hl7.org/fhir/R5/questionnaireresponse-definitions.html#QuestionnaireResponse.subject'>
       A FHIR [`Reference`](https://hl7.org/fhir/R5/references.html#Reference) object to the patient that is the subject of the response.
@@ -51,6 +53,11 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
 <Row>
   <Col>
     This endpoint allows you to create a new QuestionnaireResponse.
+
+    <Note>
+      Posting a QuestionnaireResponse whose `identifier` already exists returns `409 Conflict` with issue code `conflict`. Unlike other resources, no `Location` header is returned and the issue code is not `duplicate`.
+    </Note>
+
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="POST" label="/QuestionnaireResponse">
@@ -64,7 +71,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
         "status": "in-progress",
         "identifier": [
           {
-            "system": "http://example.com/my-hospital-reports/,
+            "system": "http://example.com/my-hospital-reports/",
             "value": "123"
           }
         ],
@@ -77,7 +84,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       }'
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var qr = new QuestionnaireResponse
     {
         Status = QuestionnaireResponse.QuestionnaireResponseStatus.InProgress,
@@ -90,7 +97,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
             Value = "123"
             }
         },
-        Subject = new ResourceReference("Patient/123")
+        Subject = new ResourceReference("Patient/123"),
         Encounter = new ResourceReference("Encounter/456")
     };
     client.Create(qr);
@@ -135,7 +142,7 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     var questionnaireResponse = client.Read<QuestionnaireResponse>("1");
     ```
     </CodeGroup>
@@ -169,6 +176,13 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
 <Row>
   <Col>
     This endpoint allows you to delete an existing QuestionnaireResponse by providing the QuestionnaireResponse id. Once a QuestionnaireResponse is deleted, it cannot be recovered.
+
+    A successful deletion returns `204 No Content` with an empty body.
+
+    <Note>
+      Only the author (the API key or user that created the response) may delete it. Requests from anyone else return `403 Forbidden`. If the response is still referenced by another resource (for example as a Task output), the deletion returns `409 Conflict`.
+    </Note>
+
   </Col>
   <Col sticky>
     <CodeGroup title="Request" tag="DELETE" label="/QuestionnaireResponse/1">
@@ -178,21 +192,12 @@ The QuestionnaireResponse model conforms to the FHIR QuestionnaireResponse resou
       -H "Content-Type: application/fhir+json" \
     ```
     ```cs {{ title: 'C#' }}
-    var client = new FhirClient(new Uri("https://reports.tiro.health.tiro.health/fhir/r5"), settings, handler);
+    var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
     client.Delete("QuestionnaireResponse", "1");
     ```
     </CodeGroup>
-    ```json {{ title: 'Response' }}
-    {
-      "resourceType": "OperationOutcome",
-      "issue": [
-        {
-          "severity": "information",
-          "code": "informational",
-          "diagnostics": "Successfully deleted QuestionnaireResponse/1"
-        }
-      ]
-    }
+    ```http {{ title: 'Response' }}
+    HTTP/1.1 204 No Content
     ```
   </Col>
 </Row>
