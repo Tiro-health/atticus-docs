@@ -41,14 +41,16 @@ The Task model conforms to the FHIR Task resource and implements the SDC Task Qu
         An array of identifiers for this task. This is useful for referencing tasks in external systems.
         More information about identifiers can be found [here](./tips#store-your-internal-identifiers-in-fhir-resources).
     </Property>
-    <Property name="status" type="code" href='https://hl7.org/fhir/R5/task-definitions.html#Task.status'>
+    <Property name="status" type="code" required href='https://hl7.org/fhir/R5/task-definitions.html#Task.status'>
     The current status of the task. Possible values include:
-    - `draft`: Task is created but not yet ready for action.\
-    This occurs when a `questionnaire` input is missing.
-    - `ready`: Task is ready to be completed by a practitioner.
+    - `draft`: Task is created but not yet ready for action.
+    - `ready`: Task is ready to be completed by a practitioner.\
+    Creating a task with this status requires a `questionnaire` input.
     - `in-progress`: Task is being worked on.
     The `questionnaire-response` output is available but may not be complete.
     - `completed`: Task has been completed successfully including the forwarding to other systesm like the EHR.
+    <span/>
+    On create, only `draft` and `ready` are accepted: `in-progress` and `completed` return `501 Not Implemented`, and `failed` returns `400`. Omitting the status returns a `422`.
     <span/>
     The status affects how the task appears in practitioners' worklists (the reports overview page) and is automatically updated as they interact with it.
     </Property>
@@ -61,7 +63,7 @@ The Task model conforms to the FHIR Task resource and implements the SDC Task Qu
     <Property name="input" type="BackboneElement[]" href='https://hl7.org/fhir/R5/task-definitions.html#Task.input'>
         Input parameters for the task. See [Task Inputs and Output Types](#input-and-output-types) section below for details on available input types.
 
-        Some parameters like `questionnaire` can be completed by a practitioner through the user interface.
+        Some parameters like `questionnaire` can be completed by a practitioner through the user interface. Note that inputs are only processed when the task is created with `status: "ready"`: a `questionnaire` input provided on a `draft` task is ignored and will not be visible when reading the task back.
     </Property>
     <Property name="output" type="BackboneElement[]" href='https://hl7.org/fhir/R5/task-definitions.html#Task.output'>
         Output parameters from the task execution. This captures the results produced by the task. This can only be added by the Tiro.health and should not be provided by the client.
@@ -131,9 +133,9 @@ Example of a task output containing a completed questionnaire response:
 
 The status of a Complete Questionnaire task progresses through several stages as practitioners interact with it:
 
-1. **`draft`** Task appears in practitioners' worklists as available for completion
-   The **questionnaire** input is optional, if provided the task status will be set to `ready` automatically.
-2. **`ready`** The **questionnaire** input is present either through the API or through the user interface. The task is ready to be fullfilled.
+1. **`draft`** Task appears in practitioners' worklists as available for completion.
+   A task created as `draft` stays `draft`, even when a **questionnaire** input is provided.
+2. **`ready`** The task was created with `status: "ready"` and a **questionnaire** input, or a practitioner selected a questionnaire through the user interface. The task is ready to be fullfilled.
 3. **`in-progress`** Practitioner has started filling out the questionnaire. A incomplete QuestionnairResponse is present in the output.
 4. **`completed`** Practitioner has successfully submitted the completed questionnaire. All processing steps have been full-filled.
 
@@ -148,6 +150,10 @@ Each status change affects how and where the task appears in the practitioner's 
 <Row>
     <Col>
         This endpoint allows you to create a new Complete Questionnaire task. The task will appear in practitioners' worklists based on the specified parameters.
+
+        <Note>
+            Posting a task whose body `identifier` already exists returns a `409 Conflict` (issue code `duplicate`) with a `Location` header pointing to the existing task. To create a task only if it doesn't exist yet, use a conditional create: `POST /Task?identifier=<token>` returns `200` with the existing task on a match, or `201` when a new task is created.
+        </Note>
     </Col>
     <Col sticky>
         <CodeGroup title="Request" tag="POST" label="/Task">
@@ -342,6 +348,7 @@ Dim task = client.Read(Of Task)("456")
   "intent": "order",
   "description": "Complete CT scan report for patient",
   "code": {
+    "text": "CT scan report",
     "coding": [
       {
         "system": "http://fhir.tiro.health/CodeSystem/task-type",
@@ -363,7 +370,7 @@ Dim task = client.Read(Of Task)("456")
           }
         ]
       },
-      "valueCanonical": "Questionnaire/ct-scan-report"
+      "valueCanonical": "https://tiro.health/fhir/Questionnaire/ct-scan-report|1.0.0"
     }
   ],
   "output": [
@@ -393,32 +400,37 @@ Dim task = client.Read(Of Task)("456")
 
 <Row>
 <Col>
-This endpoint allows you to search for tasks based on various criteria. This is useful for finding tasks for a specific patient or tasks of a certain status.
+This endpoint allows you to search for tasks based on various criteria. This is useful for finding tasks for a specific patient or tasks with a specific identifier.
 
-### Common search parameters
+### Supported search parameters
 
-- `status`: Filter tasks by status
-- `patient`: Filter tasks by patient reference
-- `code`: Filter tasks by type
 - `identifier`: Filter tasks by identifier
+- `code`: Filter tasks by type (use `code:text` to match on the code's `text`)
+- `subject`: Filter tasks by patient reference (e.g. `subject=Patient/123`)
+- `encounter`: Filter tasks by encounter reference
+- `output`: Filter tasks by output reference
+- `_id`: Filter tasks by resource id
+- `sort`, `offset`, `limit`: Control ordering and pagination of the results
+
+<Note>
+  Unsupported parameters (such as `status` or `patient`) are silently ignored
+  rather than rejected. A query containing only ignored parameters returns all
+  tasks in the tenant, up to the default limit of 1000.
+</Note>
 
 </Col>
 <Col sticky>
-<CodeGroup title="Request" tag="GET" label="/Task?patient=Patient/123&status=requested">
+<CodeGroup title="Request" tag="GET" label="/Task?subject=Patient/123">
   ```bash {{ title: 'cURL' }}
   curl -G https://reports.tiro.health/fhir/r5/Task \
-  --data-urlencode "patient=Patient/123" \
-  --data-urlencode "status=completed" \
-  --data-urlencode "code=complete-questionnaire" \
+  --data-urlencode "subject=Patient/123" \
   -H "Authorization: Basic {{apikey}}" \
   -H "Content-Type: application/fhir+json"
   ```
 
 ```bash {{ title: 'httpie' }}
 http GET https://reports.tiro.health/fhir/r5/Task \
-patient==Patient/123 \
-status==completed \
-code==complete-questionnaire \
+subject==Patient/123 \
 Authorization:"Basic {{apikey}}" \
 Content-Type:"application/fhir+json"
 ```
@@ -426,9 +438,7 @@ Content-Type:"application/fhir+json"
 ```cs {{ title: 'C#' }}
 var client = new FhirClient(new Uri("https://reports.tiro.health/fhir/r5"), settings, handler);
 var searchParams = new SearchParams()
-    .Where("patient=Patient/123")
-    .Where("status=completed")
-    .Where("code=complete-questionnaire");
+    .Where("subject=Patient/123");
 
 var results = client.Search<Task>(searchParams);
 ```
@@ -436,9 +446,7 @@ var results = client.Search<Task>(searchParams);
 ```vb {{ title: 'VB.NET' }}
 Dim client = New FhirClient(New Uri("https://reports.tiro.health/fhir/r5"), settings, handler)
 Dim searchParams = New SearchParams() _
-    .Where("patient=Patient/123") _
-    .Where("status=completed") _
-    .Where("code=complete-questionnaire")
+    .Where("subject=Patient/123")
 
 Dim results = client.Search(Of Task)(searchParams)
 ```
@@ -468,6 +476,7 @@ Dim results = client.Search(Of Task)(searchParams)
         "intent": "order",
         "description": "Complete CT scan report for patient",
         "code": {
+          "text": "CT scan report",
           "coding": [
             {
               "system": "http://fhir.tiro.health/CodeSystem/task-type",
@@ -475,7 +484,7 @@ Dim results = client.Search(Of Task)(searchParams)
             }
           ]
         },
-        "status": "requested",
+        "status": "ready",
         "for": {
           "reference": "Patient/123"
         },
@@ -489,7 +498,7 @@ Dim results = client.Search(Of Task)(searchParams)
                 }
               ]
             },
-            "valueCanonical": "Questionnaire/ct-scan-report"
+            "valueCanonical": "https://tiro.health/fhir/Questionnaire/ct-scan-report|1.0.0"
           }
         ]
       }

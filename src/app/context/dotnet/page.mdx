@@ -90,7 +90,7 @@ Here is an example of how to create a session in a .NET application:
    string handoverToken = session.GetProperty("handover_token").GetString();
    ```
 
-2. Hand the token over to the WebView2 control by navigating it to the handover URL. The `next` value is the [Launch URL](/api/session-management#launch-url) the user should land on:
+2. Hand the token over to the WebView2 control by navigating it to the handover URL. The `next` value is the [Launch URL](/api/session-management#session-handover) the user should land on:
 
    ```csharp
    string nextUrl = Uri.EscapeDataString("https://app.tiro.health/external/v1?task=Task/123");
