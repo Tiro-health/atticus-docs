@@ -1,0 +1,7 @@
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+
+# Nexuzhealth KWS integration guide - kept out of search results
+Disallow: /api/kws
+Disallow: /kws/
