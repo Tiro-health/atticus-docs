@@ -2,6 +2,7 @@ import { type Metadata } from 'next'
 import glob from 'fast-glob'
 
 import { Providers } from '@/app/providers'
+import { AccessGate } from '@/components/AccessGate'
 import { Layout } from '@/components/Layout'
 import { type Section } from '@/components/SectionProvider'
 
@@ -11,6 +12,12 @@ export const metadata: Metadata = {
   title: {
     template: '%s - Tiro.health Integration Docs',
     default: 'Tiro.health Integration Docs',
+  },
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false },
   },
 }
 
@@ -32,9 +39,11 @@ export default async function RootLayout({
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className="flex min-h-full bg-white antialiased dark:bg-zinc-900">
         <Providers>
-          <div className="w-full">
-            <Layout allSections={allSections}>{children}</Layout>
-          </div>
+          <AccessGate>
+            <div className="w-full">
+              <Layout allSections={allSections}>{children}</Layout>
+            </div>
+          </AccessGate>
         </Providers>
       </body>
     </html>

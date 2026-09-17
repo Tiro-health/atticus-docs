@@ -1,0 +1,3 @@
+# The integration docs are shared with partners, not with the open web.
+User-agent: *
+Disallow: /
