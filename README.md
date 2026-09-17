@@ -30,6 +30,28 @@ Make sure the `href` matches a folder in the [src/app](src/app) directory.
 All documentation pages are written in MDX and can be found in the [src/app](src/app) directory. Each page should have a `metadata` object at the top of the file that defines the title and description of the page. The `sections` array should list all the sections on the page.
 The directory where the page is located is used as the URL path. For example, a page in [src/Patient](src/Patient) will be available at `/Patient`.
 
+## Access gate
+
+The docs are no longer public. Every page sits behind a shared password that is
+checked in the browser (`src/components/AccessGate.tsx`), and the site ships a
+`robots.txt` plus `noindex` metadata so search engines drop it.
+
+Rotate the password with:
+
+```bash
+node scripts/docs-password.mjs '<new password>'
+```
+
+Copy the printed line into `NEXT_PUBLIC_DOCS_ACCESS_VERIFIER` in `.env` and
+deploy. Changing the verifier signs everyone out; sessions also expire after 30
+days.
+
+Keep in mind what this does and does not do. Because the site is a static
+export on GitHub Pages, there is no server to check anything, so the gate stops
+search engines and casual readers but not someone who reads the page source or
+the repository. Treat these pages as "not for the open web", never as a place
+for secrets.
+
 ## Customizing
 
 Customization of the design and functionality is possible by modifying the React components in the [src/components](src/components) directory.
