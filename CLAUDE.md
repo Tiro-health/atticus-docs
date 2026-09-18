@@ -10,6 +10,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Linting**: `npm run lint` - Runs ESLint with Next.js configuration
 - **Code formatting**: `npx prettier --write .` - Formats code using Prettier with Tailwind CSS plugin
 
+## Deployments
+
+Two hosts run in parallel while the site moves off GitHub Pages:
+
+- **GitHub Pages** (`.github/workflows/nextjs.yml`) still serves docs.tiro.health and rebuilds on every push to `main`.
+- **Vercel** (`atticus-docs` project in the Tiro-health team) deploys to production only when a `v*` tag is pushed, via `.github/workflows/vercel-production.yml`. Branch and PR previews come from Vercel's GitHub integration; production deploys from `main` pushes are switched off in `vercel.json`.
+
+Build-time environment variables for Vercel live in the Vercel project settings, not in the repo. Do not move production deploys onto `main` pushes without asking — releases are intentionally the only path to production.
+
 ## Architecture Overview
 
 This is a **Next.js-based documentation website** built with the following key technologies:

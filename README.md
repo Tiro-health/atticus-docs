@@ -40,6 +40,29 @@ This template includes a global search that's powered by the [FlexSearch](https:
 
 This feature requires no configuration, and works out of the box by automatically scanning your documentation pages to build its index. You can adjust the search parameters by editing the `/src/mdx/search.mjs` file.
 
+## Deployments
+
+The site is hosted twice while we move off GitHub Pages.
+
+[docs.tiro.health](https://docs.tiro.health) is still served by GitHub Pages, rebuilt from `main` by [.github/workflows/nextjs.yml](.github/workflows/nextjs.yml). Nothing about that has changed yet.
+
+Vercel hosts the same site in the Tiro-health team as the [atticus-docs](https://vercel.com/tirohealth/atticus-docs) project, and production there is release-driven rather than branch-driven:
+
+- Pushing a `v*` tag runs [.github/workflows/vercel-production.yml](.github/workflows/vercel-production.yml), which deploys that exact commit to production at [atticus-docs-tirohealth.vercel.app](https://atticus-docs-tirohealth.vercel.app). The same workflow can be run manually from the Actions tab.
+- Pushes to `main` are explicitly _not_ deployed to production. That is switched off in [vercel.json](vercel.json) via `git.deploymentEnabled`, so merging a PR never changes what is live.
+- Every other branch and pull request still gets a Vercel preview deployment through the GitHub integration.
+
+Cutting a release therefore looks like:
+
+```bash
+git tag v2026.09.18
+git push origin v2026.09.18
+```
+
+The workflow needs a `VERCEL_TOKEN` repository secret: a Vercel access token scoped to the Tiro-health team. The org and project IDs are in the workflow itself — they identify the project, they don't grant access to it.
+
+Build-time configuration (currently the PostHog key and host) lives in the Vercel project's environment variables, not in the workflow.
+
 ## License
 
 This site template is a commercial product and is licensed under the [Tailwind UI license](https://tailwindui.com/license).
