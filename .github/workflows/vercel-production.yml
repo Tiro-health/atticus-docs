@@ -1,0 +1,66 @@
+# Production deployments to Vercel are release-driven: pushing a `v*` tag
+# deploys that exact commit to https://atticus-docs-tirohealth.vercel.app.
+#
+# Pushes to `main` deliberately do NOT deploy to production — that is disabled
+# in `vercel.json` (`git.deploymentEnabled`). Branches and pull requests still
+# get preview deployments from Vercel's GitHub integration.
+name: Deploy to Vercel production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag or commit to deploy (defaults to the branch you run this from)'
+        required: false
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.ref || github.ref_name }}
+    runs-on: ubuntu-latest
+    environment:
+      name: vercel-production
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      # Neither ID is a secret: they identify the project, they don't grant access.
+      VERCEL_ORG_ID: team_6BudHbsFlxrMjKqdN6CgJFvh
+      VERCEL_PROJECT_ID: prj_HeMBppaDKSpnh47IPc1lNbXStZXK
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check credentials
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::VERCEL_TOKEN is not set. Add a Vercel access token scoped to the Tiro-health team as a repository secret."
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # The build runs on Vercel rather than here, so production builds use the
+      # exact same environment, env vars and build cache as preview deployments.
+      - name: Deploy to production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed \`${{ inputs.ref || github.ref_name }}\` to $url" >> "$GITHUB_STEP_SUMMARY"
